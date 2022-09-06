@@ -10,7 +10,7 @@
 //
 // Global CONSTANTS (TypeScript 1.5 introduced const. Very cool.)
 //
-const APP_NAME = "chaOS"; // can characterize my thoughts while completing this project ('kay-aas') or maybe the cha cha slide ('cha-oh-ess'), either is fitting
+const APP_NAME = "chaOS"; // can characterize my thoughts while completing this project ('kay-aas') or maybe the cha cha slide ('chaa-oh-ess'), either is fitting
 const APP_VERSION = "3.1.4"; // 159265358979323846264338327950288419716, that's all I got
 const CPU_CLOCK_INTERVAL = 100; // This is in ms (milliseconds) so 1000 = 1 second.
 const TIMER_IRQ = 0; // Pages 23 (timer), 9 (interrupts), and 561 (interrupt priority).

@@ -50,6 +50,9 @@ module TSOS {
                 _GLaDOS = new Glados();
                 _GLaDOS.init();
             }
+
+            // Display current DateTime and updates every second.
+            const setDate = setInterval(this.refreshTime, 1000);
         }
 
         public static hostLog(msg: string, source: string = "?"): void {
@@ -111,6 +114,22 @@ module TSOS {
             // That boolean parameter is the 'forceget' flag. When it is true it causes the page to always
             // be reloaded from the server. If it is false or not specified the browser may reload the
             // page from its cache, which is not what we want.
+        }
+
+        public static refreshTime(): void {
+            // Create new Date object and properly format string value
+            var dateDisplay = <HTMLInputElement> document.getElementById("datetime");
+            var dt = new Date();
+            var dateString = dt.toLocaleString();
+
+            dateString = dateString.replace(", ", " - ");
+            dateDisplay.innerHTML = dateString;
+        }
+
+        public static setStatus(msg): void {
+            // Displays user-defined status message
+            var statusEle = <HTMLInputElement> document.getElementById("status");
+            statusEle.innerHTML = msg;
         }
     }
 }

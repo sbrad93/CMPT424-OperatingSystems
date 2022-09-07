@@ -45,6 +45,15 @@ var TSOS;
             // prompt <string>
             sc = new TSOS.ShellCommand(this.shellPrompt, "prompt", "<string> - Sets the prompt.");
             this.commandList[this.commandList.length] = sc;
+            // date
+            sc = new TSOS.ShellCommand(this.shellDate, "date", "- Displays the current date.");
+            this.commandList[this.commandList.length] = sc;
+            // whereami
+            sc = new TSOS.ShellCommand(this.shellLocation, "whereami", "- Displays your current location.");
+            this.commandList[this.commandList.length] = sc;
+            // imfeeling
+            sc = new TSOS.ShellCommand(this.shellSongs, "imfeeling", "<string> - Displays song recommendations based on your mood.");
+            this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
             // Display the initial prompt.
@@ -193,7 +202,36 @@ var TSOS;
                     case "help":
                         _StdOut.putText("Help displays a list of (hopefully) valid commands.");
                         break;
-                    // TODO: Make descriptive MANual page entries for the the rest of the shell commands here.
+                    case "ver":
+                        _StdOut.putText("Ver displays the current version data.");
+                        break;
+                    case "shutdown":
+                        _StdOut.putText("Shutdown shuts down (duh) the virtual OS");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("but leaves the underlying host/hardware simulation running.");
+                        break;
+                    case "cls":
+                        _StdOut.putText("Cls clears the screen and resets the cursor position.");
+                        break;
+                    case "trace":
+                        _StdOut.putText("Trace turns the OS trace on or off.");
+                        break;
+                    case "rot13":
+                        _StdOut.putText("Rot13 does rot13 obfuscation on a given string.");
+                        break;
+                    case "prompt":
+                        _StdOut.putText("Prompt promptly sets the prompt.");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("Say that three times fast.");
+                        break;
+                    case "date":
+                        _StdOut.putText("Date displays the current DateTime.");
+                        break;
+                    case "whereami":
+                        _StdOut.putText("Whereami displays your current location. I'm always watching.");
+                        break;
+                    case "imfeeling":
+                        _StdOut.putText("Imfeeling displays song recommendations based on your mood.");
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -242,6 +280,71 @@ var TSOS;
             }
             else {
                 _StdOut.putText("Usage: prompt <string>  Please supply a string.");
+            }
+        }
+        shellDate(args) {
+            let date = new Date();
+            _StdOut.putText(date.toString());
+        }
+        shellLocation(args) {
+            _StdOut.putText("The relative end of your conscious timeline.");
+            _StdOut.advanceLine();
+            _StdOut.advanceLine();
+            _StdOut.putText("Unless, of course, you're a time traveller.");
+            _StdOut.advanceLine();
+            _StdOut.putText("...Or your relative end is also your absolute end. Yikes.");
+        }
+        shellSongs(args) {
+            if (args.length > 0) {
+                var mood = args[0];
+                switch (mood) {
+                    case "happy":
+                        _StdOut.putText("Wired - Sonny Fodera, Ella Eyre");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("A Lover's Holiday - Change");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("Thunder Clatter - Wild Cub");
+                        break;
+                    case "sad":
+                        _StdOut.putText("All Out of Love - Air Supply");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("Not the Same Anymore - The Strokes");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("If I Only Had the Words to Tell You- Billy Joel");
+                        break;
+                    case "angry":
+                        _StdOut.putText("Daphne Did It - Cleopatrick");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("Little Monster - Royal Blood");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("Iron Man - Black Sabbath");
+                        break;
+                    case "heartbroken":
+                        _StdOut.putText("All Too Well - Taylor Swift");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("Heat Waves - Glass Animals");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("Not Over You - Gavin DeGraw");
+                        break;
+                    case "stressed":
+                        _StdOut.putText("Take It Easy - The Eagles");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("You're Only Human - Billy Joel");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("I'm Still Standing - Elton John");
+                        break;
+                    case "villainous":
+                        _StdOut.putText("Swan Lake, Op. 20, Act II No. 10: Scene Moderato");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("Lacrimosa - Mozart");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("Symphony No. 7 in A Major, Op.92: II. Allegretto - Beethoven");
+                        break;
+                    default:
+                        _StdOut.putText("Sorry, I've never felt " + args[0] + " before.");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("Usage: imfeeling <string>  Please supply a string.");
+                }
             }
         }
     }

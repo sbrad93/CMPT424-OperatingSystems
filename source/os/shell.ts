@@ -345,7 +345,9 @@ module TSOS {
 
         public shellDate(args: string[]) {
             let date: Date = new Date();
-            _StdOut.putText(date.toString());
+            _StdOut.putText("Date: " + date.toLocaleDateString());
+            _StdOut.advanceLine();
+            _StdOut.putText("Time: " + date.toLocaleTimeString());
         }
 
         public shellLocation(args: string[]) {

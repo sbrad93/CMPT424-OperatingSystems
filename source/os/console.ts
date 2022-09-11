@@ -13,7 +13,9 @@ module TSOS {
                     public currentFontSize = _DefaultFontSize,
                     public currentXPosition = 0,
                     public currentYPosition = _DefaultFontSize,
-                    public buffer = "") {
+                    public buffer = "",
+                    public prevCanvas = null,
+                    public prevXPosition = 0) {
         }
 
         public init(): void {
@@ -34,19 +36,38 @@ module TSOS {
             while (_KernelInputQueue.getSize() > 0) {
                 // Get the next character from the kernel input queue.
                 var chr = _KernelInputQueue.dequeue();
+                
                 // Check to see if it's "special" (enter or ctrl-c) or "normal" (anything else that the keyboard device driver gave us).
                 if (chr === String.fromCharCode(13)) { // the Enter key
+                    alert(this.buffer);
                     // The enter key marks the end of a console command, so ...
                     // ... tell the shell ...
                     _OsShell.handleInput(this.buffer);
                     // ... and reset our buffer.
                     this.buffer = "";
+                } else if (chr === '\b') {
+                    // Remove the last letter from the buffer
+                    this.buffer = this.buffer.slice(0, -1);
+
+                    alert(this.buffer);
+
+                    // Clear the canvas
+                    this.clearScreen();
+
+                    // Replace the current canvas image to the image prior to printing the last letter
+                    _DrawingContext.putImageData(this.prevCanvas, 0, 0);
+
+                    // Update the x position
+                    this.currentXPosition = this.prevXPosition;
                 } else {
-                    // This is a "normal" character, so ...
-                    // ... draw it on the screen...
-                    this.putText(chr);
-                    // ... and add it to our buffer.
-                    this.buffer += chr;
+                    if (chr != '\0') {
+                        // This is a "normal" character, so ...
+                        // ... draw it on the screen...
+                        this.putText(chr);
+
+                        // ... and add it to our buffer.
+                        this.buffer += chr;
+                    }
                 }
                 // TODO: Add a case for Ctrl-C that would allow the user to break the current program.
             }
@@ -62,7 +83,15 @@ module TSOS {
             */
             if (text !== "") {
                 // Draw the text at the current X and Y coordinates.
+
+                // // Create a canvas image before new letter is printed 
+                // // and take note of the current x position (in case the new letter is later deleted)
+                this.prevCanvas = _DrawingContext.getImageData(0, 0, _Canvas.width, _Canvas.height);
+                this.prevXPosition = this.currentXPosition;
+
+                // Draw the new letter
                 _DrawingContext.drawText(this.currentFont, this.currentFontSize, this.currentXPosition, this.currentYPosition, text);
+
                 // Move the current X position.
                 var offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
                 this.currentXPosition = this.currentXPosition + offset;

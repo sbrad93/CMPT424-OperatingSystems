@@ -3,9 +3,11 @@
 <head>
    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
    <meta name="author"             content="Alan G. Labouseur" />
+   <meta name="author"             content="Shannon Brady" />
    <link rel="stylesheet" href="tsos.css" type="text/css" media="screen" />
+   <link href="https://fonts.googleapis.com/icon?family=Material+Icons"rel="stylesheet">
    <title>
-      TSOS - a browser-based virtual Operating System in TypeScript
+      chaOS - a browser-based virtual Operating System in TypeScript
    </title>
 
    <!-- Globals CONSTANTS and _Variables. Must included be first. -->
@@ -38,6 +40,17 @@
 <body onload="onDocumentLoad()">
 
 <div id="divMain" style="width:100%;">
+   <div id="divTaskBar">
+      <p>
+         <span class="material-icons">calendar_today</span>
+         <label>DateTime:</label>
+         <span id="datetime"></span>
+      <p>
+         <span class="material-icons">lightbulb</span>
+         <label>Status:</label>
+         <span id="status"></span>
+      </p>
+   </div>
 
    <div id="divButtonBar" style="margin:4px;">
       <input type="button"
@@ -67,10 +80,10 @@
              onclick="TSOS.Control.hostBtnReset_click(this);">
    </div>
 
-   <div id="divConsole" style="margin:4px; width:500px; height:500px; float:left;">
+   <div id="divConsole" style="margin:4px; width:500px; height:500px; float:left; overflow:auto;">
       <canvas id="display"
-              width="500px"
-              height="500px"
+              width="800px"
+              height="800px"
               tabindex="3">
       </canvas>
    </div>

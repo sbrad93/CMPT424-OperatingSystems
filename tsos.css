@@ -1,7 +1,7 @@
 /* TSOS.css */
 
 body {
-  background: #909193 url(distrib/images/linen.png) repeat;
+  background: #d5e6ff url(distrib/images/linen.png) repeat;
   font-family: Helvetica, Verdana, Arial, sans-serif;
   font-size: 12pt;
   font-weight: normal;
@@ -31,9 +31,10 @@ h3 {
 }
 
 #display {
-  background-color:#DFDBC3;
-  border: 2px solid red;
+  background-color:#b8a9c9;
+  border: 2px solid #622569;
   cursor: default;
+  overflow: hidden;
 }
 
 .normal_button {
@@ -41,8 +42,16 @@ h3 {
 }
 
 .footerText {
-  color: black;
+  color: #622569;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 8pt;
   text-align: center;
+}
+
+#divTaskBar {
+  background-color:rgb(227, 225, 225);
+  border: 1px solid #622569;
+  cursor: default;
+  margin: 10px;
+  padding-left: 10px;
 }

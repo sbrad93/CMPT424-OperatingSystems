@@ -81,14 +81,20 @@ module TSOS {
 
             // whereami
             sc = new ShellCommand(this.shellLocation,
-                            "whereami",
-                            "- Displays your current location.");
+                                "whereami",
+                                "- Displays your current location.");
             this.commandList[this.commandList.length] = sc;
 
             // imfeeling
             sc = new ShellCommand(this.shellSongs,
-                            "imfeeling",
-                            "<string> - Displays song recommendations based on your mood.");
+                                "imfeeling",
+                                "<string> - Displays song recommendations based on your mood.");
+            this.commandList[this.commandList.length] = sc;
+
+            // status
+            sc = new ShellCommand(this.shellStatus,
+                                "status",
+                                "<string> - Sets the status message.");
             this.commandList[this.commandList.length] = sc;
 
             // ps  - list the running processes and their IDs
@@ -278,10 +284,16 @@ module TSOS {
                         _StdOut.putText("Date displays the current DateTime.");
                         break;
                     case "whereami":
-                        _StdOut.putText("Whereami displays your current location. I'm always watching.");
+                        _StdOut.putText("Whereami displays your current location.");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("I'm always watching.");
                         break;
                     case "imfeeling":
                         _StdOut.putText("Imfeeling displays song recommendations based on your mood.");
+                        break;
+                    case "status":
+                        _StdOut.putText("Status sets a user-defined status message.");
+                        break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -333,7 +345,9 @@ module TSOS {
 
         public shellDate(args: string[]) {
             let date: Date = new Date();
-            _StdOut.putText(date.toString());
+            _StdOut.putText("Date: " + date.toLocaleDateString());
+            _StdOut.advanceLine();
+            _StdOut.putText("Time: " + date.toLocaleTimeString());
         }
 
         public shellLocation(args: string[]) {
@@ -400,5 +414,16 @@ module TSOS {
             }
         }
 
+        public shellStatus(args: string[]) {
+            if (args.length > 0) {
+                var statusMsg = args.toString();
+                for (let i=0; i<statusMsg.length; i++) {
+                    statusMsg = statusMsg.replace(",", " ");
+                }
+                TSOS.Control.setStatus(statusMsg);
+            } else {
+                _StdOut.putText("Usage: status <string>  Please supply a string");
+            }
+        }
     }
 }

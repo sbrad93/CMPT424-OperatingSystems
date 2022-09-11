@@ -50,6 +50,9 @@ module TSOS {
                 _GLaDOS = new Glados();
                 _GLaDOS.init();
             }
+
+            // Display current DateTime and updates every second.
+            const setDate = setInterval(this.refreshTime, 1000);
         }
 
         public static hostLog(msg: string, source: string = "?"): void {
@@ -93,6 +96,8 @@ module TSOS {
             // .. and call the OS Kernel Bootstrap routine.
             _Kernel = new Kernel();
             _Kernel.krnBootstrap();  // _GLaDOS.afterStartup() will get called in there, if configured.
+
+            this.scrollCanvas();
         }
 
         public static hostBtnHaltOS_click(btn): void {
@@ -111,6 +116,51 @@ module TSOS {
             // That boolean parameter is the 'forceget' flag. When it is true it causes the page to always
             // be reloaded from the server. If it is false or not specified the browser may reload the
             // page from its cache, which is not what we want.
+        }
+
+        public static refreshTime(): void {
+            // Create new Date object and properly format string value
+            var dateDisplay = <HTMLInputElement> document.getElementById("datetime");
+            var dt = new Date();
+            var dateString = dt.toLocaleString();
+
+            dateString = dateString.replace(", ", " - ");
+            dateDisplay.innerHTML = dateString;
+        }
+
+        public static setStatus(msg): void {
+            // Displays user-defined status message
+            var statusEle = <HTMLInputElement> document.getElementById("status");
+            statusEle.innerHTML = msg;
+        }
+
+        public static scrollCanvas(): void {
+            // This was somewhat painful.
+            // Big thanks to stackoverflow: https://stackoverflow.com/questions/5517783/preventing-canvas-clear-when-resizing-window
+
+            // Create a temporary canvas and context to save initial data
+            var tempCanvas = document.createElement('canvas');
+            var tempCtx = tempCanvas.getContext('2d');
+
+            document.addEventListener("keyup", function(event) {
+                // Canvas image is resized and updated each time CLI receives new command (enter key pressed)
+                if (event.key === 'Enter') {
+                    resizeCanvas();
+                }
+            });
+
+            function resizeCanvas() {
+                // Resize canvas height to compensate for increasing text
+                // Create new image with adjusted canvas and include initial data
+                tempCanvas.width = _Canvas.width;
+                tempCanvas.height = _Canvas.height;
+                tempCtx.drawImage(_Canvas, 0, 0);
+
+                // Only need to update height, width is unchanged
+                _Canvas.height += 100;
+
+                _DrawingContext.drawImage(tempCanvas, 0, 0);
+            }
         }
     }
 }

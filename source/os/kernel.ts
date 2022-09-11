@@ -10,6 +10,7 @@
 module TSOS {
 
     export class Kernel {
+        static krnTrapError: any;
         //
         // OS Startup and Shutdown Routines
         //

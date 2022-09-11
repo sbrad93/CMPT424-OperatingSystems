@@ -138,25 +138,9 @@ module TSOS {
             // This was somewhat painful.
             // Big thanks to stackoverflow: https://stackoverflow.com/questions/5517783/preventing-canvas-clear-when-resizing-window
 
-            var canvas = <HTMLCanvasElement> document.getElementById("display");
-            var ctx = canvas.getContext("2d");
-
             // Create a temporary canvas and context to save initial data
             var tempCanvas = document.createElement('canvas');
             var tempCtx = tempCanvas.getContext('2d');
-
-            function resizeCanvas() {
-                // Resize canvas height to compensate for increasing text
-                // Create new image with adjusted canvas and include initial data
-                tempCanvas.width = canvas.width;
-                tempCanvas.height = canvas.height;
-                tempCtx.drawImage(canvas, 0, 0);
-
-                // Only need to update height, width is unchanged
-                canvas.height += 200;
-
-                ctx.drawImage(tempCanvas, 0, 0);
-            }
 
             document.addEventListener("keyup", function(event) {
                 // Canvas image is resized and updated each time CLI receives new command (enter key pressed)
@@ -164,6 +148,19 @@ module TSOS {
                     resizeCanvas();
                 }
             });
+
+            function resizeCanvas() {
+                // Resize canvas height to compensate for increasing text
+                // Create new image with adjusted canvas and include initial data
+                tempCanvas.width = _Canvas.width;
+                tempCanvas.height = _Canvas.height;
+                tempCtx.drawImage(_Canvas, 0, 0);
+
+                // Only need to update height, width is unchanged
+                _Canvas.height += 100;
+
+                _DrawingContext.drawImage(tempCanvas, 0, 0);
+            }
         }
     }
 }

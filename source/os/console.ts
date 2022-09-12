@@ -9,6 +9,11 @@ module TSOS {
 
     export class Console {
 
+        // stack containing iterative 'images' of the console canvas
+        static imgStack = [];
+        // stack containing iterative instances of this.prevXPosition
+        static positionStack = [];
+
         constructor(public currentFont = _DefaultFontFamily,
                     public currentFontSize = _DefaultFontSize,
                     public currentXPosition = 0,
@@ -39,26 +44,28 @@ module TSOS {
                 
                 // Check to see if it's "special" (enter or ctrl-c) or "normal" (anything else that the keyboard device driver gave us).
                 if (chr === String.fromCharCode(13)) { // the Enter key
-                    // alert(this.buffer);
                     // The enter key marks the end of a console command, so ...
                     // ... tell the shell ...
                     _OsShell.handleInput(this.buffer);
                     // ... and reset our buffer.
                     this.buffer = "";
                 } else if (chr === '\b') {
-                    // Remove the last letter from the buffer
-                    this.buffer = this.buffer.slice(0, -1);
+                    if (this.buffer != "") {
+                        // Remove the last letter from the buffer
+                        this.buffer = this.buffer.slice(0, -1);
 
-                    // alert(this.buffer);
+                        // Get the most recent canvas image iteration
+                        this.prevCanvas = Console.imgStack.pop();
 
-                    // Clear the canvas
-                    this.clearScreen();
+                        // Clear the canvas
+                        this.clearScreen();
 
-                    // Replace the current canvas image to the image prior to printing the last letter
-                    _DrawingContext.putImageData(this.prevCanvas, 0, 0);
+                        // Replace the current canvas image
+                        _DrawingContext.putImageData(this.prevCanvas, 0, 0);
 
-                    // Update the x position
-                    this.currentXPosition = this.prevXPosition;
+                        // Update the x position
+                        this.currentXPosition = Console.positionStack.pop();
+                    }
                 } else if (chr === '\t') {
                     this.chkCommandCompletion(this.buffer);
                 } else {
@@ -86,10 +93,15 @@ module TSOS {
             if (text !== "") {
                 // Draw the text at the current X and Y coordinates.
 
-                // // Create a canvas image before new letter is printed 
-                // // and take note of the current x position (in case the new letter is later deleted)
+                // Capture the canvas image data
+                // Push this image data to the stack
                 this.prevCanvas = _DrawingContext.getImageData(0, 0, _Canvas.width, _Canvas.height);
+                Console.imgStack.push(this.prevCanvas);
+
+                // Update previous x position
+                // Push this position to the stack
                 this.prevXPosition = this.currentXPosition;
+                Console.positionStack.push(this.prevXPosition);
 
                 // Draw the new letter
                 _DrawingContext.drawText(this.currentFont, this.currentFontSize, this.currentXPosition, this.currentYPosition, text);

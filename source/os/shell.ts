@@ -191,6 +191,27 @@ module TSOS {
             return retVal;
         }
 
+        // public static chkCmdCompletion(_buffer): string {
+        //     var cmd = "hello";
+        //     // for (var i in _OsShell.commandList) {
+        //     //     alert('hey');
+        //     // }
+
+        //     // for (var i=0; i<this.commandList.length; i++) {
+        //     //     alert("ay");
+        //     //     // cmd += this.commandList[i] + "\n";
+        //     //     // if (this.commandList[i].includes(_buffer)) {
+        //     //     //     alert("true");
+        //     //     // }
+        //     // }
+        //     // cmd = "whereami"
+        //     // if (cmd.includes("whe")) {
+        //     //     alert("true");
+        //     // }
+        //     // alert(cmd);
+        //     return cmd;
+        // }
+
         //
         // Shell Command Functions. Kinda not part of Shell() class exactly, but
         // called from here, so kept here to avoid violating the law of least astonishment.
@@ -409,8 +430,9 @@ module TSOS {
                     default:
                         _StdOut.putText("Sorry, I've never felt " + args[0] + " before.");
                         _StdOut.advanceLine();
-                        _StdOut.putText("Usage: imfeeling <string>  Please supply a string.");
                 }
+            } else {
+                _StdOut.putText("Usage: imfeeling <string>  Please supply a string.");
             }
         }
 

@@ -38,6 +38,8 @@ module TSOS {
                 // Check to see if we even want to deal with the key that was pressed.
                 if (keyCode == 8) {
                     _KernelInputQueue.enqueue('\b');
+                } else if (keyCode == 9) {
+                    _KernelInputQueue.enqueue('\t');
                 } else if ((keyCode >= 65) && (keyCode <= 90)) { // letter
                     if (isShifted === true) { 
                         chr = String.fromCharCode(keyCode); // Uppercase A-Z

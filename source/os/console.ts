@@ -39,7 +39,7 @@ module TSOS {
                 
                 // Check to see if it's "special" (enter or ctrl-c) or "normal" (anything else that the keyboard device driver gave us).
                 if (chr === String.fromCharCode(13)) { // the Enter key
-                    alert(this.buffer);
+                    // alert(this.buffer);
                     // The enter key marks the end of a console command, so ...
                     // ... tell the shell ...
                     _OsShell.handleInput(this.buffer);
@@ -49,7 +49,7 @@ module TSOS {
                     // Remove the last letter from the buffer
                     this.buffer = this.buffer.slice(0, -1);
 
-                    alert(this.buffer);
+                    // alert(this.buffer);
 
                     // Clear the canvas
                     this.clearScreen();
@@ -59,6 +59,8 @@ module TSOS {
 
                     // Update the x position
                     this.currentXPosition = this.prevXPosition;
+                } else if (chr === '\t') {
+                    this.chkCommandCompletion(this.buffer);
                 } else {
                     if (chr != '\0') {
                         // This is a "normal" character, so ...
@@ -110,6 +112,29 @@ module TSOS {
                                      _FontHeightMargin;
 
             // TODO: Handle scrolling. (iProject 1)
+        }
+
+        public chkCommandCompletion(_buffer): void {
+            var possMatches = []
+
+            // Check if current buffer is a beginning substring of any shell commands
+            for (var i in _OsShell.commandList) {
+                if (_OsShell.commandList[i].command.startsWith(_buffer)) {
+                    possMatches.push(_OsShell.commandList[i].command);
+                }
+            }
+
+            // Action is only taken if there's one potential match
+            if (possMatches.length == 1) {
+                // Get the remaining letters of potential command match
+                var remaining = possMatches[0].slice(_buffer.length);
+
+                // Print remaining letters and add to input buffer
+                for (var i in remaining) {
+                    this.putText(remaining[i]);
+                    this.buffer += remaining[i];
+                }
+            }
         }
     }
  }

@@ -168,14 +168,28 @@ module TSOS {
             // 1. Remove leading and trailing spaces.
             buffer = Utils.trim(buffer);
 
-            // 2. Lower-case it.
-            buffer = buffer.toLowerCase();
+            if (buffer.toLowerCase().includes("status")) {
+                // 2. We want to maintain capitalization in the status message, so step 2 is not necessary
 
-            // 3. Separate on spaces so we can determine the command and command-line args, if any.
-            var tempList = buffer.split(" ");
+                // 3. Separate on spaces so we can determine the command and command-line args, if any.
+                var tempList = buffer.split(" ");
 
-            // 4. Take the first (zeroth) element and use that as the command.
-            var cmd = tempList.shift();  // Yes, you can do that to an array in JavaScript. See the Queue class.
+                // 4. Take the first (zeroth) element and use that as the command.
+                var cmd = tempList.shift();  // Yes, you can do that to an array in JavaScript. See the Queue class.
+
+                // We only want to maintain caps in the arg, not the command
+                cmd = cmd.toLowerCase();
+            } else {
+                // 2. Lower-case it.
+                buffer = buffer.toLowerCase();
+
+                // 3. Separate on spaces so we can determine the command and command-line args, if any.
+                var tempList = buffer.split(" ");
+
+                // 4. Take the first (zeroth) element and use that as the command.
+                var cmd = tempList.shift();  // Yes, you can do that to an array in JavaScript. See the Queue class.
+            }
+
             // 4.1 Remove any left-over spaces.
             cmd = Utils.trim(cmd);
             // 4.2 Record it in the return value.
@@ -190,27 +204,6 @@ module TSOS {
             }
             return retVal;
         }
-
-        // public static chkCmdCompletion(_buffer): string {
-        //     var cmd = "hello";
-        //     // for (var i in _OsShell.commandList) {
-        //     //     alert('hey');
-        //     // }
-
-        //     // for (var i=0; i<this.commandList.length; i++) {
-        //     //     alert("ay");
-        //     //     // cmd += this.commandList[i] + "\n";
-        //     //     // if (this.commandList[i].includes(_buffer)) {
-        //     //     //     alert("true");
-        //     //     // }
-        //     // }
-        //     // cmd = "whereami"
-        //     // if (cmd.includes("whe")) {
-        //     //     alert("true");
-        //     // }
-        //     // alert(cmd);
-        //     return cmd;
-        // }
 
         //
         // Shell Command Functions. Kinda not part of Shell() class exactly, but

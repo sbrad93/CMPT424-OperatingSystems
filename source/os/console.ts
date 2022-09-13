@@ -9,9 +9,17 @@ module TSOS {
 
     export class Console {
 
-        // stack containing iterative 'images' of the console canvas
+        // List of all previously executed commands
+        static cmdHistory = [];
+        static cmdHistoryIndex = null;
+
+        // Canvas image data at new console line
+        static blankLineImg = null;
+        static blankLineXPosition = null;
+
+        // Stack containing iterative 'images' of the console canvas each time new letter printed
         static imgStack = [];
-        // stack containing iterative instances of this.prevXPosition
+        // Stack containing iterative instances of this.prevXPosition
         static positionStack = [];
 
         constructor(public currentFont = _DefaultFontFamily,
@@ -39,17 +47,26 @@ module TSOS {
 
         public handleInput(): void {
             while (_KernelInputQueue.getSize() > 0) {
+                if (this.buffer == "") {
+                    Console.blankLineImg = _DrawingContext.getImageData(0, 0, _Canvas.width, _Canvas.height);
+                    Console.blankLineXPosition = this.currentXPosition;
+                }
                 // Get the next character from the kernel input queue.
                 var chr = _KernelInputQueue.dequeue();
-                
+
                 // Check to see if it's "special" (enter or ctrl-c) or "normal" (anything else that the keyboard device driver gave us).
                 if (chr === String.fromCharCode(13)) { // the Enter key
                     // The enter key marks the end of a console command, so ...
                     // ... tell the shell ...
+                    if (this.buffer != "") {
+                        // Add command to command history and set the index
+                        Console.cmdHistory.push(this.buffer);
+                        Console.cmdHistoryIndex = Console.cmdHistory.length;
+                    }
                     _OsShell.handleInput(this.buffer);
                     // ... and reset our buffer.
                     this.buffer = "";
-                } else if (chr === '\b') {
+                } else if (chr === '\b') {                                          // Backspace
                     if (this.buffer != "") {
                         // Remove the last letter from the buffer
                         this.buffer = this.buffer.slice(0, -1);
@@ -66,10 +83,14 @@ module TSOS {
                         // Update the x position
                         this.currentXPosition = Console.positionStack.pop();
                     }
-                } else if (chr === '\t') {
+                } else if (chr === '\t') {                                          // Tab
                     this.chkCommandCompletion(this.buffer);
+                } else if (chr === '&#8593') {                                      // Up arrow
+                    this.cmdRecallUp(Console.cmdHistory);
+                } else if (chr === '&#8595') {                                      // Down arrow
+                    this.cmdRecallDown(Console.cmdHistory);
                 } else {
-                    if (chr != '\0') {
+                    if (chr != '\0') {                                              // NUL char, https://news.ycombinator.com/item?id=22283042 -- This helped me understand what the heck this was (and was midly amusing)
                         // This is a "normal" character, so ...
                         // ... draw it on the screen...
                         this.putText(chr);
@@ -127,24 +148,75 @@ module TSOS {
         }
 
         public chkCommandCompletion(_buffer): void {
-            var possMatches = []
+            var possMatches = [];
 
             // Check if current buffer is a beginning substring of any shell commands
             for (var i in _OsShell.commandList) {
                 if (_OsShell.commandList[i].command.startsWith(_buffer)) {
-                    possMatches.push(_OsShell.commandList[i].command);
+                    possMatches.push(_OsShell.commandList[i]);
                 }
             }
 
-            // Action is only taken if there's one potential match
             if (possMatches.length == 1) {
                 // Get the remaining letters of potential command match
-                var remaining = possMatches[0].slice(_buffer.length);
+                var remaining = possMatches[0].command.slice(_buffer.length);
 
                 // Print remaining letters and add to input buffer
                 for (var i in remaining) {
                     this.putText(remaining[i]);
                     this.buffer += remaining[i];
+                }
+            } else {
+                _StdOut.advanceLine();
+                _StdOut.putText("Possible Commands: ")
+                _StdOut.advanceLine();
+                for (var i in possMatches) {
+                    _StdOut.putText(possMatches[i].command + possMatches[i].description);
+                    _StdOut.advanceLine();
+                }
+                _OsShell.putPrompt();
+                this.buffer = "";
+            }
+        }
+
+        public cmdRecallUp(stack): void {
+            // Up arrow command history recall
+
+            if (Console.cmdHistoryIndex != 0) {
+                // Clear canvas and redraw canvas image from when console line was blank
+                this.clearScreen();
+                this.buffer = "";
+                _DrawingContext.putImageData(Console.blankLineImg, 0, 0);
+                this.currentXPosition = Console.blankLineXPosition;
+                // Set index back one and grab the command at that index
+                Console.cmdHistoryIndex -= 1;
+                var prevCmd = Console.cmdHistory[Console.cmdHistoryIndex];
+    
+                // Write the command to the console and update the buffer accordingly
+                for (var i in prevCmd) {
+                    this.putText(prevCmd[i]);
+                    this.buffer += prevCmd[i];
+                }
+            }
+        }
+
+        public cmdRecallDown(stack): void {
+            // Down arrow history recall
+
+            if (Console.cmdHistoryIndex != Console.cmdHistory.length) {
+                // Clear canvas and redraw canvas image from when console line was blank
+                this.clearScreen();
+                this.buffer = "";
+                _DrawingContext.putImageData(Console.blankLineImg, 0, 0);
+                this.currentXPosition = Console.blankLineXPosition;
+                // Set index forward one and grabe the command at that index
+                Console.cmdHistoryIndex += 1;
+                var nextCmd = Console.cmdHistory[Console.cmdHistoryIndex];
+
+                // Write the command to the console and update the buffer accordingly
+                for (var i in nextCmd) {
+                    this.putText(nextCmd[i]);
+                    this.buffer += nextCmd[i];
                 }
             }
         }

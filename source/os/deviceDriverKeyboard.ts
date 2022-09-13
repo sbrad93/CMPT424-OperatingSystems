@@ -73,7 +73,7 @@ module TSOS {
                     _KernelInputQueue.enqueue(chr);
                 }
             } else {
-                TSOS.Kernel.krnTrapError("msg");
+                TSOS.Kernel.krnTrapError("ChaOS has been shutdown.");
             }
         }
 

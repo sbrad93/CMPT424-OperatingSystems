@@ -22,6 +22,8 @@ module TSOS {
 
     export class Control {
 
+        static isShutdown = false;
+
         public static hostInit(): void {
             // This is called from index.html's onLoad event via the onDocumentLoad function pointer.
 
@@ -53,6 +55,25 @@ module TSOS {
 
             // Display current DateTime and updates every second.
             const setDate = setInterval(this.refreshTime, 1000);
+
+            document.addEventListener("keyup", function(event) {
+                if (event.key === "Enter") {
+                    // Disable new line
+                    event.preventDefault();
+
+                    var _input = <HTMLInputElement> document.getElementById("taProgramInput");
+
+                    // Remove whitespace
+                    // \s is the regex for whitespace
+                    // g is the global flag, meaning match alllll whitespace
+                    _input.value = (_input.value).replace(/\s+/g, '');
+
+                    Control.validateUserInput(_input.value);
+
+                    // Reset textarea value
+                    _input.value = "";
+                }
+            });
         }
 
         public static hostLog(msg: string, source: string = "?"): void {
@@ -134,6 +155,34 @@ module TSOS {
             statusEle.innerHTML = msg;
         }
 
+        public static validateUserInput(str): void {
+            if (str != "") {
+                if (isHex(str)) {
+                    // Remove leading and trailing whitespace
+                    str = str.trim();
+
+                    // Insert space between op codes and print
+                    str = str.replace(/.{2}/g, '$& ');
+                    _StdOut.putText(str);
+                } else {
+                    _StdOut.advanceLine();
+                    _StdOut.putText("Invalid hex code(s).")
+                    _StdOut.advanceLine();
+                    _OsShell.putPrompt();
+                }
+            }
+
+            function isHex(hex_str) {
+                // Checks if valid hex value
+
+                // Convert string to decimal value
+                var decimal = parseInt(hex_str,16);
+
+                // Convert decimal value to hex string and check equivalence
+                return (decimal.toString(16) === hex_str.toLowerCase())
+                }
+        }
+
         public static scrollCanvas(): void {
             // This was somewhat painful.
             // Big thanks to stackoverflow: https://stackoverflow.com/questions/5517783/preventing-canvas-clear-when-resizing-window
@@ -142,10 +191,15 @@ module TSOS {
             var tempCanvas = document.createElement('canvas');
             var tempCtx = tempCanvas.getContext('2d');
 
-            document.addEventListener("keyup", function(event) {
+            document.addEventListener("keydown", function(event) {
                 // Canvas image is resized and updated each time CLI receives new command (enter key pressed)
                 if (event.key === 'Enter') {
-                    resizeCanvas();
+                    // When kernel traps OS error
+                    if (Control.isShutdown) {
+                        this.location.reload();
+                    } else {
+                        resizeCanvas();
+                    }
                 }
             });
 

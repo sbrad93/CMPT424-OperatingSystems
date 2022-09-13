@@ -170,7 +170,19 @@ module TSOS {
 
         public krnTrapError(msg) {
             Control.hostLog("OS ERROR - TRAP: " + msg);
-            // TODO: Display error on console, perhaps in some sort of colored screen. (Maybe blue?)
+            // Since it's the 'blue' screen of death...
+            _DrawingContext.fillStyle = "blue";
+            
+            _DrawingContext.fillRect(0, 0, _Canvas.width, _Canvas.height);
+
+            _StdOut.putText("Something when massively wrong here.");
+            _StdOut.advanceLine();
+            _StdOut.putText("ChaOS has been shutdown to prevent more chaos.");
+            _StdOut.advanceLine();
+            _StdOut.advanceLine();
+            _StdOut.putText("Press <Enter> to restart.")
+
+            Control.isShutdown = true;
             this.krnShutdown();
         }
     }

@@ -97,6 +97,12 @@ module TSOS {
                                 "<string> - Sets the status message.");
             this.commandList[this.commandList.length] = sc;
 
+            // test kernel trap error
+            sc = new ShellCommand(this.shellTestKrnTrapError,
+                                "bsod",
+                                "- Tests when kernel traps an OS error and displays BSOD.");
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -308,6 +314,9 @@ module TSOS {
                     case "status":
                         _StdOut.putText("Status sets a user-defined status message.");
                         break;
+                    case "bsod":
+                        _StdOut.putText("Tests when the kernel traps and OS error and displays BSOD.")
+                        break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -439,6 +448,10 @@ module TSOS {
             } else {
                 _StdOut.putText("Usage: status <string>  Please supply a string");
             }
+        }
+
+        public shellTestKrnTrapError(args: string[]) {
+            _Kernel.krnTrapError("ChaOS has been shutdown.");
         }
     }
 }

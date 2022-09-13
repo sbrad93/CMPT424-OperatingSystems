@@ -90,7 +90,7 @@ module TSOS {
                 } else if (chr === '&#8595') {                                      // Down arrow
                     this.cmdRecallDown(Console.cmdHistory);
                 } else {
-                    if (chr != '\0') {                                              // NUL char, https://news.ycombinator.com/item?id=22283042 -- This helped me understand what the heck this was (and was midly amusing)
+                    if (chr != '\0') {                                              // NUL char, https://news.ycombinator.com/item?id=22283042 -- This helped me understand what the heck this was (and provide mild amusement)
                         // This is a "normal" character, so ...
                         // ... draw it on the screen...
                         this.putText(chr);
@@ -167,6 +167,7 @@ module TSOS {
                     this.buffer += remaining[i];
                 }
             } else {
+                // Existing buffer matches more > 1 command
                 _StdOut.advanceLine();
                 _StdOut.putText("Possible Commands: ")
                 _StdOut.advanceLine();
@@ -175,7 +176,11 @@ module TSOS {
                     _StdOut.advanceLine();
                 }
                 _OsShell.putPrompt();
-                this.buffer = "";
+
+                // Print letters already in buffer
+                for (var j=0; j<this.buffer.length; j++) {
+                    _StdOut.putText(this.buffer[j]);
+                }
             }
         }
 

@@ -53,6 +53,15 @@ module TSOS {
 
             // Display current DateTime and updates every second.
             const setDate = setInterval(this.refreshTime, 1000);
+
+            // Check if kernel trapped an OS error
+            document.addEventListener("keydown", function(event) {
+                if (event.key === "Enter") {
+                    if (Kernel.isShutdown) {
+                        location.reload();
+                    }
+                }
+            });
         }
 
         public static hostLog(msg: string, source: string = "?"): void {
@@ -96,8 +105,6 @@ module TSOS {
             // .. and call the OS Kernel Bootstrap routine.
             _Kernel = new Kernel();
             _Kernel.krnBootstrap();  // _GLaDOS.afterStartup() will get called in there, if configured.
-
-            this.scrollCanvas();
         }
 
         public static hostBtnHaltOS_click(btn): void {
@@ -134,33 +141,62 @@ module TSOS {
             statusEle.innerHTML = msg;
         }
 
-        public static scrollCanvas(): void {
-            // This was somewhat painful.
-            // Big thanks to stackoverflow: https://stackoverflow.com/questions/5517783/preventing-canvas-clear-when-resizing-window
+        public static validateUserInput(str): void {
+            if (str != "") {
+                // Make op codes upper case for formatting purposes
+                str = str.toUpperCase();
 
-            // Create a temporary canvas and context to save initial data
-            var tempCanvas = document.createElement('canvas');
-            var tempCtx = tempCanvas.getContext('2d');
+                if ((isHex(str)) && (str.length%2==0)) {
+                    // Digits must be hex and in pairs
 
-            document.addEventListener("keyup", function(event) {
-                // Canvas image is resized and updated each time CLI receives new command (enter key pressed)
-                if (event.key === 'Enter') {
-                    resizeCanvas();
+                    // Remove leading and trailing whitespace
+                    str = str.trim();
+
+                    // Insert space between op codes and print
+                    str = str.replace(/.{2}/g, '$& ');
+                    _StdOut.putText(str);
+                } else {
+                    _StdOut.putText("Invalid op code(s).");
                 }
-            });
-
-            function resizeCanvas() {
-                // Resize canvas height to compensate for increasing text
-                // Create new image with adjusted canvas and include initial data
-                tempCanvas.width = _Canvas.width;
-                tempCanvas.height = _Canvas.height;
-                tempCtx.drawImage(_Canvas, 0, 0);
-
-                // Only need to update height, width is unchanged
-                _Canvas.height += 100;
-
-                _DrawingContext.drawImage(tempCanvas, 0, 0);
+            } else {
+                _StdOut.putText("Invalid op code(s).");
             }
+
+            function isHex(hex_str) {
+                // Checks if valid hex value
+                // Since toString(16) loses precision after a certain amount of digits, I decided to convert opcodes individually
+
+                hex_str = hex_str.toLowerCase();
+
+                // Regex that splits hex string into a list of individual op codes
+                var opCodes = hex_str.match(/.{1,2}/g);
+
+                for (var i=0; i<opCodes.length; i++) {
+                    var temp = parseInt(opCodes[i], 16);
+
+                    if ((opCodes[i].startsWith("0")) && (temp.toString(16) === opCodes[i].slice(-1))) {     // case of a single int that lost leading zero
+                        // keep looping
+                    } else if (temp.toString(16) === opCodes[i]) {
+                        // keep looping
+                    } else {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+
+        public static load(): void {
+            // Loads valid hex codes in the console
+            var _input = <HTMLInputElement> document.getElementById("taProgramInput");
+
+            // Remove whitespace
+            _input.value = (_input.value).replace(/\s+/g, '');
+
+            Control.validateUserInput(_input.value);
+
+            // Reset textarea value
+            _input.value = "";
         }
     }
 }

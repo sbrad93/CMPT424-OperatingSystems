@@ -97,6 +97,18 @@ module TSOS {
                                 "<string> - Sets the status message.");
             this.commandList[this.commandList.length] = sc;
 
+            // test kernel trap error
+            sc = new ShellCommand(this.shellTestKrnTrapError,
+                                "bsod",
+                                "- Tests when kernel traps an OS error and displays BSOD.");
+            this.commandList[this.commandList.length] = sc;
+            
+            // Load input values into console
+            sc = new ShellCommand(this.shellLoad,
+                            "load",
+                            "<string> - Loads a user program into the console.");
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -168,14 +180,28 @@ module TSOS {
             // 1. Remove leading and trailing spaces.
             buffer = Utils.trim(buffer);
 
-            // 2. Lower-case it.
-            buffer = buffer.toLowerCase();
+            if (buffer.toLowerCase().includes("status")) {
+                // 2. We want to maintain capitalization in the status message, so step 2 is not necessary
 
-            // 3. Separate on spaces so we can determine the command and command-line args, if any.
-            var tempList = buffer.split(" ");
+                // 3. Separate on spaces so we can determine the command and command-line args, if any.
+                var tempList = buffer.split(" ");
 
-            // 4. Take the first (zeroth) element and use that as the command.
-            var cmd = tempList.shift();  // Yes, you can do that to an array in JavaScript. See the Queue class.
+                // 4. Take the first (zeroth) element and use that as the command.
+                var cmd = tempList.shift();  // Yes, you can do that to an array in JavaScript. See the Queue class.
+
+                // We only want to maintain caps in the arg, not the command
+                cmd = cmd.toLowerCase();
+            } else {
+                // 2. Lower-case it.
+                buffer = buffer.toLowerCase();
+
+                // 3. Separate on spaces so we can determine the command and command-line args, if any.
+                var tempList = buffer.split(" ");
+
+                // 4. Take the first (zeroth) element and use that as the command.
+                var cmd = tempList.shift();  // Yes, you can do that to an array in JavaScript. See the Queue class.
+            }
+
             // 4.1 Remove any left-over spaces.
             cmd = Utils.trim(cmd);
             // 4.2 Record it in the return value.
@@ -294,6 +320,12 @@ module TSOS {
                     case "status":
                         _StdOut.putText("Status sets a user-defined status message.");
                         break;
+                    case "bsod":
+                        _StdOut.putText("Tests when the kernel traps and OS error and displays BSOD.")
+                        break;
+                    case "load":
+                        _StdOut.putText("Loads a user program into the console.")
+                        break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -354,7 +386,7 @@ module TSOS {
             _StdOut.putText("The relative end of your conscious timeline.");
             _StdOut.advanceLine();
             _StdOut.advanceLine();
-            _StdOut.putText("Unless, of course, you're a time traveller.");
+            _StdOut.putText("Unless, of course, you're a time traveler.");
             _StdOut.advanceLine();
             _StdOut.putText("...Or your relative end is also your absolute end. Yikes.");
         }
@@ -409,8 +441,9 @@ module TSOS {
                     default:
                         _StdOut.putText("Sorry, I've never felt " + args[0] + " before.");
                         _StdOut.advanceLine();
-                        _StdOut.putText("Usage: imfeeling <string>  Please supply a string.");
                 }
+            } else {
+                _StdOut.putText("Usage: imfeeling <string>  Please supply a string.");
             }
         }
 
@@ -424,6 +457,14 @@ module TSOS {
             } else {
                 _StdOut.putText("Usage: status <string>  Please supply a string");
             }
+        }
+
+        public shellTestKrnTrapError(args: string[]) {
+            _Kernel.krnTrapError("ChaOS has been shutdown.");
+        }
+
+        public shellLoad(args: string[]) {
+            Control.load();
         }
     }
 }

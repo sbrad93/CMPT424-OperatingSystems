@@ -38,6 +38,12 @@ module TSOS {
                 // Check to see if we even want to deal with the key that was pressed.
                 if (keyCode == 8) {
                     _KernelInputQueue.enqueue('\b');
+                } else if (keyCode == 38) {
+                    _KernelInputQueue.enqueue('&#8593')
+                } else if (keyCode == 40) { 
+                    _KernelInputQueue.enqueue('&#8595')
+                } else if (keyCode == 9) {
+                    _KernelInputQueue.enqueue('\t');
                 } else if ((keyCode >= 65) && (keyCode <= 90)) { // letter
                     if (isShifted === true) { 
                         chr = String.fromCharCode(keyCode); // Uppercase A-Z
@@ -67,7 +73,7 @@ module TSOS {
                     _KernelInputQueue.enqueue(chr);
                 }
             } else {
-                TSOS.Kernel.krnTrapError("msg");
+                TSOS.Kernel.krnTrapError("ChaOS has been shutdown.");
             }
         }
 

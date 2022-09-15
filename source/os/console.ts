@@ -9,6 +9,19 @@ module TSOS {
 
     export class Console {
 
+        // List of all previously executed commands
+        static cmdHistory = [];
+        static cmdHistoryIndex = null;
+
+        // Canvas image data at new console line
+        static blankLineImg = null;
+        static blankLineXPosition = null;
+
+        // Stack containing iterative 'images' of the console canvas each time new letter printed
+        static imgStack = [];
+        // Stack containing iterative instances of this.prevXPosition
+        static positionStack = [];
+
         constructor(public currentFont = _DefaultFontFamily,
                     public currentFontSize = _DefaultFontSize,
                     public currentXPosition = 0,
@@ -34,33 +47,50 @@ module TSOS {
 
         public handleInput(): void {
             while (_KernelInputQueue.getSize() > 0) {
+                if (this.buffer == "") {
+                    Console.blankLineImg = _DrawingContext.getImageData(0, 0, _Canvas.width, _Canvas.height);
+                    Console.blankLineXPosition = this.currentXPosition;
+                }
                 // Get the next character from the kernel input queue.
                 var chr = _KernelInputQueue.dequeue();
-                
+
                 // Check to see if it's "special" (enter or ctrl-c) or "normal" (anything else that the keyboard device driver gave us).
                 if (chr === String.fromCharCode(13)) { // the Enter key
-                    alert(this.buffer);
                     // The enter key marks the end of a console command, so ...
                     // ... tell the shell ...
+                    if (this.buffer != "") {
+                        // Add command to command history and set the index
+                        Console.cmdHistory.push(this.buffer);
+                        Console.cmdHistoryIndex = Console.cmdHistory.length;
+                    }
                     _OsShell.handleInput(this.buffer);
                     // ... and reset our buffer.
                     this.buffer = "";
-                } else if (chr === '\b') {
-                    // Remove the last letter from the buffer
-                    this.buffer = this.buffer.slice(0, -1);
+                } else if (chr === '\b') {                                          // Backspace
+                    if (this.buffer != "") {
+                        // Remove the last letter from the buffer
+                        this.buffer = this.buffer.slice(0, -1);
 
-                    alert(this.buffer);
+                        // Get the most recent canvas image iteration
+                        this.prevCanvas = Console.imgStack.pop();
 
-                    // Clear the canvas
-                    this.clearScreen();
+                        // Clear the canvas
+                        this.clearScreen();
 
-                    // Replace the current canvas image to the image prior to printing the last letter
-                    _DrawingContext.putImageData(this.prevCanvas, 0, 0);
+                        // Replace the current canvas image
+                        _DrawingContext.putImageData(this.prevCanvas, 0, 0);
 
-                    // Update the x position
-                    this.currentXPosition = this.prevXPosition;
+                        // Update the x position
+                        this.currentXPosition = Console.positionStack.pop();
+                    }
+                } else if (chr === '\t') {                                          // Tab
+                    this.chkCommandCompletion(this.buffer);
+                } else if (chr === '&#8593') {                                      // Up arrow
+                    this.cmdRecallUp(Console.cmdHistory);
+                } else if (chr === '&#8595') {                                      // Down arrow
+                    this.cmdRecallDown(Console.cmdHistory);
                 } else {
-                    if (chr != '\0') {
+                    if (chr != '\0') {                                              // NUL char, https://news.ycombinator.com/item?id=22283042 -- This helped me understand what the heck this was (and provide mild amusement)
                         // This is a "normal" character, so ...
                         // ... draw it on the screen...
                         this.putText(chr);
@@ -84,10 +114,15 @@ module TSOS {
             if (text !== "") {
                 // Draw the text at the current X and Y coordinates.
 
-                // // Create a canvas image before new letter is printed 
-                // // and take note of the current x position (in case the new letter is later deleted)
+                // Capture the canvas image data
+                // Push this image data to the stack
                 this.prevCanvas = _DrawingContext.getImageData(0, 0, _Canvas.width, _Canvas.height);
+                Console.imgStack.push(this.prevCanvas);
+
+                // Update previous x position
+                // Push this position to the stack
                 this.prevXPosition = this.currentXPosition;
+                Console.positionStack.push(this.prevXPosition);
 
                 // Draw the new letter
                 _DrawingContext.drawText(this.currentFont, this.currentFontSize, this.currentXPosition, this.currentYPosition, text);
@@ -105,11 +140,109 @@ module TSOS {
              * Font descent measures from the baseline to the lowest point in the font.
              * Font height margin is extra spacing between the lines.
              */
+            var tempYPosition = this.currentYPosition;
             this.currentYPosition += _DefaultFontSize + 
                                      _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
                                      _FontHeightMargin;
 
-            // TODO: Handle scrolling. (iProject 1)
+
+            // Scrolling
+            // This was somewhat painful.
+            // Big thanks to stackoverflow: https://stackoverflow.com/questions/5517783/preventing-canvas-clear-when-resizing-window
+
+            // Create a temporary canvas and context to save initial data
+            var tempCanvas = document.createElement('canvas');
+            var tempCtx = tempCanvas.getContext('2d');
+
+            if (this.currentYPosition > _Canvas.height) {
+                tempCanvas.width = _Canvas.width;
+                tempCanvas.height = _Canvas.height;
+                tempCtx.drawImage(_Canvas, 0, 0);
+
+                // Update canvas height according to the change in y position, and add 100 to add a little extra space
+                _Canvas.height += (this.currentYPosition - tempYPosition) + 100;
+
+                _DrawingContext.drawImage(tempCanvas, 0, 0);
+            }
+        }
+
+        public chkCommandCompletion(_buffer): void {
+            var possMatches = [];
+
+            // Check if current buffer is a beginning substring of any shell commands
+            for (var i in _OsShell.commandList) {
+                if (_OsShell.commandList[i].command.startsWith(_buffer)) {
+                    possMatches.push(_OsShell.commandList[i]);
+                }
+            }
+
+            if (possMatches.length == 1) {
+                // Get the remaining letters of potential command match
+                var remaining = possMatches[0].command.slice(_buffer.length);
+
+                // Print remaining letters and add to input buffer
+                for (var i in remaining) {
+                    this.putText(remaining[i]);
+                    this.buffer += remaining[i];
+                }
+            } else {
+                // Existing buffer matches more > 1 command
+                _StdOut.advanceLine();
+                _StdOut.putText("Possible Commands: ")
+                _StdOut.advanceLine();
+                for (var i in possMatches) {
+                    _StdOut.putText(possMatches[i].command + possMatches[i].description);
+                    _StdOut.advanceLine();
+                }
+                _OsShell.putPrompt();
+
+                // Print letters already in buffer
+                for (var j=0; j<this.buffer.length; j++) {
+                    _StdOut.putText(this.buffer[j]);
+                }
+            }
+        }
+
+        public cmdRecallUp(stack): void {
+            // Up arrow command history recall
+
+            if (Console.cmdHistoryIndex != 0) {
+                // Clear canvas and redraw canvas image from when console line was blank
+                this.clearScreen();
+                this.buffer = "";
+                _DrawingContext.putImageData(Console.blankLineImg, 0, 0);
+                this.currentXPosition = Console.blankLineXPosition;
+                // Set index back one and grab the command at that index
+                Console.cmdHistoryIndex -= 1;
+                var prevCmd = Console.cmdHistory[Console.cmdHistoryIndex];
+    
+                // Write the command to the console and update the buffer accordingly
+                for (var i in prevCmd) {
+                    this.putText(prevCmd[i]);
+                    this.buffer += prevCmd[i];
+                }
+            }
+        }
+
+        public cmdRecallDown(stack): void {
+            // Down arrow history recall
+
+            if (Console.cmdHistoryIndex != Console.cmdHistory.length) {
+                // Clear canvas and redraw canvas image from when console line was blank
+                this.clearScreen();
+                this.buffer = "";
+                _DrawingContext.putImageData(Console.blankLineImg, 0, 0);
+                this.currentXPosition = Console.blankLineXPosition;
+                // Set index forward one and grabe the command at that index
+                Console.cmdHistoryIndex += 1;
+                var nextCmd = Console.cmdHistory[Console.cmdHistoryIndex];
+
+                // Write the command to the console and update the buffer accordingly
+                for (var i in nextCmd) {
+                    this.putText(nextCmd[i]);
+                    this.buffer += nextCmd[i];
+                }
+            }
         }
     }
  }

@@ -22,8 +22,6 @@ module TSOS {
 
     export class Control {
 
-        static isShutdown = false;
-
         public static hostInit(): void {
             // This is called from index.html's onLoad event via the onDocumentLoad function pointer.
 
@@ -56,22 +54,12 @@ module TSOS {
             // Display current DateTime and updates every second.
             const setDate = setInterval(this.refreshTime, 1000);
 
-            document.addEventListener("keyup", function(event) {
+            // Check if kernel trapped an OS error
+            document.addEventListener("keydown", function(event) {
                 if (event.key === "Enter") {
-                    // Disable new line
-                    event.preventDefault();
-
-                    var _input = <HTMLInputElement> document.getElementById("taProgramInput");
-
-                    // Remove whitespace
-                    // \s is the regex for whitespace
-                    // g is the global flag, meaning match alllll whitespace
-                    _input.value = (_input.value).replace(/\s+/g, '');
-
-                    Control.validateUserInput(_input.value);
-
-                    // Reset textarea value
-                    _input.value = "";
+                    if (Kernel.isShutdown) {
+                        location.reload();
+                    }
                 }
             });
         }
@@ -117,8 +105,6 @@ module TSOS {
             // .. and call the OS Kernel Bootstrap routine.
             _Kernel = new Kernel();
             _Kernel.krnBootstrap();  // _GLaDOS.afterStartup() will get called in there, if configured.
-
-            this.scrollCanvas();
         }
 
         public static hostBtnHaltOS_click(btn): void {
@@ -157,7 +143,12 @@ module TSOS {
 
         public static validateUserInput(str): void {
             if (str != "") {
-                if (isHex(str)) {
+                // Make op codes upper case for formatting purposes
+                str = str.toUpperCase();
+
+                if ((isHex(str)) && (str.length%2==0)) {
+                    // Digits must be hex and in pairs
+
                     // Remove leading and trailing whitespace
                     str = str.trim();
 
@@ -165,56 +156,47 @@ module TSOS {
                     str = str.replace(/.{2}/g, '$& ');
                     _StdOut.putText(str);
                 } else {
-                    _StdOut.advanceLine();
-                    _StdOut.putText("Invalid hex code(s).")
-                    _StdOut.advanceLine();
-                    _OsShell.putPrompt();
+                    _StdOut.putText("Invalid op code(s).");
                 }
+            } else {
+                _StdOut.putText("Invalid op code(s).");
             }
 
             function isHex(hex_str) {
                 // Checks if valid hex value
+                // Since toString(16) loses precision after a certain amount of digits, I decided to convert opcodes individually
 
-                // Convert string to decimal value
-                var decimal = parseInt(hex_str,16);
+                hex_str = hex_str.toLowerCase();
 
-                // Convert decimal value to hex string and check equivalence
-                return (decimal.toString(16) === hex_str.toLowerCase())
-                }
-        }
+                // Regex that splits hex string into a list of individual op codes
+                var opCodes = hex_str.match(/.{1,2}/g);
 
-        public static scrollCanvas(): void {
-            // This was somewhat painful.
-            // Big thanks to stackoverflow: https://stackoverflow.com/questions/5517783/preventing-canvas-clear-when-resizing-window
+                for (var i=0; i<opCodes.length; i++) {
+                    var temp = parseInt(opCodes[i], 16);
 
-            // Create a temporary canvas and context to save initial data
-            var tempCanvas = document.createElement('canvas');
-            var tempCtx = tempCanvas.getContext('2d');
-
-            document.addEventListener("keydown", function(event) {
-                // Canvas image is resized and updated each time CLI receives new command (enter key pressed)
-                if (event.key === 'Enter') {
-                    // When kernel traps OS error
-                    if (Control.isShutdown) {
-                        this.location.reload();
+                    if ((opCodes[i].startsWith("0")) && (temp.toString(16) === opCodes[i].slice(-1))) {     // case of a single int that lost leading zero
+                        // keep looping
+                    } else if (temp.toString(16) === opCodes[i]) {
+                        // keep looping
                     } else {
-                        resizeCanvas();
+                        return false;
                     }
                 }
-            });
-
-            function resizeCanvas() {
-                // Resize canvas height to compensate for increasing text
-                // Create new image with adjusted canvas and include initial data
-                tempCanvas.width = _Canvas.width;
-                tempCanvas.height = _Canvas.height;
-                tempCtx.drawImage(_Canvas, 0, 0);
-
-                // Only need to update height, width is unchanged
-                _Canvas.height += 100;
-
-                _DrawingContext.drawImage(tempCanvas, 0, 0);
+                return true;
             }
+        }
+
+        public static load(): void {
+            // Loads valid hex codes in the console
+            var _input = <HTMLInputElement> document.getElementById("taProgramInput");
+
+            // Remove whitespace
+            _input.value = (_input.value).replace(/\s+/g, '');
+
+            Control.validateUserInput(_input.value);
+
+            // Reset textarea value
+            _input.value = "";
         }
     }
 }

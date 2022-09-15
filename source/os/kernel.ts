@@ -11,6 +11,7 @@ module TSOS {
 
     export class Kernel {
         static krnTrapError: any;
+        static isShutdown = false;
         //
         // OS Startup and Shutdown Routines
         //
@@ -170,19 +171,25 @@ module TSOS {
 
         public krnTrapError(msg) {
             Control.hostLog("OS ERROR - TRAP: " + msg);
+
+            // Clear the screen, reset xy coordinates, reset canvas height
+            _Console.clearScreen();
+            _Console.resetXY();
+            _Canvas.height = 500;
+
             // Since it's the 'blue' screen of death...
             _DrawingContext.fillStyle = "blue";
-            
             _DrawingContext.fillRect(0, 0, _Canvas.width, _Canvas.height);
 
-            _StdOut.putText("Something when massively wrong here.");
+            _StdOut.advanceLine();
+            _StdOut.putText("Something went massively wrong here.");
             _StdOut.advanceLine();
             _StdOut.putText("ChaOS has been shutdown to prevent more chaos.");
             _StdOut.advanceLine();
             _StdOut.advanceLine();
             _StdOut.putText("Press <Enter> to restart.")
 
-            Control.isShutdown = true;
+            Kernel.isShutdown = true;
             this.krnShutdown();
         }
     }

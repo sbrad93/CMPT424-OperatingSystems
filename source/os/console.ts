@@ -140,11 +140,30 @@ module TSOS {
              * Font descent measures from the baseline to the lowest point in the font.
              * Font height margin is extra spacing between the lines.
              */
+            var tempYPosition = this.currentYPosition;
             this.currentYPosition += _DefaultFontSize + 
                                      _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
                                      _FontHeightMargin;
 
-            // TODO: Handle scrolling. (iProject 1)
+
+            // Scrolling
+            // This was somewhat painful.
+            // Big thanks to stackoverflow: https://stackoverflow.com/questions/5517783/preventing-canvas-clear-when-resizing-window
+
+            // Create a temporary canvas and context to save initial data
+            var tempCanvas = document.createElement('canvas');
+            var tempCtx = tempCanvas.getContext('2d');
+
+            if (this.currentYPosition > _Canvas.height) {
+                tempCanvas.width = _Canvas.width;
+                tempCanvas.height = _Canvas.height;
+                tempCtx.drawImage(_Canvas, 0, 0);
+
+                // Update canvas height according to the change in y position, and add 100 to add a little extra space
+                _Canvas.height += (this.currentYPosition - tempYPosition) + 100;
+
+                _DrawingContext.drawImage(tempCanvas, 0, 0);
+            }
         }
 
         public chkCommandCompletion(_buffer): void {

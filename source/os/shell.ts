@@ -102,6 +102,12 @@ module TSOS {
                                 "bsod",
                                 "- Tests when kernel traps an OS error and displays BSOD.");
             this.commandList[this.commandList.length] = sc;
+            
+            // Load input values into console
+            sc = new ShellCommand(this.shellLoad,
+                            "load",
+                            "<string> - Loads a user program into the console.");
+            this.commandList[this.commandList.length] = sc;
 
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -317,6 +323,9 @@ module TSOS {
                     case "bsod":
                         _StdOut.putText("Tests when the kernel traps and OS error and displays BSOD.")
                         break;
+                    case "load":
+                        _StdOut.putText("Loads a user program into the console.")
+                        break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -377,7 +386,7 @@ module TSOS {
             _StdOut.putText("The relative end of your conscious timeline.");
             _StdOut.advanceLine();
             _StdOut.advanceLine();
-            _StdOut.putText("Unless, of course, you're a time traveller.");
+            _StdOut.putText("Unless, of course, you're a time traveler.");
             _StdOut.advanceLine();
             _StdOut.putText("...Or your relative end is also your absolute end. Yikes.");
         }
@@ -452,6 +461,10 @@ module TSOS {
 
         public shellTestKrnTrapError(args: string[]) {
             _Kernel.krnTrapError("ChaOS has been shutdown.");
+        }
+
+        public shellLoad(args: string[]) {
+            Control.load();
         }
     }
 }

@@ -1,3 +1,7 @@
+# Compiled Javascript files
+*.js.map
+*.js
+
 #Mac
 .DS_Store
 
@@ -133,6 +137,3 @@ dist
 
 # TernJS port file
 .tern-port
-
-# compiled JavaScript files
-distrib/

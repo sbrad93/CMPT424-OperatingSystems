@@ -12,21 +12,14 @@ module TSOS {
         constructor() {
         }
 
-        // all memory properties are reinitialized to zero
-        public reset() {
-            _Memory.mar = 0x0000;
-            _Memory.mdr = 0x00;
-            _Memory.arrInit();
-        }
-
         //reads memory at the location in the MAR and updates the MDR accordingly
         public read() {
-            _Memory.setMDR(_Memory.memArr[_Memory.getMAR()]);
+            _MMU.setMDR(_Memory.memArr[_MMU.getMAR()]);
         }
 
         //writes the contents of the MDR to memory at the location indicated by the MAR
         public write() {
-            _Memory.memArr[_Memory.getMAR()] = _Memory.getMDR();
+            _Memory.memArr[_MMU.getMAR()] = _MMU.getMDR();
         }
 
         //displays the memory content up to a given address

@@ -14,32 +14,62 @@ module TSOS {
 
         // updates last two hex digits in MAR
         public setLowOrderByte(lob: number) {
-            _Memory.setMAR(_Memory.getMAR() + lob);
+            this.setMAR(this.getMAR() + lob);
             //console.log(this.getMAR().toString(16));
         }
 
         // updates first two hex digits in MAR
         public setHighOrderByte(hob: number) {
             let hob_mod = hob * 0x0100;
-            _Memory.setMAR(hob_mod + _Memory.getMAR());
+            this.setMAR(hob_mod + this.getMAR());
             //console.log(this.getMAR().toString(16));
         }
 
         // updates 16 bit MAR in one cycle
         public modMAR(lob: number) {
-            _Memory.setMAR(0x0000);
+            this.setMAR(0x0000);
             this.setLowOrderByte(lob);
         }
 
         // used to load a static program into memoery array
         // inserts given memory byte into specified memory address
         public writeImmmediate(addr: number, dat: number) {
-            for (let i=0; i<_Memory.getMemArr().length; i++) { 
+            for (let i=0; i<this.getMemArr().length; i++) { 
                 if(i == addr) {
-                    _Memory.getMemArr()[i] = dat;
+                    this.getMemArr()[i] = dat;
                 }
             }
         }
+
+        // all memory properties are reinitialized to zero
+        public reset() {
+            this.setMAR(0x0000);
+            this.setMDR(0x00);
+            _Memory.arrInit();
+        }
+
+        /* Memory Getters and Setters */
+        // Initially had this is memory.ts, but I started to think it made more sense if the MMU 
+        // was the entity making changes to the MAR and MDR.
+        public getMAR() {
+            return _Memory.mar;
+        } // getMAR
+
+        public getMDR() {
+            return _Memory.mdr;
+        } // getMDR
+
+        public getMemArr() {
+            return _Memory.memArr;
+        } // getMemArr
+
+        public setMAR(mar_mod: number) {
+            _Memory.mar = mar_mod;
+        } // setMAR
+
+        public setMDR(mdr_mod: number) {
+            _Memory.mdr = mdr_mod;
+        } // setMDR
         
     }
 }

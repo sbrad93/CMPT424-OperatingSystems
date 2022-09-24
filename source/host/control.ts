@@ -100,6 +100,7 @@ module TSOS {
             _CPU = new Cpu();  // Note: We could simulate multi-core systems by instantiating more than one instance of the CPU here.
             _CPU.init();       //       There's more to do, like dealing with scheduling and such, but this would be a start. Pretty cool.
 
+            // Temporary, for testing purposes
             _CPU.isExecuting = true;
 
             // ... then set the host clock pulse ...
@@ -115,7 +116,7 @@ module TSOS {
             // Create the Memory Accessor
             _MemAccessor = new MemAccessor();
 
-            _CPU.test();
+            _CPU.powersOfThree();
         }
 
         public static hostBtnHaltOS_click(btn): void {

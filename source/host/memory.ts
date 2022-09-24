@@ -24,26 +24,5 @@ module TSOS {
     
             return this.memArr;
         }
-
-        /* Getters and Setters */
-        public getMAR() {
-            return this.mar;
-        } // getMAR
-
-        public getMDR() {
-            return this.mdr;
-        } // getMDR
-
-        public getMemArr() {
-            return this.memArr;
-        } // getMemArr
-
-        public setMAR(mar_mod: number) {
-            this.mar = mar_mod;
-        } // setMAR
-
-        public setMDR(mdr_mod: number) {
-            this.mdr = mdr_mod;
-        } // setMDR
     }
 }

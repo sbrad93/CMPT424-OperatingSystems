@@ -15,14 +15,12 @@ module TSOS {
         // updates last two hex digits in MAR
         public setLowOrderByte(lob: number) {
             this.setMAR(this.getMAR() + lob);
-            //console.log(this.getMAR().toString(16));
         }
 
         // updates first two hex digits in MAR
         public setHighOrderByte(hob: number) {
             let hob_mod = hob * 0x0100;
             this.setMAR(hob_mod + this.getMAR());
-            //console.log(this.getMAR().toString(16));
         }
 
         // updates 16 bit MAR in one cycle
@@ -31,7 +29,7 @@ module TSOS {
             this.setLowOrderByte(lob);
         }
 
-        // used to load a static program into memoery array
+        // used to load a static program into memory array
         // inserts given memory byte into specified memory address
         public writeImmmediate(addr: number, dat: number) {
             for (let i=0; i<this.getMemArr().length; i++) { 

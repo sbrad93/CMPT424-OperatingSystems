@@ -464,7 +464,38 @@ module TSOS {
         }
 
         public shellLoad(args: string[]) {
-            Control.load();
+            // reset memory and memory output
+            var memory_out = <HTMLInputElement> document.getElementById("taMemory");
+            memory_out.value = "";
+            _Memory.arrInit();
+
+            // reset CPU
+            _CPU.init();
+
+            // create a new process
+            var process = new PCB(0);
+
+            // get da op codes
+            var opcode_str = Control.getOpCodes();
+
+            if (opcode_str != null) {
+                _CPU.isExecuting = true;
+
+                // Regex that splits hex string into a list of individual op codes
+                var opCodes = opcode_str.match(/.{1,2}/g);
+
+                for (let i=0; i<opCodes.length; i++) {
+                    // load program into memory array
+                    var opCode_val = parseInt(opCodes[i], 16);
+                    _MMU.writeImmmediate(i, opCode_val);
+                }
+
+                for (let j=0; j<opCodes.length; j++) {
+                    // display memory
+                    memory_out.value += Utils.hexLog(_Memory.memArr[j]);
+                    memory_out.value += " ";
+                }
+            }
         }
     }
 }

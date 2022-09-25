@@ -100,9 +100,6 @@ module TSOS {
             _CPU = new Cpu();  // Note: We could simulate multi-core systems by instantiating more than one instance of the CPU here.
             _CPU.init();       //       There's more to do, like dealing with scheduling and such, but this would be a start. Pretty cool.
 
-            // Temporary, for testing purposes
-            _CPU.isExecuting = true;
-
             // ... then set the host clock pulse ...
             _hardwareClockID = setInterval(Devices.hostClockPulse, CPU_CLOCK_INTERVAL);
             // .. and call the OS Kernel Bootstrap routine.
@@ -115,8 +112,6 @@ module TSOS {
 
             // Create the Memory Accessor
             _MemAccessor = new MemAccessor();
-
-            _CPU.powersOfThree();
         }
 
         public static hostBtnHaltOS_click(btn): void {
@@ -153,25 +148,41 @@ module TSOS {
             statusEle.innerHTML = msg;
         }
 
-        public static validateUserInput(str): void {
+        public static getOpCodes(): string {
+            // Loads valid hex codes in the console
+            
+            var _input = <HTMLInputElement> document.getElementById("taProgramInput");
+
+            // Remove whitespace
+            _input.value = (_input.value).replace(/\s+/g, '');
+
+            // Make op codes upper case for formatting purposes
+            _input.value = _input.value.toUpperCase();
+
+            // Remove leading and trailing whitespace
+            _input.value = _input.value.trim();
+
+            // Check if op codes are valid
+            var opcode_str = Control.validateUserInput(_input.value);
+
+            // Reset textarea value
+            _input.value = "";
+
+            return opcode_str;
+        }
+
+        public static validateUserInput(str): string {
+            // Digits must be hex and in pairs
             if (str != "") {
-                // Make op codes upper case for formatting purposes
-                str = str.toUpperCase();
-
                 if ((isHex(str)) && (str.length%2==0)) {
-                    // Digits must be hex and in pairs
-
-                    // Remove leading and trailing whitespace
-                    str = str.trim();
-
-                    // Insert space between op codes and print
-                    str = str.replace(/.{2}/g, '$& ');
-                    _StdOut.putText(str);
+                    return str;
                 } else {
                     _StdOut.putText("Invalid op code(s).");
+                    return null;
                 }
             } else {
                 _StdOut.putText("Invalid op code(s).");
+                return null;
             }
 
             function isHex(hex_str) {
@@ -196,19 +207,6 @@ module TSOS {
                 }
                 return true;
             }
-        }
-
-        public static load(): void {
-            // Loads valid hex codes in the console
-            var _input = <HTMLInputElement> document.getElementById("taProgramInput");
-
-            // Remove whitespace
-            _input.value = (_input.value).replace(/\s+/g, '');
-
-            Control.validateUserInput(_input.value);
-
-            // Reset textarea value
-            _input.value = "";
         }
     }
 }

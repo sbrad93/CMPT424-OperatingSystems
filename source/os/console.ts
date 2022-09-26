@@ -134,35 +134,32 @@ module TSOS {
          }
 
         public advanceLine(): void {
+            // Fixed scrolling from iProject1
+
             this.currentXPosition = 0;
             /*
              * Font size measures from the baseline to the highest point in the font.
              * Font descent measures from the baseline to the lowest point in the font.
              * Font height margin is extra spacing between the lines.
              */
-            var tempYPosition = this.currentYPosition;
-            this.currentYPosition += _DefaultFontSize + 
-                                     _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
-                                     _FontHeightMargin;
+            // allows for a new line buffer
+            _FontHeight = _DefaultFontSize + 
+                            _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
+                            _FontHeightMargin;
 
+            this.currentYPosition += _FontHeight;
 
-            // Scrolling
-            // This was somewhat painful.
-            // Big thanks to stackoverflow: https://stackoverflow.com/questions/5517783/preventing-canvas-clear-when-resizing-window
-
-            // Create a temporary canvas and context to save initial data
-            var tempCanvas = document.createElement('canvas');
-            var tempCtx = tempCanvas.getContext('2d');
-
+            // scroll only if canvas height exceeds y position
             if (this.currentYPosition > _Canvas.height) {
-                tempCanvas.width = _Canvas.width;
-                tempCanvas.height = _Canvas.height;
-                tempCtx.drawImage(_Canvas, 0, 0);
+                // get the current canvas and clear
+                var prevCanvas = _DrawingContext.getImageData(0, _FontHeight, _Canvas.width, _Canvas.height);
+                this.clearScreen();
 
-                // Update canvas height according to the change in y position, and add 100 to add a little extra space
-                _Canvas.height += (this.currentYPosition - tempYPosition) + 100;
-
-                _DrawingContext.drawImage(tempCanvas, 0, 0);
+                // redraw at the top of console
+                _DrawingContext.putImageData(prevCanvas, 0, 0);
+                
+                // update y position
+                this.currentYPosition -= _FontHeight;
             }
         }
 

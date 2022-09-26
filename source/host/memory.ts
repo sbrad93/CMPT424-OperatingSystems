@@ -9,6 +9,7 @@ module TSOS {
     export class Memory {
 
         constructor(public memArr: number [] = null,
+                    public tempArr: string[] = null,
                     public mar: number = 0x0000,
                     public mdr: number = 0x00) {
         }

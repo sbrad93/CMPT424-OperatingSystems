@@ -37,7 +37,7 @@
    <!-- Other Routines -->
    <script type="text/javascript" src="distrib/utils.js"></script>
    <!-- Uncomment the line below to enable GLaDOS testing. -->
-   <!-- <script type="text/javascript" src="../CMPT424-OperatingSystems/test/glados-ip1.js"></script> -->
+   <script type="text/javascript" src="../CMPT424-OperatingSystems/test/glados-ip2.js"></script>
    
 </head>
 
@@ -56,7 +56,7 @@
       </p>
    </div>
 
-   <div id="divButtonBar" style="margin:4px;">
+   <div id="divButtonBar">
       <input type="button"
              id = "btnStartOS"
              name="brnStartOS"
@@ -84,49 +84,120 @@
              onclick="TSOS.Control.hostBtnReset_click(this);">
    </div>
 
-   <div id="divConsole" style="margin:4px; width:500px; height:500px; float:left; overflow:auto;">
-      <canvas id="display"
-              width="900px"
-              height="500px"
-              tabindex="3">
-      </canvas>
+
+
+
+   <div id="container">
+      <div id="col-1">
+         <div id="divConsole" style="width:500px; height:500px; float:left; overflow:auto;">
+            <canvas id="display"
+                    width="900px"
+                    height="500px"
+                    tabindex="3">
+            </canvas>
+         </div>
+      </div>
+   
+   
+   
+      <div id="col-2">
+         <div id="divLog">
+            <label class="label">
+               Host Log
+            </label>
+               <br>
+               <textarea name="taHostLog"
+                         id  ="taHostLog"
+                         rows="26"
+                         cols="48"
+               ></textarea>
+         </div>
+      </div>
+
+
+   
+      <div id="col-3">
+         <div id="divUserProgramInput">
+            <label class="label">
+               User Program Input
+               <br>
+               <textarea name="taProgramInput"
+                         id  ="taProgramInput"
+                         rows="8"
+                         cols="48"
+               ></textarea>
+            </label>
+         </div>
+
+         <div id="memory">
+            <label class="label">
+               Memory
+               <br>
+               <textarea name="taMemory"
+                         id  ="taMemory"
+                         rows="8"
+                         cols="48"
+               ></textarea>
+            </label>
+         </div>
+      </div>
+
+
+
+
+      <div id="col-4">
+         <div id="cpu" class="section">
+            <label class="label">CPU</label>
+               <table id="cpu-vals">
+
+                  <thead>
+                     <tr>
+                        <th scope="col">PC</th>
+                        <th scope="col">IR</th>
+                        <th scope="col">ACC</th>
+                        <th scope="col">X</th>
+                        <th scope="col">Y</th>
+                        <th scope="col">Z</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     <tr>
+                        <td id="PC">00</td>
+                        <td id="IR">00</td>
+                        <td id="ACC">00</td>
+                        <td id="xReg">00</td>
+                        <td id="yReg">00</td>
+                        <td id="zFlg">00</td>
+      
+                     </tr>
+      
+                  </tbody>
+               </table>
+         </div>
+      <div id="processes" class="section">
+               <label class="label">Processes</label>
+                  <table id="pcbTable">
+                     <thead class="card-header">
+                        <th scope="col">PID</th>
+                        <th scope="col">SEG</th>
+                        <th scope="col">DISK</th>
+                        <th scope="col">PC</th>
+                        <th scope="col">IR</th>
+                        <th scope="col">ACC</th>
+                        <th scope="col">X</th>
+                        <th scope="col">Y</th>
+                        <th scope="col">Z</th>
+                        <th scope="col">STATE</th>
+                     </thead>
+                  </table>
+         </div>
+      </div>
+
+
+
+
    </div>
 
-   <div id="divLog" style="margin-left:520px;">
-      <label>
-         Host Log
-         <br>
-         <textarea name="taHostLog"
-                   id  ="taHostLog"
-                   rows="26"
-                   cols="48"
-         ></textarea>
-      </label>
-   </div>
-
-   <div id="divMemory" style="margin-left:520px;">
-      <label>
-         Memory
-         <br>
-         <textarea name="taMemory"
-                   id  ="taMemory"
-                   rows="8"
-                   cols="48"
-         ></textarea>
-      </label>
-   </div>
-
-   <div id="divUserProgramInput" style="margin-left:520px;">
-      <label>
-         User Program Input
-         <br>
-         <textarea name="taProgramInput"
-                   id  ="taProgramInput"
-                   rows="8"
-                   cols="48"
-         ></textarea>
-      </label>
-   </div>
 </div>
 
 <p class="footerText" style="clear:both;">

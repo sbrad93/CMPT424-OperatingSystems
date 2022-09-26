@@ -108,7 +108,7 @@ module TSOS {
 
             // Create and initialize our memory prototype
             _Memory = new Memory();
-            _Memory.arrInit()
+            _Memory.arrInit();
 
             // Create the Memory Accessor
             _MemAccessor = new MemAccessor();
@@ -150,7 +150,7 @@ module TSOS {
 
         public static getOpCodes(): string {
             // Loads valid hex codes in the console
-            
+
             var _input = <HTMLInputElement> document.getElementById("taProgramInput");
 
             // Remove whitespace

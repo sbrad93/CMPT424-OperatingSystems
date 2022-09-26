@@ -55,3 +55,58 @@ h3 {
   margin: 10px;
   padding-left: 10px;
 }
+
+#divButtonBar, #divTaskBar {
+  margin-left: 20px;
+}
+
+#col-1 {
+  /* border-style: dashed; */
+  flex-direction: row;
+  margin-left: 10px;
+  margin-right: 10px;
+  padding: 10px 10px
+}
+
+#col-2 {
+  /* border-style: dashed; */
+  flex-direction: row;
+  margin-left: 10px;
+  margin-right: 10px;
+  padding: 10px 10px
+}
+
+#col-3 {
+  /* border-style: dashed; */
+  flex-direction: row;
+  margin-left: 10px;
+  margin-right: 10px;
+  padding: 10px 10px
+}
+
+#col-4 {
+  /* border-style: dashed; */
+  flex-direction: row;
+  margin-left: 10px;
+  margin-right: 10px;
+  padding: 10px 10px
+}
+
+#container {
+  /* border-style: dashed; */
+  display: flex;
+}
+
+#processes {
+  margin-top: 40px;
+}
+
+#memory {
+  margin-top: 20px;
+}
+
+.label {
+  font-size: 20px;
+  padding: 5px 5px;
+}
+

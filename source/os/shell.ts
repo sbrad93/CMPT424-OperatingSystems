@@ -109,6 +109,12 @@ module TSOS {
                             "<string> - Loads a user program into the console.");
             this.commandList[this.commandList.length] = sc;
 
+            // Run a process
+            sc = new ShellCommand(this.shellRun,
+                            "run",
+                            "<int> - Runs a specified process.");
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -464,37 +470,46 @@ module TSOS {
         }
 
         public shellLoad(args: string[]) {
-            // reset memory and memory output
-            var memory_out = <HTMLInputElement> document.getElementById("taMemory");
-            memory_out.value = "";
-            _Memory.arrInit();
-
-            // reset CPU
-            _CPU.init();
-
-            // create a new process
-            var process = new PCB(0);
-
             // get da op codes
             var opcode_str = Control.getOpCodes();
 
             if (opcode_str != null) {
+                // reset CPU
+                _CPU.init();
+
+                // reset memory
+                _Memory.arrInit();
+
+                // create a new process
+                var process = new PCB(0);
+                
+                // Regex that splits hex string into a list of individual op codes
+                // Assign to a temporary memory array
+               _Memory.tempArr = opcode_str.match(/.{1,2}/g);
+            }
+        }
+
+        public shellRun(args: string[]) {
+            if (args[0] == "0") {
                 _CPU.isExecuting = true;
 
-                // Regex that splits hex string into a list of individual op codes
-                var opCodes = opcode_str.match(/.{1,2}/g);
+                // memory output
+                var memory_out = <HTMLInputElement> document.getElementById("taMemory");
+                memory_out.value = "";
 
-                for (let i=0; i<opCodes.length; i++) {
+                for (let i=0; i<_Memory.tempArr.length; i++) {
                     // load program into memory array
-                    var opCode_val = parseInt(opCodes[i], 16);
+                    var opCode_val = parseInt(_Memory.tempArr[i], 16);
                     _MMU.writeImmmediate(i, opCode_val);
                 }
 
-                for (let j=0; j<opCodes.length; j++) {
+                for (let j=0; j<_Memory.tempArr.length; j++) {
                     // display memory
                     memory_out.value += Utils.hexLog(_Memory.memArr[j]);
                     memory_out.value += " ";
                 }
+            } else {
+                alert("Take it eaaaasy, I didn't account for more than one process yet. People these days...")
             }
         }
     }

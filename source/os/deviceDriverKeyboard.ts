@@ -9,6 +9,8 @@ module TSOS {
     // Extends DeviceDriver
     export class DeviceDriverKeyboard extends DeviceDriver {
 
+        public isControlDown = false;
+
         constructor() {
             // Override the base method pointers.
 
@@ -35,8 +37,14 @@ module TSOS {
                 // Check that the params are valid, else OS Trap Error 
                 _Kernel.krnTrace("Key code:" + keyCode + " shifted:" + isShifted);
                 var chr = "";
+
                 // Check to see if we even want to deal with the key that was pressed.
-                if (keyCode == 8) {
+                if((this.isControlDown) && (keyCode == 75)) {
+                    // Implemented ctrl-k to clear the console
+                     _Console.init()
+                    _OsShell.putPrompt();
+                    this.isControlDown = false;
+                } else if (keyCode == 8) {
                     _KernelInputQueue.enqueue('\b');
                 } else if (keyCode == 38) {
                     _KernelInputQueue.enqueue('&#8593')
@@ -44,6 +52,8 @@ module TSOS {
                     _KernelInputQueue.enqueue('&#8595')
                 } else if (keyCode == 9) {
                     _KernelInputQueue.enqueue('\t');
+                } else if (keyCode == 17) {
+                    this.isControlDown = true;
                 } else if ((keyCode >= 65) && (keyCode <= 90)) { // letter
                     if (isShifted === true) { 
                         chr = String.fromCharCode(keyCode); // Uppercase A-Z

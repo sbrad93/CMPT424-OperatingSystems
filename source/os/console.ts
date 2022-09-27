@@ -68,20 +68,11 @@ module TSOS {
                     this.buffer = "";
                 } else if (chr === '\b') {                                          // Backspace
                     if (this.buffer != "") {
-                        // Remove the last letter from the buffer
-                        this.buffer = this.buffer.slice(0, -1);
-
-                        // Get the most recent canvas image iteration
-                        this.prevCanvas = Console.imgStack.pop();
-
-                        // Clear the canvas
-                        this.clearScreen();
-
-                        // Replace the current canvas image
-                        _DrawingContext.putImageData(this.prevCanvas, 0, 0);
-
-                        // Update the x position
-                        this.currentXPosition = Console.positionStack.pop();
+                        // Backwards line wrap
+                        if (this.buffer.length > 0 && this.currentXPosition <= 0) {
+                            this.removeLine();
+                        }
+                        this.removeText(chr);
                     }
                 } else if (chr === '\t') {                                          // Tab
                     this.chkCommandCompletion(this.buffer);
@@ -114,6 +105,10 @@ module TSOS {
             if (text !== "") {
                 // Draw the text at the current X and Y coordinates.
 
+                let offset = 0;
+                let resStr = text;
+                let resStrList = [];
+
                 // Capture the canvas image data
                 // Push this image data to the stack
                 this.prevCanvas = _DrawingContext.getImageData(0, 0, _Canvas.width, _Canvas.height);
@@ -123,44 +118,102 @@ module TSOS {
                 // Push this position to the stack
                 this.prevXPosition = this.currentXPosition;
                 Console.positionStack.push(this.prevXPosition);
-
-                // Draw the new letter
-                _DrawingContext.drawText(this.currentFont, this.currentFontSize, this.currentXPosition, this.currentYPosition, text);
+                
+                // Since canvas width is 500px and each char is roughly 8px (and I waned to account for some extra space)...
+                const index = 55;
+                if (text.length > index) {
+                    // Place newline char once text exceeds console view
+                    resStr = text.slice(0,index) + "\n" + text.slice(index);
+                    
+                    // Split text at newline
+                    resStrList = resStr.split("\n");
+                    for (let i =0; i<resStrList.length; i++) {
+                        // Draw split text
+                        _DrawingContext.drawText(this.currentFont, this.currentFontSize, this.currentXPosition, this.currentYPosition, resStrList[i]);
+                        offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, resStrList[i]);
+                        _StdOut.advanceLine();
+                    }
+                } else {
+                    // Draw normal text
+                    _DrawingContext.drawText(this.currentFont, this.currentFontSize, this.currentXPosition, this.currentYPosition, text);
+                    offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
+                }
 
                 // Move the current X position.
-                var offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
                 this.currentXPosition = this.currentXPosition + offset;
+
+                // Line wrap for user typing
+                // Advance line once currenct x position exceeds canvas width (plus a little extra margin)
+                if (this.currentXPosition > (_Canvas.width-15)) {
+                    this.advanceLine();
+                }
             }
+         }
+
+         public removeText(text): void {
+            // Backspace function
+
+            // Remove the last letter from the buffer
+            this.buffer = this.buffer.slice(0, -1);
+
+            // Get the most recent canvas image iteration
+            this.prevCanvas = Console.imgStack.pop();
+
+            // Clear the canvas
+            this.clearScreen();
+
+            // Replace the current canvas image
+            _DrawingContext.putImageData(this.prevCanvas, 0, 0);
+
+            // Update the x position
+            this.currentXPosition = Console.positionStack.pop();
          }
 
         public advanceLine(): void {
             // Fixed scrolling from iProject1
 
-            this.currentXPosition = 0;
             /*
              * Font size measures from the baseline to the highest point in the font.
              * Font descent measures from the baseline to the lowest point in the font.
              * Font height margin is extra spacing between the lines.
              */
-            // allows for a new line buffer
-            _FontHeight = _DefaultFontSize + 
-                            _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
-                            _FontHeightMargin;
 
-            this.currentYPosition += _FontHeight;
+            this.currentXPosition = 0;
 
-            // scroll only if canvas height exceeds y position
+            // Set the line advance amount and update y position
+            let advanceAmt = this.setAdvanceAmt();
+            this.currentYPosition += advanceAmt;
+
+            // Scroll only if canvas height exceeds y position
             if (this.currentYPosition > _Canvas.height) {
-                // get the current canvas and clear
-                var prevCanvas = _DrawingContext.getImageData(0, _FontHeight, _Canvas.width, _Canvas.height);
+                // Grab the current canvas and clear
+                var prevCanvas = _DrawingContext.getImageData(0, advanceAmt, _Canvas.width, _Canvas.height);
                 this.clearScreen();
 
-                // redraw at the top of console
+                // Redraw at the top of console
                 _DrawingContext.putImageData(prevCanvas, 0, 0);
                 
-                // update y position
-                this.currentYPosition -= _FontHeight;
+                // Update y position
+                this.currentYPosition -= advanceAmt;
             }
+        }
+
+        public removeLine(): void {
+            // Recalculates x and y positions for backwards line wrap
+            this.currentXPosition = _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer);
+            this.currentXPosition += _DrawingContext.measureText(this.currentFont, this.currentFontSize, _OsShell.promptStr);
+
+            let advanceAmt = this.setAdvanceAmt();
+            this.currentYPosition -= advanceAmt;
+        }
+
+        public setAdvanceAmt(): number {
+            // returns the size of the newline buffer
+            let advanceAmt: number = _FontHeightMargin + _DefaultFontSize;
+            advanceAmt = _DefaultFontSize + 
+                            _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
+                            _FontHeightMargin;
+            return advanceAmt;
         }
 
         public chkCommandCompletion(_buffer): void {

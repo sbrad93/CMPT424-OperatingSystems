@@ -46,7 +46,7 @@ module TSOS {
             // cls
             sc = new ShellCommand(this.shellCls,
                                   "cls",
-                                  "- Clears the screen and resets the cursor position.");
+                                  "- Clear the screen and resets the cursor position.");
             this.commandList[this.commandList.length] = sc;
 
             // man <topic>
@@ -113,6 +113,11 @@ module TSOS {
             sc = new ShellCommand(this.shellRun,
                             "run",
                             "<int> - Runs a specified process.");
+            this.commandList[this.commandList.length] = sc;
+            // Memory dump testing
+            sc = new ShellCommand(this.shellMemoryDump,
+                            "dump",
+                            " - Displays memory in browser console.");
             this.commandList[this.commandList.length] = sc;
 
             // ps  - list the running processes and their IDs
@@ -267,8 +272,15 @@ module TSOS {
             _StdOut.putText("Commands:");
             for (var i in _OsShell.commandList) {
                 _StdOut.advanceLine();
-                _StdOut.putText("  " + _OsShell.commandList[i].command + " " + _OsShell.commandList[i].description);
+                _StdOut.putText(_OsShell.commandList[i].command + " " + _OsShell.commandList[i].description);
             }
+
+            // _StdOut.putText("Commands:");
+            // _StdIn.advanceLine();
+            // for (let i in _OsShell.commandList) {
+            //     Utils.chckShellLineWrap(_OsShell.commandList[i].command + " " +_OsShell.commandList[i].description);
+            // }
+
         }
 
         public shellShutdown(args: string[]) {
@@ -490,6 +502,7 @@ module TSOS {
         }
 
         public shellRun(args: string[]) {
+            alert(args[0]);
             if (args[0] == "0") {
                 _CPU.isExecuting = true;
 
@@ -511,6 +524,11 @@ module TSOS {
             } else {
                 alert("Take it eaaaasy, I didn't account for more than one process yet. People these days...")
             }
+            alert("done");
+        }
+
+        public shellMemoryDump(args: string[]) {
+            _MemAccessor.displayMemory(0x1000);
         }
     }
 }

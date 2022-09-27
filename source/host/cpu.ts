@@ -115,7 +115,7 @@ module TSOS {
                         this.PC ++;
                     } else if (this.instructionReg == 0xEA) {       // EA: no operation
                         this.step = 6;
-                        this.PC ++;
+                        // this.PC ++;
                     } else if (this.instructionReg == 0xFF) {       // FF: system call
                         if (this.Xreg == 0x01) {                    // prints integer in y register
                             this.step = 3;
@@ -169,6 +169,7 @@ module TSOS {
                     } else if (this.instructionReg == 0xD0) {       // D0: branch n bytes if zflag = 0
                         _MemAccessor.read();
                         this.PC = this.offset(_MMU.getMDR());
+                        // alert(Utils.hexLog(this.PC));
                     } else if (this.instructionReg == 0xFF) {       // FF: system call
                         if (this.Xreg == 0x01) {
                             this.out+=this.Yreg.toString(16);

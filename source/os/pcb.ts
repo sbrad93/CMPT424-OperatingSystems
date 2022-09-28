@@ -5,7 +5,7 @@ module TSOS {
         public pid: number = 0;
 
         constructor(_pid,
-                    public state: string = "ready",
+                    public state: string = "resident",
                     public PC: number = 0x00,
                     public acc: number = 0x00,
                     public Xreg: number = 0x00,

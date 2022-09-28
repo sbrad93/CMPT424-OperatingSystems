@@ -486,14 +486,14 @@ module TSOS {
             var opcode_str = Control.getOpCodes();
 
             if (opcode_str != null) {
-                // reset CPU
+                // reset CPU registers and memory (for now)
                 _CPU.init();
-
-                // reset memory
                 _Memory.arrInit();
 
-                // create a new process and add to queue
-                var process = new PCB(0);
+                // create a new process and add to PCB list
+                var process = new PCB(_PidCounter++);
+                alert(process.pid);
+                _PCBlist.push(process);
                 
                 // Regex that splits hex string into a list of individual op codes
                 // Assign to a temporary memory array
@@ -502,29 +502,37 @@ module TSOS {
         }
 
         public shellRun(args: string[]) {
-            alert(args[0]);
-            if (args[0] == "0") {
+            let pid = parseInt(args[0]);
+            _CurrentPCB = _PCBlist.find(element => element.pid == pid);
+            
+            if (!_CurrentPCB)  {
+                _StdOut.putText(`Process ${pid} does not exist.`);
+            } else if (_CurrentPCB.state === "ready") {
+                _StdOut.putText(`Process ${pid} is already running.`);
+            }
+            else if (_CurrentPCB.state === "terminated") {
+                _StdOut.putText(`Process ${pid} has already run and is terminated.`);
+            } else {
+                // current process is now running
+                _CurrentPCB.state = "ready";
                 _CPU.isExecuting = true;
 
                 // memory output
                 var memory_out = <HTMLInputElement> document.getElementById("taMemory");
                 memory_out.value = "";
 
-                for (let i=0; i<_Memory.tempArr.length; i++) {
-                    // load program into memory array
-                    var opCode_val = parseInt(_Memory.tempArr[i], 16);
-                    _MemoryManager.writeImmmediate(i, opCode_val);
-                }
+                // load the program into memory at location $0000	
+                _MemoryManager.load(_Memory.tempArr);
+
+                // clear temp array
+                _Memory.tempArr = [];
 
                 for (let j=0; j<_Memory.tempArr.length; j++) {
                     // display memory
                     memory_out.value += Utils.hexLog(_Memory.memArr[j]);
                     memory_out.value += " ";
                 }
-            } else {
-                alert("Take it eaaaasy, I didn't account for more than one process yet. People these days...")
             }
-            alert("done");
         }
 
         public shellMemoryDump(args: string[]) {

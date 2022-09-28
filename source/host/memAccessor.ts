@@ -22,7 +22,7 @@ module TSOS {
             _Memory.memArr[_MemoryManager.getMAR()] = _MemoryManager.getMDR();
         }
 
-        //displays the memory content up to a given address
+        //displays the memory content up to a given address in browser console
         public displayMemory(address: number) {
             console.log();
             console.log();

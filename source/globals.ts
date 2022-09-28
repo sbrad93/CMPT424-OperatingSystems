@@ -57,6 +57,11 @@ var _KernelBuffers = null;
 var _StdIn:  TSOS.Console = null; 
 var _StdOut: TSOS.Console = null;
 
+// Processes
+var _PidCounter = 0;
+var _PCBlist = [];
+var _CurrentPCB: TSOS.PCB;
+
 // UI
 var _Console: TSOS.Console;
 var _OsShell: TSOS.Shell;

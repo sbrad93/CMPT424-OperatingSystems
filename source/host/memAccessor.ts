@@ -14,12 +14,12 @@ module TSOS {
 
         //reads memory at the location in the MAR and updates the MDR accordingly
         public read() {
-            _MMU.setMDR(_Memory.memArr[_MMU.getMAR()]);
+            _MemoryManager.setMDR(_Memory.memArr[_MemoryManager.getMAR()]);
         }
 
         //writes the contents of the MDR to memory at the location indicated by the MAR
         public write() {
-            _Memory.memArr[_MMU.getMAR()] = _MMU.getMDR();
+            _Memory.memArr[_MemoryManager.getMAR()] = _MemoryManager.getMDR();
         }
 
         //displays the memory content up to a given address

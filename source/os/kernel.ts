@@ -38,7 +38,7 @@ module TSOS {
             this.krnTrace(_krnKeyboardDriver.status);
 
             // Initialze the memory manager
-            _MMU = new Mmu();
+            _MemoryManager = new MemoryManager();
 
             //
             // ... more?

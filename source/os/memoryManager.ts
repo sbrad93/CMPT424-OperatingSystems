@@ -1,5 +1,5 @@
 /* ----------- 
-    MMU.ts
+    MemoryManager.ts
 
     Routines for the memory management unit in the client OS. Primary functionality includes allowcating
     and deallocating memory.
@@ -7,7 +7,7 @@
 
 module TSOS {
 
-    export class Mmu {
+    export class MemoryManager {
 
         constructor() {
         }

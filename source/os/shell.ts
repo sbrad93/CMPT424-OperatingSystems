@@ -492,7 +492,7 @@ module TSOS {
                 // reset memory
                 _Memory.arrInit();
 
-                // create a new process
+                // create a new process and add to queue
                 var process = new PCB(0);
                 
                 // Regex that splits hex string into a list of individual op codes
@@ -513,7 +513,7 @@ module TSOS {
                 for (let i=0; i<_Memory.tempArr.length; i++) {
                     // load program into memory array
                     var opCode_val = parseInt(_Memory.tempArr[i], 16);
-                    _MMU.writeImmmediate(i, opCode_val);
+                    _MemoryManager.writeImmmediate(i, opCode_val);
                 }
 
                 for (let j=0; j<_Memory.tempArr.length; j++) {

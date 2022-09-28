@@ -62,7 +62,7 @@ module TSOS {
 
                 // fetch
                 case 0:
-                    this.instructionReg = _MMU.getMemArr()[this.PC];
+                    this.instructionReg = _MemoryManager.getMemArr()[this.PC];
                     this.step = 1;
                     this.PC ++;
                     break;
@@ -70,7 +70,7 @@ module TSOS {
                 //decode
                 case 1:
                     if (this.instructionReg == 0xA9) {              // A9: load accumulator with a constant
-                        this.acc = _MMU.getMemArr()[this.PC];
+                        this.acc = _MemoryManager.getMemArr()[this.PC];
                         this.step = 6;
                         this.PC ++;
                     } else if ((this.instructionReg == 0x8D)  ||    // 8D: store accumulator in memory
@@ -80,8 +80,8 @@ module TSOS {
                                 (this.instructionReg == 0xAE) ||    // AE: load the x register from memory
                                 (this.instructionReg == 0xEC) ||    // EC: compare byte in memory to x register
                                 (this.instructionReg == 0xEE)) {    // EE: increment the value of a byte
-                        _MMU.setMAR(0x00);
-                        _MMU.setLowOrderByte(_MMU.getMemArr()[this.PC]);
+                        _MemoryManager.setMAR(0x00);
+                        _MemoryManager.setLowOrderByte(_MemoryManager.getMemArr()[this.PC]);
                         this.step = 2;
                         this.PC ++;
                     } else if (this.instructionReg == 0x8A) {       // 8A: load the accumulator from x register
@@ -91,11 +91,11 @@ module TSOS {
                         this.acc = this.Yreg;
                         this.step = 6;
                     } else if (this.instructionReg == 0xA2) {       // A2: load x register with a constant
-                        this.Xreg = _MMU.getMemArr()[this.PC];
+                        this.Xreg = _MemoryManager.getMemArr()[this.PC];
                         this.step = 6;
                         this.PC ++;
                     } else if (this.instructionReg == 0xA0) {       // A0: load y register with a constant
-                        this.Yreg = _MMU.getMemArr()[this.PC];
+                        this.Yreg = _MemoryManager.getMemArr()[this.PC];
                         this.step = 6;
                         this.PC ++;
                     } else if (this.instructionReg == 0xAA) {       // AA: load x register from the accumulator
@@ -106,7 +106,7 @@ module TSOS {
                         this.step = 6;
                     } else if (this.instructionReg == 0xD0) {       // D0: branch n bytes if zflag = 0
                         if (this.Zflag == 0) {
-                            _MMU.modMAR(this.PC);
+                            _MemoryManager.modMAR(this.PC);
                             this.step = 3;
                         }
                         else {
@@ -123,8 +123,8 @@ module TSOS {
                             this.PC = this.Yreg;
                             this.step = 6;
                         } else if (this.Xreg == 0x03) {             // prints 0x00 terminated string stored from the adress in operand
-                            _MMU.setMAR(0x00);
-                            _MMU.setLowOrderByte(_MMU.getMemArr()[this.PC]);
+                            _MemoryManager.setMAR(0x00);
+                            _MemoryManager.setLowOrderByte(_MemoryManager.getMemArr()[this.PC]);
                             this.step = 2;
                             this.PC ++;
                         }
@@ -138,7 +138,7 @@ module TSOS {
                     break;
                 // decode 2
                 case 2:
-                    _MMU.setHighOrderByte(_MMU.getMemArr()[this.PC]);
+                    _MemoryManager.setHighOrderByte(_MemoryManager.getMemArr()[this.PC]);
                     this.PC ++;
                     this.step = 3;
                     break;
@@ -146,35 +146,35 @@ module TSOS {
                 //execute
                 case 3:
                     if (this.instructionReg == 0x8D) {              // 8D: store the accumulator in memory
-                        _MMU.setMDR(this.acc);
+                        _MemoryManager.setMDR(this.acc);
                         _MemAccessor.write();
                     } else if (this.instructionReg == 0x6D) {       // 6D: add with carry -- adds contents of memory address to accumulator, keeps result in accumulator
                         _MemAccessor.read();
-                        this.acc += _MMU.getMDR();
+                        this.acc += _MemoryManager.getMDR();
                     } else if (this.instructionReg == 0xAC) {       // AC: load y register from memory
                         _MemAccessor.read();
-                        this.Yreg = _MMU.getMDR();
+                        this.Yreg = _MemoryManager.getMDR();
                     } else if ((this.instructionReg == 0xAD) ||     // AD: load accumulator from memory
                                 (this.instructionReg == 0xEE)) {    // EE: increment the value of a byte
                         _MemAccessor.read();
-                        this.acc = _MMU.getMDR();
+                        this.acc = _MemoryManager.getMDR();
                     } else if (this.instructionReg == 0xAE) {       // AE: load x register from memory
                         _MemAccessor.read();
-                        this.Xreg = _MMU.getMDR();
+                        this.Xreg = _MemoryManager.getMDR();
                     } else if (this.instructionReg == 0xEC) {       // EC: compare byte in memory to x register
                         _MemAccessor.read();
-                        if (this.Xreg == _MMU.getMDR()) {
+                        if (this.Xreg == _MemoryManager.getMDR()) {
                             this.Zflag = 0x01;
                         }
                     } else if (this.instructionReg == 0xD0) {       // D0: branch n bytes if zflag = 0
                         _MemAccessor.read();
-                        this.PC = this.offset(_MMU.getMDR());
+                        this.PC = this.offset(_MemoryManager.getMDR());
                         // alert(Utils.hexLog(this.PC));
                     } else if (this.instructionReg == 0xFF) {       // FF: system call
                         if (this.Xreg == 0x01) {
                             this.out+=this.Yreg.toString(16);
                         } else if (this.Xreg == 0x03) {
-                            this.PC = _MMU.getMAR();
+                            this.PC = _MemoryManager.getMAR();
                         }
                         this.step = 6;
                     }
@@ -194,7 +194,7 @@ module TSOS {
 
             //write to memory
             case 5:
-                _MMU.setMDR(this.acc);
+                _MemoryManager.setMDR(this.acc);
                 _MemAccessor.write();
                 this.step = 6;
                 break;
@@ -254,214 +254,214 @@ module TSOS {
         // program that adds 2 + 2
         // output: 4
         public basicAdd() {
-            _MMU.writeImmmediate(0x0000, 0xA9);
-            _MMU.writeImmmediate(0x0001, 0x02);
+            _MemoryManager.writeImmmediate(0x0000, 0xA9);
+            _MemoryManager.writeImmmediate(0x0001, 0x02);
 
-            _MMU.writeImmmediate(0x0002, 0x8D);
-            _MMU.writeImmmediate(0x0003, 0x14);
-            _MMU.writeImmmediate(0x0004, 0x00);
+            _MemoryManager.writeImmmediate(0x0002, 0x8D);
+            _MemoryManager.writeImmmediate(0x0003, 0x14);
+            _MemoryManager.writeImmmediate(0x0004, 0x00);
 
-            _MMU.writeImmmediate(0x0005, 0x6D);
-            _MMU.writeImmmediate(0x0006, 0x14);
-            _MMU.writeImmmediate(0x0007, 0x00);
+            _MemoryManager.writeImmmediate(0x0005, 0x6D);
+            _MemoryManager.writeImmmediate(0x0006, 0x14);
+            _MemoryManager.writeImmmediate(0x0007, 0x00);
 
-            _MMU.writeImmmediate(0x0008, 0xA2);
-            _MMU.writeImmmediate(0x0009, 0x01);
+            _MemoryManager.writeImmmediate(0x0008, 0xA2);
+            _MemoryManager.writeImmmediate(0x0009, 0x01);
 
-            _MMU.writeImmmediate(0x000A, 0xA8);
+            _MemoryManager.writeImmmediate(0x000A, 0xA8);
 
-            _MMU.writeImmmediate(0x000B, 0xFF);
-            _MMU.writeImmmediate(0x000C, 0x00);
+            _MemoryManager.writeImmmediate(0x000B, 0xFF);
+            _MemoryManager.writeImmmediate(0x000C, 0x00);
         }
 
         //program that prints powers of two up to 2^3
         //output: 1248
         public powersOfTwo() {
-            _MMU.writeImmmediate(0x0000, 0xA9);
-            _MMU.writeImmmediate(0x0001, 0x10);
+            _MemoryManager.writeImmmediate(0x0000, 0xA9);
+            _MemoryManager.writeImmmediate(0x0001, 0x10);
 
-            _MMU.writeImmmediate(0x0002, 0x8D);
-            _MMU.writeImmmediate(0x0003, 0x31);
-            _MMU.writeImmmediate(0x0004, 0x00);
+            _MemoryManager.writeImmmediate(0x0002, 0x8D);
+            _MemoryManager.writeImmmediate(0x0003, 0x31);
+            _MemoryManager.writeImmmediate(0x0004, 0x00);
 
-            _MMU.writeImmmediate(0x0005, 0xA9);
-            _MMU.writeImmmediate(0x0006, 0x01);
+            _MemoryManager.writeImmmediate(0x0005, 0xA9);
+            _MemoryManager.writeImmmediate(0x0006, 0x01);
 
-            _MMU.writeImmmediate(0x0007, 0x8D);
-            _MMU.writeImmmediate(0x0008, 0x30);
-            _MMU.writeImmmediate(0x0009, 0x00);
+            _MemoryManager.writeImmmediate(0x0007, 0x8D);
+            _MemoryManager.writeImmmediate(0x0008, 0x30);
+            _MemoryManager.writeImmmediate(0x0009, 0x00);
 
-            _MMU.writeImmmediate(0x000A, 0xAC);
-            _MMU.writeImmmediate(0x000B, 0x30);
-            _MMU.writeImmmediate(0x000C, 0x00);
+            _MemoryManager.writeImmmediate(0x000A, 0xAC);
+            _MemoryManager.writeImmmediate(0x000B, 0x30);
+            _MemoryManager.writeImmmediate(0x000C, 0x00);
 
-            _MMU.writeImmmediate(0x000D, 0xA2);
-            _MMU.writeImmmediate(0x000E, 0x01);
+            _MemoryManager.writeImmmediate(0x000D, 0xA2);
+            _MemoryManager.writeImmmediate(0x000E, 0x01);
 
-            _MMU.writeImmmediate(0x000F, 0xFF);
+            _MemoryManager.writeImmmediate(0x000F, 0xFF);
 
-            _MMU.writeImmmediate(0x0010, 0xAD);
-            _MMU.writeImmmediate(0x0011, 0x30);
-            _MMU.writeImmmediate(0x0012, 0x00);
+            _MemoryManager.writeImmmediate(0x0010, 0xAD);
+            _MemoryManager.writeImmmediate(0x0011, 0x30);
+            _MemoryManager.writeImmmediate(0x0012, 0x00);
 
-            _MMU.writeImmmediate(0x0013, 0x6D);
-            _MMU.writeImmmediate(0x0014, 0x30);
-            _MMU.writeImmmediate(0x0015, 0x00);
+            _MemoryManager.writeImmmediate(0x0013, 0x6D);
+            _MemoryManager.writeImmmediate(0x0014, 0x30);
+            _MemoryManager.writeImmmediate(0x0015, 0x00);
 
-            _MMU.writeImmmediate(0x0016, 0x8D);
-            _MMU.writeImmmediate(0x0017, 0x30);
-            _MMU.writeImmmediate(0x0018, 0x00);
+            _MemoryManager.writeImmmediate(0x0016, 0x8D);
+            _MemoryManager.writeImmmediate(0x0017, 0x30);
+            _MemoryManager.writeImmmediate(0x0018, 0x00);
 
-            _MMU.writeImmmediate(0x0019, 0xAE);
-            _MMU.writeImmmediate(0x001A, 0x30);
-            _MMU.writeImmmediate(0x001B, 0x00);
+            _MemoryManager.writeImmmediate(0x0019, 0xAE);
+            _MemoryManager.writeImmmediate(0x001A, 0x30);
+            _MemoryManager.writeImmmediate(0x001B, 0x00);
 
-            _MMU.writeImmmediate(0x001C, 0xEC);
-            _MMU.writeImmmediate(0x001D, 0x31);
-            _MMU.writeImmmediate(0x001E, 0x00);
+            _MemoryManager.writeImmmediate(0x001C, 0xEC);
+            _MemoryManager.writeImmmediate(0x001D, 0x31);
+            _MemoryManager.writeImmmediate(0x001E, 0x00);
 
-            _MMU.writeImmmediate(0x001F, 0xD0);
-            _MMU.writeImmmediate(0x0020, 0xE9);
+            _MemoryManager.writeImmmediate(0x001F, 0xD0);
+            _MemoryManager.writeImmmediate(0x0020, 0xE9);
 
-            _MMU.writeImmmediate(0x0021, 0x00);
+            _MemoryManager.writeImmmediate(0x0021, 0x00);
         }
 
         //program that prints powers of three up to 3^2
         //output: 139
         public powersOfThree() {
-            _MMU.writeImmmediate(0x0000, 0xA9);
-            _MMU.writeImmmediate(0x0001, 0x1B);
+            _MemoryManager.writeImmmediate(0x0000, 0xA9);
+            _MemoryManager.writeImmmediate(0x0001, 0x1B);
 
-            _MMU.writeImmmediate(0x0002, 0x8D);
-            _MMU.writeImmmediate(0x0003, 0x31);
-            _MMU.writeImmmediate(0x0004, 0x00);
+            _MemoryManager.writeImmmediate(0x0002, 0x8D);
+            _MemoryManager.writeImmmediate(0x0003, 0x31);
+            _MemoryManager.writeImmmediate(0x0004, 0x00);
 
-            _MMU.writeImmmediate(0x0005, 0xA9);
-            _MMU.writeImmmediate(0x0006, 0x01);
+            _MemoryManager.writeImmmediate(0x0005, 0xA9);
+            _MemoryManager.writeImmmediate(0x0006, 0x01);
 
-            _MMU.writeImmmediate(0x0007, 0x8D);
-            _MMU.writeImmmediate(0x0008, 0x30);
-            _MMU.writeImmmediate(0x0009, 0x00);
+            _MemoryManager.writeImmmediate(0x0007, 0x8D);
+            _MemoryManager.writeImmmediate(0x0008, 0x30);
+            _MemoryManager.writeImmmediate(0x0009, 0x00);
 
-            _MMU.writeImmmediate(0x000A, 0xAC);
-            _MMU.writeImmmediate(0x000B, 0x30);
-            _MMU.writeImmmediate(0x000C, 0x00);
+            _MemoryManager.writeImmmediate(0x000A, 0xAC);
+            _MemoryManager.writeImmmediate(0x000B, 0x30);
+            _MemoryManager.writeImmmediate(0x000C, 0x00);
 
-            _MMU.writeImmmediate(0x000D, 0xA2);
-            _MMU.writeImmmediate(0x000E, 0x01);
+            _MemoryManager.writeImmmediate(0x000D, 0xA2);
+            _MemoryManager.writeImmmediate(0x000E, 0x01);
 
-            _MMU.writeImmmediate(0x000F, 0xFF);
+            _MemoryManager.writeImmmediate(0x000F, 0xFF);
 
-            _MMU.writeImmmediate(0x0010, 0xAD);
-            _MMU.writeImmmediate(0x0011, 0x30);
-            _MMU.writeImmmediate(0x0012, 0x00);
+            _MemoryManager.writeImmmediate(0x0010, 0xAD);
+            _MemoryManager.writeImmmediate(0x0011, 0x30);
+            _MemoryManager.writeImmmediate(0x0012, 0x00);
 
-            _MMU.writeImmmediate(0x0013, 0x6D);
-            _MMU.writeImmmediate(0x0014, 0x30);
-            _MMU.writeImmmediate(0x0015, 0x00);
+            _MemoryManager.writeImmmediate(0x0013, 0x6D);
+            _MemoryManager.writeImmmediate(0x0014, 0x30);
+            _MemoryManager.writeImmmediate(0x0015, 0x00);
 
-            _MMU.writeImmmediate(0x0016, 0x6D);
-            _MMU.writeImmmediate(0x0017, 0x30);
-            _MMU.writeImmmediate(0x0018, 0x00);
+            _MemoryManager.writeImmmediate(0x0016, 0x6D);
+            _MemoryManager.writeImmmediate(0x0017, 0x30);
+            _MemoryManager.writeImmmediate(0x0018, 0x00);
 
-            _MMU.writeImmmediate(0x0019, 0x8D);
-            _MMU.writeImmmediate(0x001A, 0x30);
-            _MMU.writeImmmediate(0x001B, 0x00);
+            _MemoryManager.writeImmmediate(0x0019, 0x8D);
+            _MemoryManager.writeImmmediate(0x001A, 0x30);
+            _MemoryManager.writeImmmediate(0x001B, 0x00);
 
-            _MMU.writeImmmediate(0x001C, 0xAE);
-            _MMU.writeImmmediate(0x001D, 0x30);
-            _MMU.writeImmmediate(0x001E, 0x00);
+            _MemoryManager.writeImmmediate(0x001C, 0xAE);
+            _MemoryManager.writeImmmediate(0x001D, 0x30);
+            _MemoryManager.writeImmmediate(0x001E, 0x00);
 
-            _MMU.writeImmmediate(0x001F, 0xEC);
-            _MMU.writeImmmediate(0x0020, 0x31);
-            _MMU.writeImmmediate(0x0021, 0x00);
+            _MemoryManager.writeImmmediate(0x001F, 0xEC);
+            _MemoryManager.writeImmmediate(0x0020, 0x31);
+            _MemoryManager.writeImmmediate(0x0021, 0x00);
 
-            _MMU.writeImmmediate(0x0022, 0xD0);
-            _MMU.writeImmmediate(0x0023, 0xE6);
+            _MemoryManager.writeImmmediate(0x0022, 0xD0);
+            _MemoryManager.writeImmmediate(0x0023, 0xE6);
             
-            _MMU.writeImmmediate(0x0024, 0x00);
+            _MemoryManager.writeImmmediate(0x0024, 0x00);
         }
 
         //program that tests increment instruction
         //output: 12345
         public increment() {
-            _MMU.writeImmmediate(0x0000, 0xA9);
-            _MMU.writeImmmediate(0x0001, 0x06);
+            _MemoryManager.writeImmmediate(0x0000, 0xA9);
+            _MemoryManager.writeImmmediate(0x0001, 0x06);
 
-            _MMU.writeImmmediate(0x0002, 0x8D);
-            _MMU.writeImmmediate(0x0003, 0x31);
-            _MMU.writeImmmediate(0x0004, 0x00);
+            _MemoryManager.writeImmmediate(0x0002, 0x8D);
+            _MemoryManager.writeImmmediate(0x0003, 0x31);
+            _MemoryManager.writeImmmediate(0x0004, 0x00);
 
-            _MMU.writeImmmediate(0x0005, 0xA9);
-            _MMU.writeImmmediate(0x0006, 0x01);
+            _MemoryManager.writeImmmediate(0x0005, 0xA9);
+            _MemoryManager.writeImmmediate(0x0006, 0x01);
 
-            _MMU.writeImmmediate(0x0007, 0x8D);
-            _MMU.writeImmmediate(0x0008, 0x30);
-            _MMU.writeImmmediate(0x0009, 0x00);
+            _MemoryManager.writeImmmediate(0x0007, 0x8D);
+            _MemoryManager.writeImmmediate(0x0008, 0x30);
+            _MemoryManager.writeImmmediate(0x0009, 0x00);
 
-            _MMU.writeImmmediate(0x000A, 0xAC);
-            _MMU.writeImmmediate(0x000B, 0x30);
-            _MMU.writeImmmediate(0x000C, 0x00);
+            _MemoryManager.writeImmmediate(0x000A, 0xAC);
+            _MemoryManager.writeImmmediate(0x000B, 0x30);
+            _MemoryManager.writeImmmediate(0x000C, 0x00);
 
-            _MMU.writeImmmediate(0x000D, 0xA2);
-            _MMU.writeImmmediate(0x000E, 0x01);
+            _MemoryManager.writeImmmediate(0x000D, 0xA2);
+            _MemoryManager.writeImmmediate(0x000E, 0x01);
 
-            _MMU.writeImmmediate(0x000F, 0xFF);
+            _MemoryManager.writeImmmediate(0x000F, 0xFF);
 
-            _MMU.writeImmmediate(0x0010, 0xEE);
-            _MMU.writeImmmediate(0x0011, 0x30);
-            _MMU.writeImmmediate(0x0012, 0x00);
+            _MemoryManager.writeImmmediate(0x0010, 0xEE);
+            _MemoryManager.writeImmmediate(0x0011, 0x30);
+            _MemoryManager.writeImmmediate(0x0012, 0x00);
 
-            _MMU.writeImmmediate(0x0013, 0xAE);
-            _MMU.writeImmmediate(0x0014, 0x30);
-            _MMU.writeImmmediate(0x0015, 0x00);
+            _MemoryManager.writeImmmediate(0x0013, 0xAE);
+            _MemoryManager.writeImmmediate(0x0014, 0x30);
+            _MemoryManager.writeImmmediate(0x0015, 0x00);
 
-            _MMU.writeImmmediate(0x0016, 0xEC);
-            _MMU.writeImmmediate(0x0017, 0x31);
-            _MMU.writeImmmediate(0x0018, 0x00);
+            _MemoryManager.writeImmmediate(0x0016, 0xEC);
+            _MemoryManager.writeImmmediate(0x0017, 0x31);
+            _MemoryManager.writeImmmediate(0x0018, 0x00);
 
-            _MMU.writeImmmediate(0x0019, 0xD0);
-            _MMU.writeImmmediate(0x001A, 0xEF);
+            _MemoryManager.writeImmmediate(0x0019, 0xD0);
+            _MemoryManager.writeImmmediate(0x001A, 0xEF);
 
-            _MMU.writeImmmediate(0x001B, 0x00);
+            _MemoryManager.writeImmmediate(0x001B, 0x00);
         }
 
         // output: Hi how are you???
         public sysCallTwo() {
-            _MMU.writeImmmediate(0x0000, 0xA2);
-            _MMU.writeImmmediate(0x0001, 0x02);
+            _MemoryManager.writeImmmediate(0x0000, 0xA2);
+            _MemoryManager.writeImmmediate(0x0001, 0x02);
     
-            _MMU.writeImmmediate(0x0002, 0xA0);
-            _MMU.writeImmmediate(0x0003, 0x06);
+            _MemoryManager.writeImmmediate(0x0002, 0xA0);
+            _MemoryManager.writeImmmediate(0x0003, 0x06);
     
-            _MMU.writeImmmediate(0x0004, 0xFF);
-            _MMU.writeImmmediate(0x0005, 0x00);
+            _MemoryManager.writeImmmediate(0x0004, 0xFF);
+            _MemoryManager.writeImmmediate(0x0005, 0x00);
     
-            _MMU.writeImmmediate(0x0006, 0x48);
-            _MMU.writeImmmediate(0x0007, 0x69);
+            _MemoryManager.writeImmmediate(0x0006, 0x48);
+            _MemoryManager.writeImmmediate(0x0007, 0x69);
     
-            _MMU.writeImmmediate(0x0008, 0x20);
+            _MemoryManager.writeImmmediate(0x0008, 0x20);
     
-            _MMU.writeImmmediate(0x0009, 0x68);
-            _MMU.writeImmmediate(0x000A, 0x6F);
-            _MMU.writeImmmediate(0x000B, 0x77);
+            _MemoryManager.writeImmmediate(0x0009, 0x68);
+            _MemoryManager.writeImmmediate(0x000A, 0x6F);
+            _MemoryManager.writeImmmediate(0x000B, 0x77);
     
-            _MMU.writeImmmediate(0x000C, 0x20);
+            _MemoryManager.writeImmmediate(0x000C, 0x20);
     
-            _MMU.writeImmmediate(0x000D, 0x61);
-            _MMU.writeImmmediate(0x000E, 0x72);
-            _MMU.writeImmmediate(0x000F, 0x65);
+            _MemoryManager.writeImmmediate(0x000D, 0x61);
+            _MemoryManager.writeImmmediate(0x000E, 0x72);
+            _MemoryManager.writeImmmediate(0x000F, 0x65);
     
-            _MMU.writeImmmediate(0x0010, 0x20);
+            _MemoryManager.writeImmmediate(0x0010, 0x20);
     
-            _MMU.writeImmmediate(0x0011, 0x79);
-            _MMU.writeImmmediate(0x0012, 0x6F);
-            _MMU.writeImmmediate(0x0013, 0x75);
-            _MMU.writeImmmediate(0x0014, 0x3F);
-            _MMU.writeImmmediate(0x0015, 0x3F);
-            _MMU.writeImmmediate(0x0016, 0x3F);
+            _MemoryManager.writeImmmediate(0x0011, 0x79);
+            _MemoryManager.writeImmmediate(0x0012, 0x6F);
+            _MemoryManager.writeImmmediate(0x0013, 0x75);
+            _MemoryManager.writeImmmediate(0x0014, 0x3F);
+            _MemoryManager.writeImmmediate(0x0015, 0x3F);
+            _MemoryManager.writeImmmediate(0x0016, 0x3F);
     
-            _MMU.writeImmmediate(0x0017, 0x00);
+            _MemoryManager.writeImmmediate(0x0017, 0x00);
         }
 
         // output: 
@@ -469,40 +469,40 @@ module TSOS {
         // World
         // :)
         public sysCallThree() {
-            _MMU.writeImmmediate(0x0000, 0xA2);
-            _MMU.writeImmmediate(0x0001, 0x03);
+            _MemoryManager.writeImmmediate(0x0000, 0xA2);
+            _MemoryManager.writeImmmediate(0x0001, 0x03);
     
-            _MMU.writeImmmediate(0x0002, 0xFF);
-            _MMU.writeImmmediate(0x0003, 0x06);
-            _MMU.writeImmmediate(0x0004, 0x00);
+            _MemoryManager.writeImmmediate(0x0002, 0xFF);
+            _MemoryManager.writeImmmediate(0x0003, 0x06);
+            _MemoryManager.writeImmmediate(0x0004, 0x00);
     
-            _MMU.writeImmmediate(0x0005, 0x00);
+            _MemoryManager.writeImmmediate(0x0005, 0x00);
     
-            _MMU.writeImmmediate(0x0006, 0x0A);
+            _MemoryManager.writeImmmediate(0x0006, 0x0A);
             
-            _MMU.writeImmmediate(0x0007, 0x48);
-            _MMU.writeImmmediate(0x0008, 0x65);
-            _MMU.writeImmmediate(0x0009, 0x6C);
-            _MMU.writeImmmediate(0x000A, 0x6C);
-            _MMU.writeImmmediate(0x000B, 0x6F);
+            _MemoryManager.writeImmmediate(0x0007, 0x48);
+            _MemoryManager.writeImmmediate(0x0008, 0x65);
+            _MemoryManager.writeImmmediate(0x0009, 0x6C);
+            _MemoryManager.writeImmmediate(0x000A, 0x6C);
+            _MemoryManager.writeImmmediate(0x000B, 0x6F);
     
-            _MMU.writeImmmediate(0x000C, 0x0A);
+            _MemoryManager.writeImmmediate(0x000C, 0x0A);
     
-            _MMU.writeImmmediate(0x000D, 0x57);
-            _MMU.writeImmmediate(0x000E, 0x6F);
-            _MMU.writeImmmediate(0x000F, 0x72);
-            _MMU.writeImmmediate(0x0010, 0x6C);
-            _MMU.writeImmmediate(0x0011, 0x64);
-            _MMU.writeImmmediate(0x0012, 0x21);
+            _MemoryManager.writeImmmediate(0x000D, 0x57);
+            _MemoryManager.writeImmmediate(0x000E, 0x6F);
+            _MemoryManager.writeImmmediate(0x000F, 0x72);
+            _MemoryManager.writeImmmediate(0x0010, 0x6C);
+            _MemoryManager.writeImmmediate(0x0011, 0x64);
+            _MemoryManager.writeImmmediate(0x0012, 0x21);
     
-            _MMU.writeImmmediate(0x0013, 0x0A);
+            _MemoryManager.writeImmmediate(0x0013, 0x0A);
     
-            _MMU.writeImmmediate(0x0014, 0x3A);
-            _MMU.writeImmmediate(0x0015, 0x29);
+            _MemoryManager.writeImmmediate(0x0014, 0x3A);
+            _MemoryManager.writeImmmediate(0x0015, 0x29);
     
-            _MMU.writeImmmediate(0x0016, 0x0A);
+            _MemoryManager.writeImmmediate(0x0016, 0x0A);
     
-            _MMU.writeImmmediate(0x0017, 0x00);
+            _MemoryManager.writeImmmediate(0x0017, 0x00);
         }
     }
 }

@@ -482,53 +482,70 @@ module TSOS {
         }
 
         public shellLoad(args: string[]) {
-            // get da op codes
+            // Get da op codes
             var opcode_str = Control.getOpCodes();
 
             if (opcode_str != null) {
-                // reset CPU registers and memory (for now)
+                // Reset CPU registers and memory (for now)
                 _CPU.init();
                 _Memory.arrInit();
 
-                // create a new process and add to PCB list
-                var process = new PCB(_PidCounter++);
-                alert(process.pid);
-                _PCBlist.push(process);
+                // Create a new process and add to PCB list
+                _CurrentPCB = new PCB(_PidCounter);
+                _PidCounter += 1;
+                _PCBlist.push(_CurrentPCB);
                 
                 // Regex that splits hex string into a list of individual op codes
                 // Assign to a temporary memory array
                _Memory.tempArr = opcode_str.match(/.{1,2}/g);
+
+               // Add a new row to the Processes table
+               Control.addRowToPCBTable();
+
+               _StdOut.putText("Successfuly loaded program into memory.");
+               _StdOut.advanceLine();
+               _StdOut.putText(`PID: ${_CurrentPCB.pid}`);
+               _StdOut.advanceLine();
+               _StdOut.advanceLine();
+               _StdOut.putText(`Execute \"run ${_CurrentPCB.pid}\" to run your program.`)
+
             }
         }
 
         public shellRun(args: string[]) {
             let pid = parseInt(args[0]);
-            _CurrentPCB = _PCBlist.find(element => element.pid == pid);
+            let potentialPCB = _PCBlist.find(element => element.pid == pid);
             
-            if (!_CurrentPCB)  {
+            if (Number.isNaN(pid)) {
+                _StdOut.putText(`Please enter a valid process id.`);
+                _StdOut.advanceLine();
+                _StdOut.putText("Usage: run <pid>")
+            } else if (!potentialPCB)  {
                 _StdOut.putText(`Process ${pid} does not exist.`);
-            } else if (_CurrentPCB.state === "ready") {
+            } else if (potentialPCB.state === "ready") {
                 _StdOut.putText(`Process ${pid} is already running.`);
             }
-            else if (_CurrentPCB.state === "terminated") {
+            else if (potentialPCB.state === "terminated") {
                 _StdOut.putText(`Process ${pid} has already run and is terminated.`);
             } else {
-                // current process is now running
+                // Our potential process is legit so we set it the current process
+                // Update state to "ready" and cpu begins executing
+                _CurrentPCB = potentialPCB;
                 _CurrentPCB.state = "ready";
                 _CPU.isExecuting = true;
 
-                // memory output
+                // Memory output
                 var memory_out = <HTMLInputElement> document.getElementById("taMemory");
                 memory_out.value = "";
 
-                // load the program into memory at location $0000	
+                // Load the program into memory at location $0000	
                 _MemoryManager.load(_Memory.tempArr);
 
-                // clear temp array
+                // Clear temp array for the next program that get loaded
                 _Memory.tempArr = [];
 
                 for (let j=0; j<_Memory.tempArr.length; j++) {
-                    // display memory
+                    // Display memory
                     memory_out.value += Utils.hexLog(_Memory.memArr[j]);
                     memory_out.value += " ";
                 }

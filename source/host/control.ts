@@ -177,11 +177,11 @@ module TSOS {
                 if ((isHex(str)) && (str.length%2==0)) {
                     return str;
                 } else {
-                    _StdOut.putText("Invalid op code(s).");
+                    _StdOut.putText("Invalid op code(s). Try again :/");
                     return null;
                 }
             } else {
-                _StdOut.putText("Invalid op code(s).");
+                _StdOut.putText("Nothing to load, sir.");
                 return null;
             }
 
@@ -208,5 +208,60 @@ module TSOS {
                 return true;
             }
         }
+
+        public static updatePCBtable(currPID: number) {
+            // Updates the cell values in the Processes table
+
+            const table = <HTMLTableElement> document.getElementById("pcb-table");
+
+            const pid = table.rows[currPID+1].cells[0];
+            const state = table.rows[currPID+1].cells[1];
+            const seg = table.rows[currPID+1].cells[2];
+            const pc = table.rows[currPID+1].cells[3];
+            const ir = table.rows[currPID+1].cells[4];
+            const acc = table.rows[currPID+1].cells[5];
+            const x = table.rows[currPID+1].cells[6];
+            const y = table.rows[currPID+1].cells[7];
+            const z = table.rows[currPID+1].cells[8];
+
+            pid.innerHTML = _CurrentPCB.pid+"";
+            state.innerHTML = _CurrentPCB.state;
+            seg.innerHTML = 0+"";
+            pc.innerHTML = Utils.hexLog(_CPU.PC);
+            ir.innerHTML = Utils.hexLog(_CPU.instructionReg);
+            acc.innerHTML = Utils.hexLog(_CPU.acc);
+            x.innerHTML = Utils.hexLog(_CPU.Xreg);
+            y.innerHTML =Utils.hexLog(_CPU.Yreg);
+            z.innerHTML = Utils.hexLog(_CPU.Zflag);
+        }
+
+        public static addRowToPCBTable() {
+            // Creates a new row in the Processes table each time a new program is loaded into memory
+
+            const table = <HTMLTableElement> document.getElementById("pcb-table");
+            const row = table.insertRow(-1);
+
+            const pid = row.insertCell(0);
+            const state = row.insertCell(1);
+            const seg = row.insertCell(2);
+            const pc = row.insertCell(3);
+            const ir = row.insertCell(4);
+            const acc = row.insertCell(5);
+            const x = row.insertCell(6);
+            const y = row.insertCell(7);
+            const z = row.insertCell(8);
+
+            pid.innerHTML = _CurrentPCB.pid+"";
+            seg.innerHTML = 0+"";
+            pc.innerHTML = Utils.hexLog(0x00);
+            ir.innerHTML = Utils.hexLog(0x00);
+            acc.innerHTML = Utils.hexLog(0x00);
+            x.innerHTML = Utils.hexLog(0x00);
+            y.innerHTML =Utils.hexLog(0x00);
+            z.innerHTML = Utils.hexLog(0x00);
+            state.innerHTML = _CurrentPCB.state;
+        }
+
+
     }
 }

@@ -26,7 +26,8 @@ module TSOS {
                     public instructionReg: number = 0x00,
                     public step: number = 0x00,
                     public clockCnt: number = 0,
-                    public out: string = "") {
+                    public out: string = "",
+                    public currentPCB: PCB = new PCB(_PidCounter)) {
 
         }
 
@@ -46,6 +47,7 @@ module TSOS {
         public cycle(): void {
             _Kernel.krnTrace('CPU cycle');
             this.clockCnt++;
+            _CurrentPCB.state = "running";
 
             // TODO: Accumulate CPU usage and profiling statistics here.
             // Do the real work here. Be sure to set this.isExecuting appropriately.
@@ -60,14 +62,17 @@ module TSOS {
             //      6: Interrupt Check
             switch (this.step) {
 
-                // fetch
+
+                // FETCH
                 case 0:
                     this.instructionReg = _MemoryManager.getMemArr()[this.PC];
                     this.step = 1;
                     this.PC ++;
                     break;
 
-                //decode
+
+
+                // DECODE
                 case 1:
                     if (this.instructionReg == 0xA9) {              // A9: load accumulator with a constant
                         this.acc = _MemoryManager.getMemArr()[this.PC];
@@ -121,28 +126,32 @@ module TSOS {
                         } else if (this.Xreg == 0x02) {             // prints 0x00 terminated string stored at address in y register
                             this.PC = this.Yreg;
                             this.step = 6;
-                        } else if (this.Xreg == 0x03) {             // prints 0x00 terminated string stored from the adress in operand
+                        } else if (this.Xreg == 0x03) {             // prints 0x00 terminated string stored from the address in operand
                             _MemoryManager.setMAR(0x00);
                             _MemoryManager.setLowOrderByte(_MemoryManager.getMemArr()[this.PC]);
                             this.step = 2;
                             this.PC ++;
                         }  
                     } else if (this.instructionReg == 0x00) {       // 00: break
-                        this.isExecuting = false;
-                        _CurrentPCB.state = "terminated";
+                        this.step = 3;
                     } else {
                         this.out += String.fromCharCode(this.instructionReg);
                         this.step = 6;
                     }
                     break;
-                // decode 2
+
+
+
+                // DECODE 2
                 case 2:
                     _MemoryManager.setHighOrderByte(_MemoryManager.getMemArr()[this.PC]);
                     this.PC ++;
                     this.step = 3;
                     break;
+
+
                 
-                //execute
+                // EXECUTE
                 case 3:
                     if (this.instructionReg == 0x8D) {              // 8D: store the accumulator in memory
                         _MemoryManager.setMDR(this.acc);
@@ -171,10 +180,17 @@ module TSOS {
                     } else if (this.instructionReg == 0xFF) {       // FF: system call
                         if (this.Xreg == 0x01) {
                             this.out+=this.Yreg.toString(16);
+                            _StdOut.putText(this.Yreg.toString(16));
                         } else if (this.Xreg == 0x03) {
                             this.PC = _MemoryManager.getMAR();
                         }
-                        this.step = 6;
+                    } else if (this.instructionReg == 0x00) {
+                        this.isExecuting = false;
+                        _CurrentPCB.state = "terminated";
+                        _StdOut.advanceLine();
+                        _StdOut.putText("Execution completed.")
+                        _StdOut.advanceLine();
+                        _OsShell.putPrompt();
                     }
 
                     if (this.instructionReg == 0xEE) {              // EE: increment the value of a byte (requires second execute)
@@ -184,30 +200,41 @@ module TSOS {
                     }
                     break;
 
-            //execute 2
+
+
+            // EXECUTE 2
             case 4:
                 this.acc ++;
                 this.step = 5;
                 break;
 
-            //write to memory
+
+
+            // WRITE TO MEMORY
             case 5:
                 _MemoryManager.setMDR(this.acc);
                 _MemAccessor.write();
                 this.step = 6;
                 break;
 
-            //interrupt check
+
+
+            // INTERRUPT CHECK
             case 6:
                 this.step = 0;
                 // this.intContr.checkInterrupts();
                 break;
             }
+
+
+            // browser console logging
             this.cpuLog();
+            // update Processes table at the end of each cpu cycle
+            Control.updatePCBtable(_CurrentPCB.pid);
         }
 
-        //logging information for each member of CPU class
         public cpuLog() {
+            //logging information for each member of CPU class
             console.log("PC: " + Utils.hexLog(this.PC) + "\n" +
                         "IR: " + Utils.hexLog(this.instructionReg) + "\n" +
                         "Acc: " + Utils.hexLog(this.acc) + "\n" +
@@ -219,9 +246,10 @@ module TSOS {
             console.log("---------------------------------------");
         }
 
-        //returns loop start value from given offset value
-        //used with branching (BNE)
         public offset(offVal : number) : number{
+            //returns loop start value from given offset value
+            //used with branching (BNE)
+
             let start : number;
             let start_str : string;
             
@@ -241,13 +269,9 @@ module TSOS {
 
 
 
-        /* ------------
+        /* ------------------------------------------------------------------
             6502 Test Programs!!
-
-            I wrote these nearly a year ago.
-            Trying to understand what they mean again was fun.
-            Brain damage: acquired
-        -------------- */
+        ------------------------------------------------------------------- */
 
         // program that adds 2 + 2
         // output: 4

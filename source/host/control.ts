@@ -209,7 +209,27 @@ module TSOS {
             }
         }
 
-        public static updatePCBtable(currPID: number) {
+        public static updateCPUtable(): void {
+            // Updates the cell values in the CPU table
+
+            const table = <HTMLTableElement> document.getElementById("cpu-table");
+
+            const pc = table.rows[1].cells[0];
+            const ir = table.rows[1].cells[1];
+            const acc = table.rows[1].cells[2];
+            const x = table.rows[1].cells[3];
+            const y = table.rows[1].cells[4];
+            const z = table.rows[1].cells[5];
+
+            pc.innerHTML = Utils.hexLog(_CPU.PC);
+            ir.innerHTML = Utils.hexLog(_CPU.instructionReg);
+            acc.innerHTML = Utils.hexLog(_CPU.acc);
+            x.innerHTML = Utils.hexLog(_CPU.Xreg);
+            y.innerHTML =Utils.hexLog(_CPU.Yreg);
+            z.innerHTML = Utils.hexLog(_CPU.Zflag);
+        }
+
+        public static updatePCBtable(currPID: number): void {
             // Updates the cell values in the Processes table
 
             const table = <HTMLTableElement> document.getElementById("pcb-table");
@@ -235,7 +255,7 @@ module TSOS {
             z.innerHTML = Utils.hexLog(_CPU.Zflag);
         }
 
-        public static addRowToPCBTable() {
+        public static addRowToPCBTable(): void {
             // Creates a new row in the Processes table each time a new program is loaded into memory
 
             const table = <HTMLTableElement> document.getElementById("pcb-table");

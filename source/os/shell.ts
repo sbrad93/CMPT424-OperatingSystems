@@ -541,14 +541,14 @@ module TSOS {
                 // Load the program into memory at location $0000	
                 _MemoryManager.load(_Memory.tempArr);
 
-                // Clear temp array for the next program that get loaded
-                _Memory.tempArr = [];
-
                 for (let j=0; j<_Memory.tempArr.length; j++) {
                     // Display memory
                     memory_out.value += Utils.hexLog(_Memory.memArr[j]);
                     memory_out.value += " ";
                 }
+
+                // Clear temp array for the next program that get loaded
+                _Memory.tempArr = [];
             }
         }
 

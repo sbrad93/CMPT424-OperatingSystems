@@ -255,6 +255,7 @@ module TSOS {
             // update Processes table and CPU table at the end of each cpu cycle
             Control.updatePCBtable(_CurrentPCB.pid);
             Control.updateCPUtable();
+            Control.updateMemoryTable();
         }
 
         public cpuLog() {

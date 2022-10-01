@@ -114,6 +114,11 @@ module TSOS {
                             "run",
                             "<int> - Runs a specified process.");
             this.commandList[this.commandList.length] = sc;
+            // Memory dump testing
+            sc = new ShellCommand(this.shellMemoryDump,
+                            "memdump",
+                            " - Displays memory in browser console.");
+            this.commandList[this.commandList.length] = sc;
 
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -339,6 +344,12 @@ module TSOS {
                     case "load":
                         _StdOut.putText("Loads a user program into the console.")
                         break;
+                    case "run":
+                        _StdOut.putText("Runs a specified process.")
+                        break;
+                    case "memdump":
+                        _StdOut.putText("Displays memory in browser console.")
+                        break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -477,6 +488,9 @@ module TSOS {
         }
 
         public shellLoad(args: string[]) {
+            // Clear temp array 
+            _Memory.tempArr = [];
+            
             // Get da op codes
             var opcode_str = Control.getOpCodes();
 
@@ -496,6 +510,15 @@ module TSOS {
 
                // Add a new row to the Processes table
                Control.addRowToPCBTable();
+
+               // Memory output
+               var memory_out = <HTMLInputElement> document.getElementById("taMemory");
+               memory_out.value = "";
+
+               // Load the program into memory at location $0000	
+               _MemoryManager.load(_Memory.tempArr);
+
+               Control.updateMemoryTable();
 
                _StdOut.putText("Successfuly loaded program into memory.");
                _StdOut.advanceLine();
@@ -528,23 +551,12 @@ module TSOS {
                 _CurrentPCB = potentialPCB;
                 _CurrentPCB.state = "ready";
                 _CPU.isExecuting = true;
-
-                // Memory output
-                var memory_out = <HTMLInputElement> document.getElementById("taMemory");
-                memory_out.value = "";
-
-                // Load the program into memory at location $0000	
-                _MemoryManager.load(_Memory.tempArr);
-
-                for (let j=0; j<_Memory.tempArr.length; j++) {
-                    // Display memory
-                    memory_out.value += Utils.hexLog(_Memory.memArr[j]);
-                    memory_out.value += " ";
-                }
-
-                // Clear temp array for the next program that get loaded
-                _Memory.tempArr = [];
             }
+        }
+
+        public shellMemoryDump(args: string[]) {
+            _MemAccessor.displayMemory(0x300);
+            _StdOut.putText("Done.");
         }
     }
 }

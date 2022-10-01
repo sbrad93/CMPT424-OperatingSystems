@@ -27,5 +27,12 @@ module TSOS {
     
             return this.memArr;
         }
+
+        //all memory properties are reinitialized to zero
+        public reset() {
+            this.mar = 0x0000;
+            this.mdr = 0x00;
+            this.arrInit();
+        }
     }
 }

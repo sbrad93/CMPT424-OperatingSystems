@@ -42,6 +42,10 @@ module TSOS {
             // Use the TypeScript cast to HTMLInputElement
             (<HTMLInputElement> document.getElementById("btnStartOS")).focus();
 
+            // Create and initialize our memory prototype
+            _Memory = new Memory();
+            _Memory.arrInit();
+
             // Check for our testing and enrichment core, which
             // may be referenced here (from index.html) as function Glados().
             if (typeof Glados === "function") {
@@ -106,12 +110,11 @@ module TSOS {
             _Kernel = new Kernel();
             _Kernel.krnBootstrap();  // _GLaDOS.afterStartup() will get called in there, if configured.
 
-            // Create and initialize our memory prototype
-            _Memory = new Memory();
-            _Memory.arrInit();
-
             // Create the Memory Accessor
             _MemAccessor = new MemAccessor();
+
+            // Display empty memory
+            Control.updateMemoryTable();
         }
 
         public static hostBtnHaltOS_click(btn): void {
@@ -255,6 +258,12 @@ module TSOS {
             z.innerHTML = Utils.hexLog(_CPU.Zflag);
         }
 
+        public static updatePCBStateInTable(currPID: number): void {
+            const table = <HTMLTableElement> document.getElementById("pcb-table");
+            const state = table.rows[currPID+1].cells[1];
+            state.innerHTML = _CurrentPCB.state;
+        }
+
         public static addRowToPCBTable(): void {
             // Creates a new row in the Processes table each time a new program is loaded into memory
 
@@ -282,6 +291,20 @@ module TSOS {
             state.innerHTML = _CurrentPCB.state;
         }
 
+        public static updateMemoryTable(): void {
+            var memory_out = <HTMLInputElement> document.getElementById("taMemory");
+            memory_out.value = "";
 
+            for (let j=0; j<_Memory.memArr.length; j++) {
+                // Display memory
+                let i = j+1;
+                memory_out.value += Utils.hexLog(_Memory.memArr[j]);
+                if (i % 8 == 0) {
+                    memory_out.value += "\n";
+                } else {
+                    memory_out.value += " ";
+                }
+            }
+        }
     }
 }

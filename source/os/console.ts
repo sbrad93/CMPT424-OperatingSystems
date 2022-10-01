@@ -76,10 +76,33 @@ module TSOS {
                     }
                 } else if (chr === '\t') {                                          // Tab
                     this.chkCommandCompletion(this.buffer);
-                } else if (chr === '&#8593') {                                      // Up arrow
+                } else if (chr === "up-arrow") {                                    // Up arrow
                     this.cmdRecallUp(Console.cmdHistory);
-                } else if (chr === '&#8595') {                                      // Down arrow
+                } else if (chr === "down-arrow") {                                  // Down arrow
                     this.cmdRecallDown(Console.cmdHistory);
+                } else if (chr == "ctrl-k") {
+                    // Implemented ctrl-k to clear the console
+                     _Console.init()
+                    _OsShell.putPrompt();
+                } else if (chr == "ctrl-c") {
+                    if (_CPU.isExecuting) {                                         // doesn't matter if cpu isn't executing
+                        // Change current process state
+                        _CurrentPCB.state = "terminated";
+
+                        // Since there's only one process running for now...
+                        _CPU.init();
+                        _Memory.reset();
+
+                        // Update Process table and memory
+                        Control.updatePCBStateInTable(_CurrentPCB.pid);
+                        Control.updateMemoryTable();
+                        Control.updateCPUtable();
+
+                        _StdOut.advanceLine();
+                        _StdOut.putText(`Process ${_CurrentPCB.pid} has been successfully terminated.`);
+                        _StdOut.advanceLine();
+                        _OsShell.putPrompt();
+                    }
                 } else {
                     if (chr != '\0') {                                              // NUL char, https://news.ycombinator.com/item?id=22283042 -- This helped me understand what the heck this was (and provide mild amusement)
                         // This is a "normal" character, so ...
@@ -90,7 +113,6 @@ module TSOS {
                         this.buffer += chr;
                     }
                 }
-                // TODO: Add a case for Ctrl-C that would allow the user to break the current program.
             }
         }
 

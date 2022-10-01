@@ -39,17 +39,19 @@ module TSOS {
                 var chr = "";
 
                 // Check to see if we even want to deal with the key that was pressed.
-                if((this.isControlDown) && (keyCode == 75)) {
-                    // Implemented ctrl-k to clear the console
-                     _Console.init()
-                    _OsShell.putPrompt();
+                if(this.isControlDown) {
+                    if (keyCode == 75) {
+                        _KernelInputQueue.enqueue("ctrl-k")
+                    } else if (keyCode == 67) {
+                        _KernelInputQueue.enqueue("ctrl-c")
+                    }
                     this.isControlDown = false;
                 } else if (keyCode == 8) {
                     _KernelInputQueue.enqueue('\b');
                 } else if (keyCode == 38) {
-                    _KernelInputQueue.enqueue('&#8593')
+                    _KernelInputQueue.enqueue("up-arrow")
                 } else if (keyCode == 40) { 
-                    _KernelInputQueue.enqueue('&#8595')
+                    _KernelInputQueue.enqueue("down-arrow")
                 } else if (keyCode == 9) {
                     _KernelInputQueue.enqueue('\t');
                 } else if (keyCode == 17) {

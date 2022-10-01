@@ -117,16 +117,15 @@ module TSOS {
                         else {
                             this.step = 6;
                         }
-                        this.PC ++;
+                        this.PC++;
                     } else if (this.instructionReg == 0xEA) {       // EA: no operation
                         this.step = 6;
                     } else if (this.instructionReg == 0xFF) {       // FF: system call
-                        if (this.Xreg == 0x01) {                    // prints integer in y register
+                        if (this.Xreg == 0x01) {                            // prints integer in y register
                             this.step = 3;
-                        } else if (this.Xreg == 0x02) {             // prints 0x00 terminated string stored at address in y register
-                            this.PC = this.Yreg;
-                            this.step = 6;
-                        } else if (this.Xreg == 0x03) {             // prints 0x00 terminated string stored from the address in operand
+                        } else if (this.Xreg == 0x02) {                     // prints 0x00 terminated string stored at address in y register;
+                            this.step = 3;
+                        } else if (this.Xreg == 0x03) {                     // prints 0x00 terminated string stored from the address in operand
                             _MemoryManager.setMAR(0x00);
                             _MemoryManager.setLowOrderByte(_MemoryManager.getMemArr()[this.PC]);
                             this.step = 2;
@@ -136,6 +135,7 @@ module TSOS {
                         this.step = 3;
                     } else {
                         this.out += String.fromCharCode(this.instructionReg);
+                        _StdOut.putText(String.fromCharCode(this.instructionReg));
                         this.step = 6;
                     }
                     break;
@@ -173,14 +173,37 @@ module TSOS {
                         _MemAccessor.read();
                         if (this.Xreg == _MemoryManager.getMDR()) {
                             this.Zflag = 0x01;
+                        } else {
+                            this.Zflag = 0x00;
                         }
                     } else if (this.instructionReg == 0xD0) {       // D0: branch n bytes if zflag = 0
-                        _MemAccessor.read();
-                        this.PC = this.offset(_MemoryManager.getMDR());
+                        if (this.Zflag == 0x00) {
+                            _MemAccessor.read();
+                            this.PC += _MemoryManager.getMDR();
+                            if (this.PC > 0x100) {
+                                this.PC = this.PC % 0x100;
+                            }
+                        }
                     } else if (this.instructionReg == 0xFF) {       // FF: system call
                         if (this.Xreg == 0x01) {
-                            this.out+=this.Yreg.toString(16);
                             _StdOut.putText(this.Yreg.toString(16));
+                        }  else if (this.Xreg == 0x02) {
+                            // location in memory where string begins
+                            let startingPoint = this.Yreg;
+                            let output = "";
+                            for (let i=0; i+startingPoint < _Memory.memSize; i++) {
+                                // loop until string is terminated with 0x00
+                                let byte = _MemoryManager.getMemArr()[startingPoint+i];
+                                if (byte == 0x00) {
+                                    break;
+                                } else {
+                                    output += String.fromCharCode(byte);
+                                }
+                            }
+                            // print output to console and resetn y register
+                            _StdOut.putText(output);
+                            this.Yreg = 0x00;
+                            this.step = 6;
                         } else if (this.Xreg == 0x03) {
                             this.PC = _MemoryManager.getMAR();
                         }
@@ -196,7 +219,7 @@ module TSOS {
                     if (this.instructionReg == 0xEE) {              // EE: increment the value of a byte (requires second execute)
                         this.step = 4;
                     } else {
-                        this.step = 6;
+                        this.step = 6;                              // otherwise, check for interrupts
                     }
                     break;
 
@@ -222,13 +245,13 @@ module TSOS {
             // INTERRUPT CHECK
             case 6:
                 this.step = 0;
-                // this.intContr.checkInterrupts();
                 break;
             }
 
 
             // browser console logging
             this.cpuLog();
+
             // update Processes table and CPU table at the end of each cpu cycle
             Control.updatePCBtable(_CurrentPCB.pid);
             Control.updateCPUtable();
@@ -245,27 +268,6 @@ module TSOS {
                         "Step: " + Utils.hexLog(this.step) + "\n" +
                         "Out: " + this.out);
             console.log("---------------------------------------");
-        }
-
-        public offset(offVal : number) : number{
-            //returns loop start value from given offset value
-            //used with branching (BNE)
-
-            let start : number;
-            let start_str : string;
-            
-            //two's comp :))))
-            //separate rightmost bits
-            start = (~offVal)+1>>>0;
-
-            //slice off the last two bytes and convert back to numeric
-            start_str = start.toString(2).slice(start.toString(2).length-8);
-            start = parseInt(start_str, 2);
-
-            //subtract from current program count
-            start = this.PC - start;
-
-            return start;
         }
 
 

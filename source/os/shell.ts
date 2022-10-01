@@ -114,11 +114,6 @@ module TSOS {
                             "run",
                             "<int> - Runs a specified process.");
             this.commandList[this.commandList.length] = sc;
-            // Memory dump testing
-            sc = new ShellCommand(this.shellMemoryDump,
-                            "dump",
-                            " - Displays memory in browser console.");
-            this.commandList[this.commandList.length] = sc;
 
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -550,10 +545,6 @@ module TSOS {
                 // Clear temp array for the next program that get loaded
                 _Memory.tempArr = [];
             }
-        }
-
-        public shellMemoryDump(args: string[]) {
-            _MemAccessor.displayMemory(0x1000);
         }
     }
 }

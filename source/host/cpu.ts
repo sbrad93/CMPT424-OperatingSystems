@@ -49,6 +49,9 @@ module TSOS {
             this.clockCnt++;
             _CurrentPCB.state = "running";
 
+            if (_IsSingleStep) {
+                _CanTakeNextStep = false;
+            }
             // TODO: Accumulate CPU usage and profiling statistics here.
             // Do the real work here. Be sure to set this.isExecuting appropriately.
 

@@ -42,19 +42,6 @@ module TSOS {
             // Use the TypeScript cast to HTMLInputElement
             (<HTMLInputElement> document.getElementById("btnStartOS")).focus();
 
-            // Create and initialize our memory prototype
-            _Memory = new Memory();
-            _Memory.arrInit();
-
-            // Check for our testing and enrichment core, which
-            // may be referenced here (from index.html) as function Glados().
-            if (typeof Glados === "function") {
-                // function Glados() is here, so instantiate Her into
-                // the global (and properly capitalized) _GLaDOS variable.
-                _GLaDOS = new Glados();
-                _GLaDOS.init();
-            }
-
             // Display current DateTime and updates every second.
             const setDate = setInterval(this.refreshTime, 1000);
 
@@ -93,12 +80,29 @@ module TSOS {
             // Disable the (passed-in) start button...
             btn.disabled = true;
 
-            // .. enable the Halt and Reset buttons ...
+            // .. enable the Halt, Reset, and Single Step buttons ...
             (<HTMLButtonElement>document.getElementById("btnHaltOS")).disabled = false;
             (<HTMLButtonElement>document.getElementById("btnReset")).disabled = false;
+            (<HTMLButtonElement>document.getElementById("btnToggleSingleStep")).disabled = false;
 
             // .. set focus on the OS console display ...
             document.getElementById("display").focus();
+
+            // Create the Memory Accessor
+            _MemAccessor = new MemAccessor();
+
+            // Create and initialize our memory prototype
+            _Memory = new Memory();
+            _Memory.arrInit();
+
+            // Check for our testing and enrichment core, which
+            // may be referenced here (from index.html) as function Glados().
+            if (typeof Glados === "function") {
+                // function Glados() is here, so instantiate Her into
+                // the global (and properly capitalized) _GLaDOS variable.
+                _GLaDOS = new Glados();
+                _GLaDOS.init();
+            }
 
             // ... Create and initialize the CPU (because it's part of the hardware)  ...
             _CPU = new Cpu();  // Note: We could simulate multi-core systems by instantiating more than one instance of the CPU here.
@@ -109,10 +113,7 @@ module TSOS {
             // .. and call the OS Kernel Bootstrap routine.
             _Kernel = new Kernel();
             _Kernel.krnBootstrap();  // _GLaDOS.afterStartup() will get called in there, if configured.
-
-            // Create the Memory Accessor
-            _MemAccessor = new MemAccessor();
-
+            
             // Display empty memory
             Control.updateMemoryTable();
         }
@@ -133,6 +134,25 @@ module TSOS {
             // That boolean parameter is the 'forceget' flag. When it is true it causes the page to always
             // be reloaded from the server. If it is false or not specified the browser may reload the
             // page from its cache, which is not what we want.
+        }
+
+        public static hostBtnToggleSingleStep_click(btn): void {
+            if ((<HTMLButtonElement> document.getElementById("btnToggleSingleStep")).value == "Single Step Off") {
+                (<HTMLButtonElement> document.getElementById("btnToggleSingleStep")).value = "Single Step On";
+                (<HTMLButtonElement> document.getElementById("btnToggleSingleStep")).style.fontWeight = "700";
+                (<HTMLButtonElement> document.getElementById("btnNextStep")).disabled = false;
+                _IsSingleStep = true;
+            } else {
+                (<HTMLButtonElement> document.getElementById("btnToggleSingleStep")).value = "Single Step Off";
+                (<HTMLButtonElement> document.getElementById("btnToggleSingleStep")).style.fontWeight = "400";
+                (<HTMLButtonElement> document.getElementById("btnNextStep")).disabled = true;
+                _IsSingleStep = false;
+            }
+            
+        }
+
+        public static hostBtnNextStep_click(btn): void {
+            _CanTakeNextStep = true;
         }
 
         public static refreshTime(): void {
@@ -239,17 +259,15 @@ module TSOS {
 
             const pid = table.rows[currPID+1].cells[0];
             const state = table.rows[currPID+1].cells[1];
-            const seg = table.rows[currPID+1].cells[2];
-            const pc = table.rows[currPID+1].cells[3];
-            const ir = table.rows[currPID+1].cells[4];
-            const acc = table.rows[currPID+1].cells[5];
-            const x = table.rows[currPID+1].cells[6];
-            const y = table.rows[currPID+1].cells[7];
-            const z = table.rows[currPID+1].cells[8];
+            const pc = table.rows[currPID+1].cells[2];
+            const ir = table.rows[currPID+1].cells[3];
+            const acc = table.rows[currPID+1].cells[4];
+            const x = table.rows[currPID+1].cells[5];
+            const y = table.rows[currPID+1].cells[6];
+            const z = table.rows[currPID+1].cells[7];
 
             pid.innerHTML = _CurrentPCB.pid+"";
             state.innerHTML = _CurrentPCB.state;
-            seg.innerHTML = 0+"";
             pc.innerHTML = Utils.hexLog(_CPU.PC);
             ir.innerHTML = Utils.hexLog(_CPU.instructionReg);
             acc.innerHTML = Utils.hexLog(_CPU.acc);
@@ -272,16 +290,14 @@ module TSOS {
 
             const pid = row.insertCell(0);
             const state = row.insertCell(1);
-            const seg = row.insertCell(2);
-            const pc = row.insertCell(3);
-            const ir = row.insertCell(4);
-            const acc = row.insertCell(5);
-            const x = row.insertCell(6);
-            const y = row.insertCell(7);
-            const z = row.insertCell(8);
+            const pc = row.insertCell(2);
+            const ir = row.insertCell(3);
+            const acc = row.insertCell(4);
+            const x = row.insertCell(5);
+            const y = row.insertCell(6);
+            const z = row.insertCell(7);
 
             pid.innerHTML = _CurrentPCB.pid+"";
-            seg.innerHTML = 0+"";
             pc.innerHTML = Utils.hexLog(0x00);
             ir.innerHTML = Utils.hexLog(0x00);
             acc.innerHTML = Utils.hexLog(0x00);
@@ -294,13 +310,19 @@ module TSOS {
         public static updateMemoryTable(): void {
             var memory_out = <HTMLInputElement> document.getElementById("taMemory");
             memory_out.value = "";
+            var rowSegment = 0x00;
 
             for (let j=0; j<_Memory.memArr.length; j++) {
                 // Display memory
+                rowSegment += 0x01;
                 let i = j+1;
+                if (j == 0) {
+                    memory_out.value += Utils.hexLog(rowSegment) + " ||| ";
+                }
                 memory_out.value += Utils.hexLog(_Memory.memArr[j]);
                 if (i % 8 == 0) {
                     memory_out.value += "\n";
+                    memory_out.value += Utils.hexLog(rowSegment) + " ||| ";
                 } else {
                     memory_out.value += " ";
                 }

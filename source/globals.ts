@@ -66,6 +66,10 @@ var _CurrentPCB: TSOS.PCB;
 var _Console: TSOS.Console;
 var _OsShell: TSOS.Shell;
 
+// Single Step
+var _IsSingleStep: boolean = false;
+var _CanTakeNextStep: boolean = false;
+
 // At least this OS is not trying to kill you. (Yet.)
 var _SarcasticMode: boolean = false;
 

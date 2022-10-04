@@ -64,8 +64,10 @@ h3 {
 
 #divButtonBar {
   margin: 0 auto;
-  width: 35%;
+  width: 50%;
   margin-top: 30px;
+
+  /* border-style: dashed; */
 }
 
 #divTaskBar {

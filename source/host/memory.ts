@@ -18,6 +18,7 @@ module TSOS {
 
         // initializes all elements in the memory array
         public arrInit():number[] {
+            this.tempArr = [];
             interface Array<T> {
                 fill(number: T): Array<T>;
             }

@@ -488,6 +488,12 @@ module TSOS {
         }
 
         public shellLoad(args: string[]) {
+            if ((_Memory.tempArr.length != 0) && (_CurrentPCB != null)) {
+                _CurrentPCB.state = "terminated";
+                Control.updatePCBStateInTable(_CurrentPCB.pid);
+                _StdOut.putText(`Process ${_CurrentPCB.pid}: Overwriting Memory...`);
+                _StdOut.advanceLine();
+            }
             // Clear temp array 
             _Memory.tempArr = [];
             
@@ -544,8 +550,10 @@ module TSOS {
                 _StdOut.putText(`Process ${pid} is already running.`);
             }
             else if (potentialPCB.state === "terminated") {
-                _StdOut.putText(`Process ${pid} has already run and is terminated.`);
+                _StdOut.putText(`Process ${pid} is terminated.`);
             } else {
+                // Clear temp array to load next program
+                _Memory.tempArr = [];
                 // Our potential process is legit so we set it the current process
                 // Update state to "ready" and cpu begins executing
                 _CurrentPCB = potentialPCB;

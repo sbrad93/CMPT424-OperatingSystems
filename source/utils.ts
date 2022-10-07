@@ -43,5 +43,12 @@ module TSOS {
             }
             return retVal;
         }
+
+        public static hexLog(num: number): string {
+            // takes in a number and outputs the properly formatted 8-bit hexadecimal equivalent
+            let ans: string;
+            ans = '0x' + ('00' + num.toString(16).toUpperCase()).slice(-2);
+            return ans;
+        }
     }
 }

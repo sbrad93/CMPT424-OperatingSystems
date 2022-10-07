@@ -17,6 +17,9 @@
    <script type="text/javascript" src="distrib/host/control.js"></script>
    <script type="text/javascript" src="distrib/host/devices.js"></script>
    <script type="text/javascript" src="distrib/host/cpu.js"></script>
+   <script type="text/javascript" src="distrib/host/memory.js"></script>
+   <script type="text/javascript" src="distrib/host/memAccessor.js"></script>
+   <script type="text/javascript" src="distrib/os/memoryManager.js"></script>
 
    <!-- Virtual OS Routines: Make sure Kernel code is last, since it needs those above it. -->
    <script type="text/javascript" src="distrib/os/interrupt.js"></script>
@@ -29,30 +32,31 @@
    <script type="text/javascript" src="distrib/os/shellCommand.js"></script>
    <script type="text/javascript" src="distrib/os/userCommand.js"></script>
    <script type="text/javascript" src="distrib/os/kernel.js"></script>
+   <script type="text/javascript" src="distrib/os/pcb.js"></script>
 
    <!-- Other Routines -->
    <script type="text/javascript" src="distrib/utils.js"></script>
    <!-- Uncomment the line below to enable GLaDOS testing. -->
-   <script type="text/javascript" src="../CMPT424-OperatingSystems/test/glados-ip1.js"></script>
+   <script type="text/javascript" src="http://alanclasses.github.io/TSOS/test/glados-ip2.js"></script>
    
 </head>
 
 <body onload="onDocumentLoad()">
 
 <div id="divMain" style="width:100%;">
+   
    <div id="divTaskBar">
-      <p>
+      <div id="date-task" class="task">
          <span class="material-icons">calendar_today</span>
-         <label>DateTime:</label>
          <span id="datetime"></span>
-      <p>
+      </div>
+      <div id="status-task" class="task">
          <span class="material-icons">lightbulb</span>
-         <label>Status:</label>
          <span id="status"></span>
-      </p>
+      </div>
    </div>
 
-   <div id="divButtonBar" style="margin:4px;">
+   <div id="divButtonBar">
       <input type="button"
              id = "btnStartOS"
              name="brnStartOS"
@@ -78,38 +82,126 @@
              value="Reset"
              tabindex="2"
              onclick="TSOS.Control.hostBtnReset_click(this);">
+
+      <input type="button"
+             id = "btnToggleSingleStep"
+             name="brnToggleSingleStep"
+             class="normal_button"
+             disabled="disabled"
+             value="Single Step Off"
+             tabindex="3"
+             onclick="TSOS.Control.hostBtnToggleSingleStep_click(this);">
+             
+      <input type="button"
+             id = "btnNextStep"
+             name="brnNextStep"
+             class="normal_button"
+             disabled="disabled"
+             value="Step"
+             tabindex="4"
+             onclick="TSOS.Control.hostBtnNextStep_click(this)">
    </div>
 
-   <div id="divConsole" style="margin:4px; width:500px; height:500px; float:left; overflow:auto;">
-      <canvas id="display"
-              width="900px"
-              height="500px"
-              tabindex="3">
-      </canvas>
-   </div>
+<img id="logo" src="distrib/images/logo.png">
 
-   <div id="divLog" style="margin-left:520px;">
-      <label>
-         Host Log
-         <br>
-         <textarea name="taHostLog"
-                   id  ="taHostLog"
-                   rows="26"
-                   cols="48"
-         ></textarea>
-      </label>
-   </div>
-
-   <div id="divUserProgramInput" style="margin-left:520px;">
-      <label>
-         User Program Input
-         <br>
-         <textarea name="taProgramInput"
-                   id  ="taProgramInput"
-                   rows="8"
-                   cols="48"
-         ></textarea>
-      </label>
+   <div id="container">
+         <div id="col-1">
+            <div id="divConsole" style="width:500px; height:500px; float:left;">
+               <canvas id="display"
+                       width="500px"
+                       height="500px"
+                       tabindex="3">
+               </canvas>
+            </div>
+         </div>
+      
+      
+      
+         <div id="col-2">
+            <div id="divLog">
+               <label class="label">
+                  Host Log
+               </label>
+                  <br>
+                  <textarea name="taHostLog"
+                            id  ="taHostLog"
+                            rows="26"
+                            cols="48"
+                  ></textarea>
+            </div>
+         </div>
+   
+   
+      
+         <div id="col-3">
+            <div id="divUserProgramInput">
+               <label class="label">
+                  User Program Input
+                  <br>
+                  <textarea name="taProgramInput"
+                            id  ="taProgramInput"
+                            rows="8"
+                            cols="48"
+                  ></textarea>
+               </label>
+            </div>
+   
+            <div id="memory">
+               <label class="label">
+                  Memory
+                  <br>
+                  <textarea name="taMemory"
+                            id  ="taMemory"
+                            rows="8"
+                            cols="48"
+                  ></textarea>
+               </label>
+            </div>
+         </div>
+   
+   
+   
+   
+         <div id="col-4">
+            <div id="cpu" class="section">
+               <label class="label">CPU</label>
+                  <table id="cpu-table">
+                     <thead>
+                        <tr>
+                           <th scope="col">PC</th>
+                           <th scope="col">IR</th>
+                           <th scope="col">ACC</th>
+                           <th scope="col">X</th>
+                           <th scope="col">Y</th>
+                           <th scope="col">Z</th>
+                        </tr>
+                     </thead>
+                        <tr>
+                           <td id="cpu-pc"></td>
+                           <td id="cpu-ir"></td>
+                           <td id="cpu-acc"></td>
+                           <td id="cpu-x"></td>
+                           <td id="cpu-y"></td>
+                           <td id="cpu-z"></td>
+                        </tr>
+                  </table>
+            </div>
+            <div id="processes" class="section">
+                     <label class="label">Processes</label>
+                        <table id="pcb-table">
+                           <thead>
+                              <th scope="col">PID</th>
+                              <th scope="col">STATE</th>
+                              <th scope="col">PC</th>
+                              <th scope="col">IR</th>
+                              <th scope="col">ACC</th>
+                              <th scope="col">X</th>
+                              <th scope="col">Y</th>
+                              <th scope="col">Z</th>
+                           </thead>
+                        </table>
+            </div>
+         </div>
    </div>
 </div>
 

@@ -46,7 +46,7 @@ module TSOS {
             // cls
             sc = new ShellCommand(this.shellCls,
                                   "cls",
-                                  "- Clears the screen and resets the cursor position.");
+                                  "- Clear the screen and resets the cursor position.");
             this.commandList[this.commandList.length] = sc;
 
             // man <topic>
@@ -107,6 +107,17 @@ module TSOS {
             sc = new ShellCommand(this.shellLoad,
                             "load",
                             "<string> - Loads a user program into the console.");
+            this.commandList[this.commandList.length] = sc;
+
+            // Run a process
+            sc = new ShellCommand(this.shellRun,
+                            "run",
+                            "<int> - Runs a specified process.");
+            this.commandList[this.commandList.length] = sc;
+            // Memory dump testing
+            sc = new ShellCommand(this.shellMemoryDump,
+                            "memdump",
+                            " - Displays memory in browser console.");
             this.commandList[this.commandList.length] = sc;
 
             // ps  - list the running processes and their IDs
@@ -261,8 +272,15 @@ module TSOS {
             _StdOut.putText("Commands:");
             for (var i in _OsShell.commandList) {
                 _StdOut.advanceLine();
-                _StdOut.putText("  " + _OsShell.commandList[i].command + " " + _OsShell.commandList[i].description);
+                _StdOut.putText(_OsShell.commandList[i].command + " " + _OsShell.commandList[i].description);
             }
+
+            // _StdOut.putText("Commands:");
+            // _StdIn.advanceLine();
+            // for (let i in _OsShell.commandList) {
+            //     Utils.chckShellLineWrap(_OsShell.commandList[i].command + " " +_OsShell.commandList[i].description);
+            // }
+
         }
 
         public shellShutdown(args: string[]) {
@@ -325,6 +343,12 @@ module TSOS {
                         break;
                     case "load":
                         _StdOut.putText("Loads a user program into the console.")
+                        break;
+                    case "run":
+                        _StdOut.putText("Runs a specified process.")
+                        break;
+                    case "memdump":
+                        _StdOut.putText("Displays memory in browser console.")
                         break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
@@ -464,7 +488,84 @@ module TSOS {
         }
 
         public shellLoad(args: string[]) {
-            Control.load();
+            if ((_MemoryManager.isFull) && (_CurrentPCB != null)) {
+                _CurrentPCB.state = "terminated";
+                Control.updatePCBStateInTable(_CurrentPCB.pid);
+                _StdOut.putText(`Process ${_CurrentPCB.pid}: Overwriting Memory...`);
+                _StdOut.advanceLine();
+            }
+            // Clear temp array 
+            _Memory.tempArr = [];
+            
+            // Get da op codes
+            var opcode_str = Control.getOpCodes();
+
+            if (opcode_str != null) {
+                // Reset CPU registers and memory (for now)
+                _CPU.init();
+                _Memory.arrInit();
+
+                // Create a new process and add to PCB list
+                _CurrentPCB = new PCB(_PidCounter);
+                _PidCounter += 1;
+                _PCBlist.push(_CurrentPCB);
+                
+                // Regex that splits hex string into a list of individual op codes
+                // Assign to a temporary memory array
+               _Memory.tempArr = opcode_str.match(/.{1,2}/g);
+
+               // Add a new row to the Processes table
+               Control.addRowToPCBTable();
+
+               // Memory output
+               var memory_out = <HTMLInputElement> document.getElementById("taMemory");
+               memory_out.value = "";
+
+               // Load the program into memory at location $0000	
+               _MemoryManager.load(_Memory.tempArr);
+
+               _StdOut.putText("Successfuly loaded program into memory.");
+               _StdOut.advanceLine();
+               _StdOut.putText(`PID: ${_CurrentPCB.pid}`);
+               _StdOut.advanceLine();
+               _StdOut.advanceLine();
+               _StdOut.putText(`Execute \"run ${_CurrentPCB.pid}\" to run your program.`)
+
+            }
+        }
+
+        public shellRun(args: string[]) {
+            let pid = parseInt(args[0]);
+            let potentialPCB = _PCBlist.find(element => element.pid == pid);
+            
+            if (Number.isNaN(pid)) {
+                _StdOut.putText(`Please enter a valid process id.`);
+                _StdOut.advanceLine();
+                _StdOut.putText("Usage: run <pid>")
+            } else if (!potentialPCB)  {
+                _StdOut.putText(`Process ${pid} does not exist.`);
+            } else if (potentialPCB.state === "ready") {
+                _StdOut.putText(`Process ${pid} is already running.`);
+            }
+            else if (potentialPCB.state === "terminated") {
+                _StdOut.putText(`Process ${pid} is terminated.`);
+            } else {
+                // Our potential process is legit so we set it the current process
+                // Update state to "ready" and cpu begins executing
+                _CurrentPCB = potentialPCB;
+                _CurrentPCB.state = "ready";
+                _CPU.isExecuting = true;
+
+                // Clear temp array to load next program
+                _Memory.tempArr = [];
+
+                _MemoryManager.isFull = false;
+            }
+        }
+
+        public shellMemoryDump(args: string[]) {
+            _MemAccessor.displayMemory(0x300);
+            _StdOut.putText("Done.");
         }
     }
 }

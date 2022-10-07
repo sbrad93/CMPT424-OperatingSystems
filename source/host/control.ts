@@ -42,15 +42,6 @@ module TSOS {
             // Use the TypeScript cast to HTMLInputElement
             (<HTMLInputElement> document.getElementById("btnStartOS")).focus();
 
-            // Check for our testing and enrichment core, which
-            // may be referenced here (from index.html) as function Glados().
-            if (typeof Glados === "function") {
-                // function Glados() is here, so instantiate Her into
-                // the global (and properly capitalized) _GLaDOS variable.
-                _GLaDOS = new Glados();
-                _GLaDOS.init();
-            }
-
             // Display current DateTime and updates every second.
             const setDate = setInterval(this.refreshTime, 1000);
 
@@ -89,12 +80,29 @@ module TSOS {
             // Disable the (passed-in) start button...
             btn.disabled = true;
 
-            // .. enable the Halt and Reset buttons ...
+            // .. enable the Halt, Reset, and Single Step buttons ...
             (<HTMLButtonElement>document.getElementById("btnHaltOS")).disabled = false;
             (<HTMLButtonElement>document.getElementById("btnReset")).disabled = false;
+            (<HTMLButtonElement>document.getElementById("btnToggleSingleStep")).disabled = false;
 
             // .. set focus on the OS console display ...
             document.getElementById("display").focus();
+
+            // Create the Memory Accessor
+            _MemAccessor = new MemAccessor();
+
+            // Create and initialize our memory prototype
+            _Memory = new Memory();
+            _Memory.arrInit();
+
+            // Check for our testing and enrichment core, which
+            // may be referenced here (from index.html) as function Glados().
+            if (typeof Glados === "function") {
+                // function Glados() is here, so instantiate Her into
+                // the global (and properly capitalized) _GLaDOS variable.
+                _GLaDOS = new Glados();
+                _GLaDOS.init();
+            }
 
             // ... Create and initialize the CPU (because it's part of the hardware)  ...
             _CPU = new Cpu();  // Note: We could simulate multi-core systems by instantiating more than one instance of the CPU here.
@@ -105,6 +113,9 @@ module TSOS {
             // .. and call the OS Kernel Bootstrap routine.
             _Kernel = new Kernel();
             _Kernel.krnBootstrap();  // _GLaDOS.afterStartup() will get called in there, if configured.
+            
+            // Display empty memory
+            Control.updateMemoryTable();
         }
 
         public static hostBtnHaltOS_click(btn): void {
@@ -125,6 +136,27 @@ module TSOS {
             // page from its cache, which is not what we want.
         }
 
+        public static hostBtnToggleSingleStep_click(btn): void {
+            if ((<HTMLButtonElement> document.getElementById("btnToggleSingleStep")).value == "Single Step Off") {
+                (<HTMLButtonElement> document.getElementById("btnToggleSingleStep")).value = "Single Step On";
+                (<HTMLButtonElement> document.getElementById("btnToggleSingleStep")).style.backgroundColor = "#3e8e41";
+                (<HTMLButtonElement> document.getElementById("btnNextStep")).disabled = false;
+                (<HTMLButtonElement> document.getElementById("btnNextStep")).value = "Step >>";
+                _IsSingleStep = true;
+            } else {
+                (<HTMLButtonElement> document.getElementById("btnToggleSingleStep")).value = "Single Step Off";
+                (<HTMLButtonElement> document.getElementById("btnToggleSingleStep")).style.backgroundColor = "white";
+                (<HTMLButtonElement> document.getElementById("btnNextStep")).disabled = true;
+                (<HTMLButtonElement> document.getElementById("btnNextStep")).value = "Step";
+                _IsSingleStep = false;
+            }
+            
+        }
+
+        public static hostBtnNextStep_click(btn): void {
+            _CanTakeNextStep = true;
+        }
+
         public static refreshTime(): void {
             // Create new Date object and properly format string value
             var dateDisplay = <HTMLInputElement> document.getElementById("datetime");
@@ -141,25 +173,41 @@ module TSOS {
             statusEle.innerHTML = msg;
         }
 
-        public static validateUserInput(str): void {
+        public static getOpCodes(): string {
+            // Loads valid hex codes in the console
+
+            var _input = <HTMLInputElement> document.getElementById("taProgramInput");
+
+            // Remove whitespace
+            _input.value = (_input.value).replace(/\s+/g, '');
+
+            // Make op codes upper case for formatting purposes
+            _input.value = _input.value.toUpperCase();
+
+            // Remove leading and trailing whitespace
+            _input.value = _input.value.trim();
+
+            // Check if op codes are valid
+            var opcode_str = Control.validateUserInput(_input.value);
+
+            // Reset textarea value
+            _input.value = "";
+
+            return opcode_str;
+        }
+
+        public static validateUserInput(str): string {
+            // Digits must be hex and in pairs
             if (str != "") {
-                // Make op codes upper case for formatting purposes
-                str = str.toUpperCase();
-
                 if ((isHex(str)) && (str.length%2==0)) {
-                    // Digits must be hex and in pairs
-
-                    // Remove leading and trailing whitespace
-                    str = str.trim();
-
-                    // Insert space between op codes and print
-                    str = str.replace(/.{2}/g, '$& ');
-                    _StdOut.putText(str);
+                    return str;
                 } else {
-                    _StdOut.putText("Invalid op code(s).");
+                    _StdOut.putText("Invalid op code(s). Try again :/");
+                    return null;
                 }
             } else {
-                _StdOut.putText("Invalid op code(s).");
+                _StdOut.putText("Nothing to load. Seriously...");
+                return null;
             }
 
             function isHex(hex_str) {
@@ -186,17 +234,118 @@ module TSOS {
             }
         }
 
-        public static load(): void {
-            // Loads valid hex codes in the console
-            var _input = <HTMLInputElement> document.getElementById("taProgramInput");
+        public static updateCPUtable(): void {
+            // Updates the cell values in the CPU table
 
-            // Remove whitespace
-            _input.value = (_input.value).replace(/\s+/g, '');
+            const table = <HTMLTableElement> document.getElementById("cpu-table");
 
-            Control.validateUserInput(_input.value);
+            const pc = table.rows[1].cells[0];
+            const ir = table.rows[1].cells[1];
+            const acc = table.rows[1].cells[2];
+            const x = table.rows[1].cells[3];
+            const y = table.rows[1].cells[4];
+            const z = table.rows[1].cells[5];
 
-            // Reset textarea value
-            _input.value = "";
+            pc.style.borderRight = "1px solid white";
+            ir.style.borderRight = "1px solid white";
+            acc.style.borderRight = "1px solid white";
+            x.style.borderRight = "1px solid white";
+            y.style.borderRight = "1px solid white";
+            z.style.borderRight = "1px solid white";
+
+            pc.innerHTML = Utils.hexLog(_CPU.PC);
+            ir.innerHTML = Utils.hexLog(_CPU.instructionReg);
+            acc.innerHTML = Utils.hexLog(_CPU.acc);
+            x.innerHTML = Utils.hexLog(_CPU.Xreg);
+            y.innerHTML =Utils.hexLog(_CPU.Yreg);
+            z.innerHTML = Utils.hexLog(_CPU.Zflag);
+        }
+
+        public static updatePCBtable(currPID: number): void {
+            // Updates the cell values in the Processes table
+
+            const table = <HTMLTableElement> document.getElementById("pcb-table");
+
+            const pid = table.rows[currPID+1].cells[0];
+            const state = table.rows[currPID+1].cells[1];
+            const pc = table.rows[currPID+1].cells[2];
+            const ir = table.rows[currPID+1].cells[3];
+            const acc = table.rows[currPID+1].cells[4];
+            const x = table.rows[currPID+1].cells[5];
+            const y = table.rows[currPID+1].cells[6];
+            const z = table.rows[currPID+1].cells[7];
+
+            pid.innerHTML = _CurrentPCB.pid+"";
+            state.innerHTML = _CurrentPCB.state;
+            pc.innerHTML = Utils.hexLog(_CPU.PC);
+            ir.innerHTML = Utils.hexLog(_CPU.instructionReg);
+            acc.innerHTML = Utils.hexLog(_CPU.acc);
+            x.innerHTML = Utils.hexLog(_CPU.Xreg);
+            y.innerHTML =Utils.hexLog(_CPU.Yreg);
+            z.innerHTML = Utils.hexLog(_CPU.Zflag);
+        }
+
+        public static updatePCBStateInTable(currPID: number): void {
+            const table = <HTMLTableElement> document.getElementById("pcb-table");
+            const state = table.rows[currPID+1].cells[1];
+            state.innerHTML = _CurrentPCB.state;
+        }
+
+        public static addRowToPCBTable(): void {
+            // Creates a new row in the Processes table each time a new program is loaded into memory
+
+            const table = <HTMLTableElement> document.getElementById("pcb-table");
+            const row = table.insertRow(-1);
+
+            const pid = row.insertCell(0);
+            const state = row.insertCell(1);
+            const pc = row.insertCell(2);
+            const ir = row.insertCell(3);
+            const acc = row.insertCell(4);
+            const x = row.insertCell(5);
+            const y = row.insertCell(6);
+            const z = row.insertCell(7);
+
+            pid.style.borderRight = "1px solid white";
+            state.style.borderRight = "1px solid white";
+            pc.style.borderRight = "1px solid white";
+            ir.style.borderRight = "1px solid white";
+            acc.style.borderRight = "1px solid white";
+            x.style.borderRight = "1px solid white";
+            y.style.borderRight = "1px solid white";
+            z.style.borderRight = "1px solid white";
+
+
+            pid.innerHTML = _CurrentPCB.pid+"";
+            pc.innerHTML = Utils.hexLog(0x00);
+            ir.innerHTML = Utils.hexLog(0x00);
+            acc.innerHTML = Utils.hexLog(0x00);
+            x.innerHTML = Utils.hexLog(0x00);
+            y.innerHTML =Utils.hexLog(0x00);
+            z.innerHTML = Utils.hexLog(0x00);
+            state.innerHTML = _CurrentPCB.state;
+        }
+
+        public static updateMemoryTable(): void {
+            var memory_out = <HTMLInputElement> document.getElementById("taMemory");
+            memory_out.value = "";
+            var rowSegment = 0x00;
+
+            for (let j=0; j<_Memory.memArr.length; j++) {
+                // Display memory
+                rowSegment += 0x01;
+                let i = j+1;
+                if (j == 0) {
+                    memory_out.value += Utils.hexLog(rowSegment) + " ||| ";
+                }
+                memory_out.value += Utils.hexLog(_Memory.memArr[j]);
+                if (i % 8 == 0) {
+                    memory_out.value += "\n";
+                    memory_out.value += Utils.hexLog(rowSegment) + " ||| ";
+                } else {
+                    memory_out.value += " ";
+                }
+            }
         }
     }
 }

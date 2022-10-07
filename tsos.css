@@ -1,11 +1,21 @@
 /* TSOS.css */
 
 body {
-  background: #d5e6ff url(distrib/images/linen.png) repeat;
-  font-family: Helvetica, Verdana, Arial, sans-serif;
+  background: #d5e6ff url(distrib/images/chaos.png) repeat;
+  font-family: monospace;
   font-size: 12pt;
   font-weight: normal;
   font-style: normal;
+  color: white
+}
+
+.label {
+  font-size: xx-large;
+}
+
+#content-body {
+  width: 75%;
+  margin: 0 auto;
 }
 
 h1 {
@@ -31,27 +41,130 @@ h3 {
 }
 
 #display {
-  background-color:#b8a9c9;
-  border: 2px solid #622569;
+  background-color:#702662;
+  border: 2px solid #1e7199;
   cursor: default;
   overflow: hidden;
 }
 
 .normal_button {
-  width: 100px;
+  width: 150px;
 }
 
 .footerText {
-  color: #622569;
+  color: white;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 8pt;
   text-align: center;
 }
 
 #divTaskBar {
-  background-color:rgb(227, 225, 225);
-  border: 1px solid #622569;
-  cursor: default;
-  margin: 10px;
-  padding-left: 10px;
+  background-color: inherit;
+  border: 1px solid #1e7199;
+  color: white;
+  width: 50%;
+  margin: 0 auto;
+  padding: 10px 10px;
 }
+
+#divButtonBar {
+  margin: 0 auto;
+  width: 30%;
+  margin-top: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.normal_button {
+  border-color: black;
+  height: 50px;
+  width: 115px;
+  font-size: medium;
+  margin-right: 10px;
+  font-weight: bold; 
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#btnToggleSingleStep {
+  margin-left: 20px;
+  width: 150px
+}
+
+#col-1 {
+  flex-direction: row;
+  margin-left: 10px;
+  margin-right: 10px;
+  padding: 10px 10px
+}
+
+#col-2 {
+  flex-direction: row;
+  margin-left: 10px;
+  margin-right: 10px;
+  padding: 10px 10px
+}
+
+#col-3 {
+  flex-direction: row;
+  margin-left: 10px;
+  margin-right: 10px;
+  padding: 10px 10px
+}
+
+#col-4 {
+  flex-direction: row;
+  margin-left: 10px;
+  margin-right: 10px;
+  padding: 10px 10px
+}
+
+#container {
+  display: flex;
+}
+
+#processes {
+  margin-top: 40px;
+}
+
+#memory {
+  margin-top: 20px;
+}
+
+#header {
+  font-size: 75px;
+  text-align: center;
+  color: white;
+}
+
+.material-icons {
+  margin-right: 5px;
+  color: white;
+}
+
+#logo {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+  height: 500px;
+  width: 500px;
+}
+
+#cpu-table {
+  width: 300px;
+  text-align: center;
+  font-size: x-large;
+  padding: 10px;
+  border: 1px solid white;
+}
+
+#pcb-table {
+  width: 300px;
+  text-align: center;
+  font-size: x-large;
+  padding: 10px;
+  border: 1px solid white;
+}
+

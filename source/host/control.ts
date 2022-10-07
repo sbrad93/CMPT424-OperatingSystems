@@ -139,13 +139,15 @@ module TSOS {
         public static hostBtnToggleSingleStep_click(btn): void {
             if ((<HTMLButtonElement> document.getElementById("btnToggleSingleStep")).value == "Single Step Off") {
                 (<HTMLButtonElement> document.getElementById("btnToggleSingleStep")).value = "Single Step On";
-                (<HTMLButtonElement> document.getElementById("btnToggleSingleStep")).style.fontWeight = "700";
+                (<HTMLButtonElement> document.getElementById("btnToggleSingleStep")).style.backgroundColor = "#3e8e41";
                 (<HTMLButtonElement> document.getElementById("btnNextStep")).disabled = false;
+                (<HTMLButtonElement> document.getElementById("btnNextStep")).value = "Step >>";
                 _IsSingleStep = true;
             } else {
                 (<HTMLButtonElement> document.getElementById("btnToggleSingleStep")).value = "Single Step Off";
-                (<HTMLButtonElement> document.getElementById("btnToggleSingleStep")).style.fontWeight = "400";
+                (<HTMLButtonElement> document.getElementById("btnToggleSingleStep")).style.backgroundColor = "white";
                 (<HTMLButtonElement> document.getElementById("btnNextStep")).disabled = true;
+                (<HTMLButtonElement> document.getElementById("btnNextStep")).value = "Step";
                 _IsSingleStep = false;
             }
             
@@ -204,7 +206,7 @@ module TSOS {
                     return null;
                 }
             } else {
-                _StdOut.putText("Nothing to load, sir.");
+                _StdOut.putText("Nothing to load. Seriously...");
                 return null;
             }
 
@@ -243,6 +245,13 @@ module TSOS {
             const x = table.rows[1].cells[3];
             const y = table.rows[1].cells[4];
             const z = table.rows[1].cells[5];
+
+            pc.style.borderRight = "1px solid white";
+            ir.style.borderRight = "1px solid white";
+            acc.style.borderRight = "1px solid white";
+            x.style.borderRight = "1px solid white";
+            y.style.borderRight = "1px solid white";
+            z.style.borderRight = "1px solid white";
 
             pc.innerHTML = Utils.hexLog(_CPU.PC);
             ir.innerHTML = Utils.hexLog(_CPU.instructionReg);
@@ -296,6 +305,16 @@ module TSOS {
             const x = row.insertCell(5);
             const y = row.insertCell(6);
             const z = row.insertCell(7);
+
+            pid.style.borderRight = "1px solid white";
+            state.style.borderRight = "1px solid white";
+            pc.style.borderRight = "1px solid white";
+            ir.style.borderRight = "1px solid white";
+            acc.style.borderRight = "1px solid white";
+            x.style.borderRight = "1px solid white";
+            y.style.borderRight = "1px solid white";
+            z.style.borderRight = "1px solid white";
+
 
             pid.innerHTML = _CurrentPCB.pid+"";
             pc.innerHTML = Utils.hexLog(0x00);

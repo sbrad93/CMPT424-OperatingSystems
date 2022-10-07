@@ -91,7 +91,6 @@ module TSOS {
 
                         // Since there's only one process running for now...
                         _CPU.init();
-                        _Memory.reset();
 
                         // Update Process table and memory
                         Control.updatePCBStateInTable(_CurrentPCB.pid);

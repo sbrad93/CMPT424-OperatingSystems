@@ -488,7 +488,7 @@ module TSOS {
         }
 
         public shellLoad(args: string[]) {
-            if ((_Memory.tempArr.length != 0) && (_CurrentPCB != null)) {
+            if ((_MemoryManager.isFull) && (_CurrentPCB != null)) {
                 _CurrentPCB.state = "terminated";
                 Control.updatePCBStateInTable(_CurrentPCB.pid);
                 _StdOut.putText(`Process ${_CurrentPCB.pid}: Overwriting Memory...`);
@@ -524,8 +524,6 @@ module TSOS {
                // Load the program into memory at location $0000	
                _MemoryManager.load(_Memory.tempArr);
 
-               Control.updateMemoryTable();
-
                _StdOut.putText("Successfuly loaded program into memory.");
                _StdOut.advanceLine();
                _StdOut.putText(`PID: ${_CurrentPCB.pid}`);
@@ -552,13 +550,16 @@ module TSOS {
             else if (potentialPCB.state === "terminated") {
                 _StdOut.putText(`Process ${pid} is terminated.`);
             } else {
-                // Clear temp array to load next program
-                _Memory.tempArr = [];
                 // Our potential process is legit so we set it the current process
                 // Update state to "ready" and cpu begins executing
                 _CurrentPCB = potentialPCB;
                 _CurrentPCB.state = "ready";
                 _CPU.isExecuting = true;
+
+                // Clear temp array to load next program
+                _Memory.tempArr = [];
+
+                _MemoryManager.isFull = false;
             }
         }
 

@@ -51,7 +51,7 @@ module TSOS {
             // browser console logging
             this.cpuLog();
 
-            // update Processes table and CPU table at the end of each cpu cycle
+            // update Processes table, CPU table, and Memory table at the end of each cpu cycle
             Control.updatePCBtable(_CurrentPCB.pid);
             Control.updateCPUtable();
             Control.updateMemoryTable();

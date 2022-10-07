@@ -9,9 +9,8 @@ module TSOS {
 
     export class MemoryManager {
 
-        constructor() {
+        constructor(public isFull: boolean = false) {
         }
-
 
         // loads a static program into memory array
         public load(program: string[]): void {
@@ -20,9 +19,12 @@ module TSOS {
                 let opCode_val = parseInt(program[i], 16);
                 _MemoryManager.writeImmmediate(i, opCode_val);
             }
+            // since memory can only hold one program right now...
+            this.isFull = true;
+            Control.updateMemoryTable();
         }
 
-        // inserts given memory byte into specified memory address
+        // helper method that inserts given memory byte into specified memory address
         public writeImmmediate(addr: number, dat: number) {
             for (let i=0; i<this.getMemArr().length; i++) { 
                 if(i == addr) {
@@ -56,8 +58,6 @@ module TSOS {
         }
 
         /* Memory Getters and Setters */
-        // Initially had this is memory.ts, but I started to think it made more sense if the MMU 
-        // was the entity making changes to the MAR and MDR.
         public getMAR() {
             return _Memory.mar;
         } // getMAR

@@ -37,7 +37,7 @@
    <!-- Other Routines -->
    <script type="text/javascript" src="distrib/utils.js"></script>
    <!-- Uncomment the line below to enable GLaDOS testing. -->
-   <!-- <script type="text/javascript" src="http://alanclasses.github.io/TSOS/test/glados-ip2.js"></script> -->
+   <script type="text/javascript" src="http://alanclasses.github.io/TSOS/test/glados-ip2.js"></script>
    
 </head>
 
@@ -46,14 +46,12 @@
 <div id="divMain" style="width:100%;">
    
    <div id="divTaskBar">
-      <div class="task">
+      <div id="date-task" class="task">
          <span class="material-icons">calendar_today</span>
-         <label class="label">DateTime:</label>
          <span id="datetime"></span>
       </div>
-      <div class="task">
+      <div id="status-task" class="task">
          <span class="material-icons">lightbulb</span>
-         <label class="label">Status:</label>
          <span id="status"></span>
       </div>
    </div>
@@ -93,6 +91,7 @@
              value="Single Step Off"
              tabindex="3"
              onclick="TSOS.Control.hostBtnToggleSingleStep_click(this);">
+             
       <input type="button"
              id = "btnNextStep"
              name="brnNextStep"
@@ -105,8 +104,7 @@
 
 <img id="logo" src="distrib/images/logo.png">
 
-   <div id="content-body">
-      <div id="container">
+   <div id="container">
          <div id="col-1">
             <div id="divConsole" style="width:500px; height:500px; float:left;">
                <canvas id="display"
@@ -204,11 +202,7 @@
                         </table>
             </div>
          </div>
-   
    </div>
-   
-   </div>
-
 </div>
 
 <p class="footerText" style="clear:both;">

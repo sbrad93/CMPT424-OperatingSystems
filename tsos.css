@@ -2,11 +2,15 @@
 
 body {
   background: #d5e6ff url(distrib/images/chaos.png) repeat;
-  font-family: Helvetica, Verdana, Arial, sans-serif;
+  font-family: monospace;
   font-size: 12pt;
   font-weight: normal;
   font-style: normal;
   color: white
+}
+
+.label {
+  font-size: xx-large;
 }
 
 #content-body {
@@ -37,8 +41,8 @@ h3 {
 }
 
 #display {
-  background-color:#dca9d3;
-  border: 2px solid #622569;
+  background-color:#702662;
+  border: 2px solid #1e7199;
   cursor: default;
   overflow: hidden;
 }
@@ -55,25 +59,37 @@ h3 {
 }
 
 #divTaskBar {
-  background-color:#efd8ea;
-  border: 1px solid #622569;
-  color: black;
-  cursor: default;
-  padding-left: 10px;
+  background-color: inherit;
+  border: 1px solid #1e7199;
+  color: white;
+  width: 50%;
+  margin: 0 auto;
+  padding: 10px 10px;
 }
 
 #divButtonBar {
   margin: 0 auto;
-  width: 50%;
+  width: 30%;
   margin-top: 30px;
-
-  /* border-style: dashed; */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-#divTaskBar {
-  width: 50%;
-  margin: 0 auto;
-  padding: 10px 10px;
+.normal_button {
+  border-color: black;
+  height: 50px;
+  width: 115px;
+  font-size: medium;
+  margin-right: 10px;
+  font-weight: bold; 
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#btnToggleSingleStep {
+  margin-left: 20px;
+  width: 150px
 }
 
 #col-1 {
@@ -124,10 +140,7 @@ h3 {
 
 .material-icons {
   margin-right: 5px;
-}
-
-.label {
-  font-size: 20px;
+  color: white;
 }
 
 #logo {
@@ -137,5 +150,21 @@ h3 {
   width: 50%;
   height: 500px;
   width: 500px;
+}
+
+#cpu-table {
+  width: 300px;
+  text-align: center;
+  font-size: x-large;
+  padding: 10px;
+  border: 1px solid white;
+}
+
+#pcb-table {
+  width: 300px;
+  text-align: center;
+  font-size: x-large;
+  padding: 10px;
+  border: 1px solid white;
 }
 

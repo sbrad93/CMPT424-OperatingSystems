@@ -9,7 +9,7 @@ module TSOS {
 
     export class MemoryManager {
 
-        constructor(public isFull: boolean = false) {
+        constructor() {
         }
 
         // loads a static program into memory array
@@ -20,8 +20,8 @@ module TSOS {
                 _MemoryManager.writeImmmediate(i, opCode_val);
             }
             // since memory can only hold one program right now...
-            this.isFull = true;
-            Control.updateMemoryTable();
+            _Memory.isFull = true;
+            Control.updateMemoryOutput();
         }
 
         // helper method that inserts given memory byte into specified memory address

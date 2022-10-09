@@ -485,10 +485,13 @@ module TSOS {
 
         public shellTestKrnTrapError(args: string[]) {
             _Kernel.krnTrapError("ChaOS has been shutdown.");
+            _CurrentPCB.state = "terminated";
+            _CPU.isExecuting = false;
+            Control.updatePCBtable(_CurrentPCB.pid);
         }
 
         public shellLoad(args: string[]) {
-            if ((_MemoryManager.isFull) && (_CurrentPCB != null)) {
+            if ((_Memory.isFull) && (_CurrentPCB != null)) {
                 _CurrentPCB.state = "terminated";
                 Control.updatePCBStateInTable(_CurrentPCB.pid);
                 _StdOut.putText(`Process ${_CurrentPCB.pid}: Overwriting Memory...`);
@@ -544,7 +547,7 @@ module TSOS {
                 _StdOut.putText("Usage: run <pid>")
             } else if (!potentialPCB)  {
                 _StdOut.putText(`Process ${pid} does not exist.`);
-            } else if (potentialPCB.state === "ready") {
+            } else if (potentialPCB.state === "running") {
                 _StdOut.putText(`Process ${pid} is already running.`);
             }
             else if (potentialPCB.state === "terminated") {
@@ -555,11 +558,7 @@ module TSOS {
                 _CurrentPCB = potentialPCB;
                 _CurrentPCB.state = "ready";
                 _CPU.isExecuting = true;
-
-                // Clear temp array to load next program
-                _Memory.tempArr = [];
-
-                _MemoryManager.isFull = false;
+                _Memory.isFull = false;
             }
         }
 

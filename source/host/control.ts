@@ -115,7 +115,7 @@ module TSOS {
             _Kernel.krnBootstrap();  // _GLaDOS.afterStartup() will get called in there, if configured.
             
             // Display empty memory
-            Control.updateMemoryTable();
+            Control.updateMemoryOutput();
         }
 
         public static hostBtnHaltOS_click(btn): void {
@@ -155,6 +155,14 @@ module TSOS {
 
         public static hostBtnNextStep_click(btn): void {
             _CanTakeNextStep = true;
+        }
+
+        public static turnOffSingleStep() {
+            (<HTMLButtonElement> document.getElementById("btnToggleSingleStep")).value = "Single Step Off";
+            (<HTMLButtonElement> document.getElementById("btnToggleSingleStep")).style.backgroundColor = "white";
+            (<HTMLButtonElement> document.getElementById("btnNextStep")).disabled = true;
+            (<HTMLButtonElement> document.getElementById("btnNextStep")).value = "Step";
+            _IsSingleStep = false;
         }
 
         public static refreshTime(): void {
@@ -315,7 +323,6 @@ module TSOS {
             y.style.borderRight = "1px solid white";
             z.style.borderRight = "1px solid white";
 
-
             pid.innerHTML = _CurrentPCB.pid+"";
             pc.innerHTML = Utils.hexLog(0x00);
             ir.innerHTML = Utils.hexLog(0x00);
@@ -326,22 +333,22 @@ module TSOS {
             state.innerHTML = _CurrentPCB.state;
         }
 
-        public static updateMemoryTable(): void {
+        public static updateMemoryOutput(): void {
             var memory_out = <HTMLInputElement> document.getElementById("taMemory");
             memory_out.value = "";
-            var rowSegment = 0x00;
+            var rowByte = 0x00;
 
             for (let j=0; j<_Memory.memArr.length; j++) {
                 // Display memory
-                rowSegment += 0x01;
+                rowByte += 0x01;
                 let i = j+1;
                 if (j == 0) {
-                    memory_out.value += Utils.hexLog(rowSegment) + " ||| ";
+                    memory_out.value += Utils.hexLog(0x00) + " ||| ";
                 }
                 memory_out.value += Utils.hexLog(_Memory.memArr[j]);
-                if (i % 8 == 0) {
+                if (i % 8 == 0 && rowByte != 0x100) {
                     memory_out.value += "\n";
-                    memory_out.value += Utils.hexLog(rowSegment) + " ||| ";
+                    memory_out.value += Utils.hexLog(rowByte) + " ||| ";
                 } else {
                     memory_out.value += " ";
                 }

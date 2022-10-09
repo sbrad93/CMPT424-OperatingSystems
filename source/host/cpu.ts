@@ -54,7 +54,7 @@ module TSOS {
             // update Processes table, CPU table, and Memory table at the end of each cpu cycle
             Control.updatePCBtable(_CurrentPCB.pid);
             Control.updateCPUtable();
-            Control.updateMemoryTable();
+            Control.updateMemoryOutput();
 
             if (_IsSingleStep) {
                 // check if in single step mode
@@ -204,6 +204,8 @@ module TSOS {
             this.PC ++;
             _CurrentPCB.state = "terminated";
             this.isExecuting = false;
+            // Single step mode turned off once program executes
+            Control.turnOffSingleStep();
             _StdOut.advanceLine();
             _StdOut.putText("Execution completed.")
             _StdOut.advanceLine();

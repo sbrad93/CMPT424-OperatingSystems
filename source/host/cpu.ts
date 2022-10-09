@@ -24,7 +24,6 @@ module TSOS {
                     public instructionReg: number = 0x00,
                     public step: number = 0x00,
                     public clockCnt: number = 0,
-                    public out: string = "",
                     public currentPCB: PCB = new PCB(_PidCounter)) {
         }
 
@@ -38,7 +37,6 @@ module TSOS {
             this.instructionReg = 0x00;
             this.step = 0x00;
             this.clockCnt = 0;
-            this.out = "";
         }
 
         public cycle(): void {
@@ -286,8 +284,7 @@ module TSOS {
                         "xReg: " + Utils.hexLog(this.Xreg) + "\n" +
                         "yReg: " + Utils.hexLog(this.Yreg) + "\n" +
                         "zFlag: " + Utils.hexLog(this.Zflag) + "\n" +
-                        "Step: " + Utils.hexLog(this.step) + "\n" +
-                        "Out: " + this.out);
+                        "Step: " + Utils.hexLog(this.step) + "\n");
             console.log("---------------------------------------");
         }
     }

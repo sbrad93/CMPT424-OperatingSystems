@@ -94,7 +94,7 @@ module TSOS {
 
                         // Update Process table and memory
                         Control.updatePCBStateInTable(_CurrentPCB.pid);
-                        Control.updateMemoryTable();
+                        Control.updateMemoryOutput();
                         Control.updateCPUtable();
 
                         _StdOut.advanceLine();

@@ -9,28 +9,65 @@ module TSOS {
 
     export class MemoryManager {
 
-        constructor() {
+        constructor( public segmentsList: MemorySegment[] = [],
+                     public segmentSize: number = 0x100 ) { // 256
         }
 
-        // loads a static program into memory array
-        public load(program: string[]): void {
-            for (let i=0; i<program.length; i++) {
-                // load program into memory array
-                let opCode_val = parseInt(program[i], 16);
-                _MemoryManager.writeImmmediate(i, opCode_val);
+
+        // loads a static program into correct segment in memory array
+        public load(program_str: string[]): void {
+            let i = 0;
+            let activeSegment = null;
+
+            while (i < this.segmentsList.length && activeSegment == null) {
+                // find the first inactive segment and set to active
+                if (!this.segmentsList[i].isActive) {
+                    activeSegment = this.segmentsList[i];
+                    activeSegment.isActive = true;
+                }
+                i++;
             }
-            // since memory can only hold one program right now...
-            _Memory.isFull = true;
+
+            let program = [];
+            for (let i=0; i<program_str.length; i++) {
+                // create an array of numeric opcodes
+                program.push(parseInt(program_str[i], 16));
+            }
+
+            // write program to memory
+            _MemoryManager.writeImmmediate(program, activeSegment);
+            
+            if (this.segmentsList[this.segmentsList.length-1].isActive) {
+                _Memory.isFull = true;
+                alert("memory is now full");
+            }
             Control.updateMemoryOutput();
         }
 
-        // helper method that inserts given memory byte into specified memory address
-        public writeImmmediate(addr: number, dat: number) {
-            for (let i=0; i<this.getMemArr().length; i++) { 
-                if(i == addr) {
-                    this.getMemArr()[i] = dat;
+        
+        // helper method that places a given opcode to the correct position within the correct segment
+        public writeImmmediate(program: number[], segment: MemorySegment) {
+            let j = 0;
+            let i = segment.firstByte;
+
+            while (i<segment.lastByte && j<program.length) { 
+                this.getMemArr()[i++] = program[j++];  
+            }
+        }
+
+        public segmentsInit() {
+            // loop through sections of memory array of memory segment size
+            for (let i=0; i<_Memory.memSize; i+=this.segmentSize) {
+
+                // if another segment can still be traversed within memory...
+                if (i+this.segmentSize <= _Memory.memSize) {
+
+                    // ...create a segment in that section in memory
+                    this.segmentsList.push(new MemorySegment(i, this.segmentSize+i-1))
+                    // console.log((this.segmentSize+i-1)-i+1);
                 }
             }
+            // console.log(this.segmentsList)
         }
 
         // updates last two hex digits in MAR

@@ -493,6 +493,8 @@ module TSOS {
         public shellLoad(args: string[]) {
             if ((_Memory.isFull) && (_CurrentPCB != null)) {
                 _CurrentPCB.state = "terminated";
+                // set the last segment to inactive and overwrite memory
+                _MemoryManager.segmentsList[_MemoryManager.segmentsList.length-1].isActive = false;
                 Control.updatePCBStateInTable(_CurrentPCB.pid);
                 _StdOut.putText(`Process ${_CurrentPCB.pid}: Overwriting Memory...`);
                 _StdOut.advanceLine();
@@ -505,8 +507,8 @@ module TSOS {
 
             if (opcode_str != null) {
                 // Reset CPU registers and memory (for now)
-                _CPU.init();
-                _Memory.arrInit();
+                // _CPU.init();
+                // _Memory.arrInit();
 
                 // Create a new process and add to PCB list
                 _CurrentPCB = new PCB(_PidCounter);
@@ -522,9 +524,8 @@ module TSOS {
 
                // Memory output
                var memory_out = <HTMLInputElement> document.getElementById("taMemory");
-               memory_out.value = "";
 
-               // Load the program into memory at location $0000	
+               // Load the program into memory	
                _MemoryManager.load(_Memory.tempArr);
 
                _StdOut.putText("Successfuly loaded program into memory.");

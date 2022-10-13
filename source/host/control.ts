@@ -324,13 +324,13 @@ module TSOS {
             z.style.borderRight = "1px solid white";
 
             pid.innerHTML = _CurrentPCB.pid+"";
+            state.innerHTML = _CurrentPCB.state;
             pc.innerHTML = Utils.hexLog(0x00);
             ir.innerHTML = Utils.hexLog(0x00);
             acc.innerHTML = Utils.hexLog(0x00);
             x.innerHTML = Utils.hexLog(0x00);
             y.innerHTML =Utils.hexLog(0x00);
             z.innerHTML = Utils.hexLog(0x00);
-            state.innerHTML = _CurrentPCB.state;
         }
 
         public static updateMemoryOutput(): void {
@@ -342,13 +342,22 @@ module TSOS {
                 // Display memory
                 rowByte += 0x01;
                 let i = j+1;
+
                 if (j == 0) {
-                    memory_out.value += Utils.hexLog(0x00) + " ||| ";
+                    // added an extra space to line up pipe characters for 8 bit and 12 bit hex (bc I'm insane)
+                    memory_out.value += Utils.hexLog(0x00) + "  ||| ";
                 }
+
                 memory_out.value += Utils.hexLog(_Memory.memArr[j]);
-                if (i % 8 == 0 && rowByte != 0x100) {
+
+                if (i % 8 == 0 && rowByte != 0x300) {
                     memory_out.value += "\n";
-                    memory_out.value += Utils.hexLog(rowByte) + " ||| ";
+                    if (rowByte < 0x100) {
+                        // added an extra space to line up pipe characters for 8 bit and 12 bit hex (bc I'm insane)
+                        memory_out.value += Utils.hexLog(rowByte) + "  ||| ";
+                    } else {
+                        memory_out.value += Utils.hexLog(rowByte) + " ||| ";
+                    }
                 } else {
                     memory_out.value += " ";
                 }

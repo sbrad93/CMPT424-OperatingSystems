@@ -9,8 +9,7 @@ module TSOS {
     export class Memory {
 
         constructor(public memArr: number [] = null,
-                    // iProject 2: load one user program in 256 bytes of memory
-                    public memSize: number = 0x100, // 256 in decimal
+                    public memSize: number = 0x300, // 768
                     public tempArr: string[] = null,
                     public mar: number = 0x0000,
                     public mdr: number = 0x00,

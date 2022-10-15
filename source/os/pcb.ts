@@ -12,7 +12,8 @@ module TSOS {
                     public Yreg: number = 0x00,
                     public Zflag: number = 0x00,
                     public isExecuting: boolean = false,
-                    public instructionReg: number = 0x00) {
+                    public instructionReg: number = 0x00,
+                    public assignedSegment: MemorySegment = null) {
 
             this.pid = _pid;
         }

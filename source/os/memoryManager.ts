@@ -10,9 +10,23 @@ module TSOS {
     export class MemoryManager {
 
         constructor( public segmentsList: MemorySegment[] = [],
-                     public segmentSize: number = 0x100 ) { // 256
+                     public segmentSize: number = 0x100 ) { // 256     
+            this.segmentsInit();
         }
 
+        // initialize the three segments in memory
+        public segmentsInit() {
+            // loop through sections of memory array of memory segment size
+            for (let i=0; i<_Memory.memSize; i+=this.segmentSize) {
+
+                // if another segment can still be traversed within memory...
+                if (i+this.segmentSize <= _Memory.memSize) {
+
+                    // ...create a segment in that section in memory
+                    this.segmentsList.push(new MemorySegment(i, this.segmentSize+i-1))
+                }
+            }
+        }
 
         // loads a static program into correct segment in memory array
         public load(program_str: string[]): void {
@@ -36,15 +50,21 @@ module TSOS {
 
             // write program to memory
             _MemoryManager.writeImmmediate(program, activeSegment);
+
+            // assign the segment to the current process
+            _CurrentPCB.assignedSegment = activeSegment;
             
+            // check if all segments are active
             if (this.segmentsList[this.segmentsList.length-1].isActive) {
                 _Memory.isFull = true;
                 alert("memory is now full");
             }
+
+            // update the memory table
             Control.updateMemoryOutput();
         }
 
-        
+
         // helper method that places a given opcode to the correct position within the correct segment
         public writeImmmediate(program: number[], segment: MemorySegment) {
             let j = 0;
@@ -55,36 +75,16 @@ module TSOS {
             }
         }
 
-        public segmentsInit() {
-            // loop through sections of memory array of memory segment size
-            for (let i=0; i<_Memory.memSize; i+=this.segmentSize) {
-
-                // if another segment can still be traversed within memory...
-                if (i+this.segmentSize <= _Memory.memSize) {
-
-                    // ...create a segment in that section in memory
-                    this.segmentsList.push(new MemorySegment(i, this.segmentSize+i-1))
-                    // console.log((this.segmentSize+i-1)-i+1);
-                }
-            }
-            // console.log(this.segmentsList)
-        }
-
-        // updates last two hex digits in MAR
-        public setLowOrderByte(lob: number) {
-            this.setMAR(this.getMAR() + lob);
-        }
-
-        // updates first two hex digits in MAR
-        public setHighOrderByte(hob: number) {
-            let hob_mod = hob * 0x0100;
-            this.setMAR(hob_mod + this.getMAR());
-        }
-
-        // updates 16 bit MAR in one cycle
-        public modMAR(lob: number) {
+        // calculates the MAR in one cycle
+        // does so by finding high and low order bytes and adding them together
+        public calcMAR(currPC: number) {
+            let nextPC = currPC + 1;
             this.setMAR(0x0000);
-            this.setLowOrderByte(lob);
+
+            let lob = this.getMAR() + _MemoryManager.getMemArr()[currPC];
+            let hob = _MemoryManager.getMemArr()[nextPC] * 0x0100;
+
+            this.setMAR(lob + hob);
         }
 
         // all memory properties are reinitialized to zero
@@ -93,6 +93,8 @@ module TSOS {
             this.setMDR(0x00);
             _Memory.arrInit();
         }
+
+
 
         /* Memory Getters and Setters */
         public getMAR() {

@@ -39,7 +39,6 @@ module TSOS {
 
             // Initialize the memory manager and create segments
             _MemoryManager = new MemoryManager();
-            _MemoryManager.segmentsInit();
 
             //
             // ... more?

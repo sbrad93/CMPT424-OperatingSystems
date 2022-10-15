@@ -24,7 +24,9 @@ module TSOS {
                     public instructionReg: number = 0x00,
                     public step: number = 0x00,
                     public clockCnt: number = 0,
-                    public currentPCB: PCB = new PCB(_PidCounter)) {
+                    public currentPCB: PCB = new PCB(_PidCounter),
+                    // for testing purposes
+                    public out: string = "") {
         }
 
         public init(): void {
@@ -129,10 +131,8 @@ module TSOS {
         // AD
         public loadAccFromMemory() {
             this.PC ++;
-            _MemoryManager.setMAR(0x00);
-            _MemoryManager.setLowOrderByte(_MemoryManager.getMemArr()[this.PC]);
+            _MemoryManager.calcMAR(this.PC);
             this.PC ++;
-            _MemoryManager.setHighOrderByte(_MemoryManager.getMemArr()[this.PC]);
             this.PC ++;
             _MemAccessor.read();
             this.acc = _MemoryManager.getMDR();
@@ -140,10 +140,8 @@ module TSOS {
         // 8D
         public storeAccInMemory() {
             this.PC ++;
-            _MemoryManager.setMAR(0x00);
-            _MemoryManager.setLowOrderByte(_MemoryManager.getMemArr()[this.PC]);
+            _MemoryManager.calcMAR(this.PC);
             this.PC ++;
-            _MemoryManager.setHighOrderByte(_MemoryManager.getMemArr()[this.PC]);
             this.PC ++;
             _MemoryManager.setMDR(this.acc);
             _MemAccessor.write();
@@ -151,10 +149,8 @@ module TSOS {
         // 6D
         public addWithCarry() {
             this.PC ++;
-            _MemoryManager.setMAR(0x00);
-            _MemoryManager.setLowOrderByte(_MemoryManager.getMemArr()[this.PC]);
+            _MemoryManager.calcMAR(this.PC);
             this.PC ++;
-            _MemoryManager.setHighOrderByte(_MemoryManager.getMemArr()[this.PC]);
             this.PC ++;
             _MemAccessor.read();
             this.acc += _MemoryManager.getMDR();
@@ -168,10 +164,8 @@ module TSOS {
         // AE
         public loadXFromMemory() {
             this.PC ++;
-            _MemoryManager.setMAR(0x00);
-            _MemoryManager.setLowOrderByte(_MemoryManager.getMemArr()[this.PC]);
+            _MemoryManager.calcMAR(this.PC);
             this.PC ++;
-            _MemoryManager.setHighOrderByte(_MemoryManager.getMemArr()[this.PC]);
             this.PC ++;
             _MemAccessor.read();
             this.Xreg = _MemoryManager.getMDR();
@@ -185,10 +179,8 @@ module TSOS {
         // AC
         public loadYFromMemory() {
             this.PC ++;
-            _MemoryManager.setMAR(0x00);
-            _MemoryManager.setLowOrderByte(_MemoryManager.getMemArr()[this.PC]);
+            _MemoryManager.calcMAR(this.PC);
             this.PC ++;
-            _MemoryManager.setHighOrderByte(_MemoryManager.getMemArr()[this.PC]);
             this.PC ++;
             _MemAccessor.read();
             this.Yreg = _MemoryManager.getMDR();
@@ -202,6 +194,7 @@ module TSOS {
             this.PC ++;
             _CurrentPCB.state = "terminated";
             this.isExecuting = false;
+            this.out = "";
             // Single step mode turned off once program executes
             Control.turnOffSingleStep();
             _StdOut.advanceLine();
@@ -212,10 +205,8 @@ module TSOS {
         // EC
         public compareWithX() {
             this.PC ++;
-            _MemoryManager.setMAR(0x00);
-            _MemoryManager.setLowOrderByte(_MemoryManager.getMemArr()[this.PC]);
+            _MemoryManager.calcMAR(this.PC);
             this.PC ++;
-            _MemoryManager.setHighOrderByte(_MemoryManager.getMemArr()[this.PC]);
             this.PC ++;
             _MemAccessor.read();
             if (this.Xreg == _MemoryManager.getMDR()) {
@@ -228,11 +219,14 @@ module TSOS {
         public branch() {
             this.PC++;
             if (this.Zflag == 0) {
-                _MemoryManager.modMAR(this.PC);
+                _MemoryManager.setMAR(this.PC);
                 _MemAccessor.read();
+                console.log("PC: " + Utils.hexLog(this.PC));
+                console.log("MDR: " + Utils.hexLog(_MemoryManager.getMDR()));
                 this.PC += _MemoryManager.getMDR();
+                console.log("PC + MDR: " + Utils.hexLog(this.PC));
                 if (this.PC > 0x100) {
-                    this.PC = this.PC % 0x100;
+                    this.PC = (this.PC % 0x100) +  _CurrentPCB.assignedSegment.firstByte;
                 }
             }
             this.PC++;
@@ -240,11 +234,8 @@ module TSOS {
         // EE
         public increment() {
             this.PC ++;
-            _MemoryManager.setMAR(0x00);
-            _MemoryManager.setLowOrderByte(_MemoryManager.getMemArr()[this.PC]);
-            this.step = 2;
+            _MemoryManager.calcMAR(this.PC);
             this.PC ++;
-            _MemoryManager.setHighOrderByte(_MemoryManager.getMemArr()[this.PC]);
             this.PC ++;
             _MemAccessor.read();
             this.acc = _MemoryManager.getMDR();
@@ -257,11 +248,12 @@ module TSOS {
             this.PC ++;
             if (this.Xreg == 0x01) {                                                // prints integer in y register
                 _StdOut.putText(this.Yreg.toString(16));
+                this.out += this.Yreg.toString(16);
             } else if (this.Xreg == 0x02) {                                         // prints 0x00 terminated string stored at address in y register;
                 // location in memory where string begins
                 let startingPoint = this.Yreg;
                 let output = "";
-                for (let i=0; i+startingPoint < _Memory.memSize; i++) {
+                for (let i=_CurrentPCB.assignedSegment.firstByte; i+startingPoint < _Memory.memSize; i++) {
                     // loop until string is terminated with 0x00
                     let byte = _MemoryManager.getMemArr()[startingPoint+i];
                     if (byte == 0x00) {
@@ -272,6 +264,7 @@ module TSOS {
                 }
                 // print output to console and reset y register
                 _StdOut.putText(output);
+                this.out += output;
                 this.Yreg = 0x00;
             } 
         }
@@ -284,7 +277,8 @@ module TSOS {
                         "xReg: " + Utils.hexLog(this.Xreg) + "\n" +
                         "yReg: " + Utils.hexLog(this.Yreg) + "\n" +
                         "zFlag: " + Utils.hexLog(this.Zflag) + "\n" +
-                        "Step: " + Utils.hexLog(this.step) + "\n");
+                        "Step: " + Utils.hexLog(this.step) + "\n" +
+                        "Out: " + this.out);
             console.log("---------------------------------------");
         }
     }

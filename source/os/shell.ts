@@ -507,8 +507,7 @@ module TSOS {
 
             if (opcode_str != null) {
                 // Reset CPU registers and memory (for now)
-                // _CPU.init();
-                // _Memory.arrInit();
+                _CPU.init();
 
                 // Create a new process and add to PCB list
                 _CurrentPCB = new PCB(_PidCounter);
@@ -555,11 +554,15 @@ module TSOS {
                 _StdOut.putText(`Process ${pid} is terminated.`);
             } else {
                 // Our potential process is legit so we set it the current process
-                // Update state to "ready" and cpu begins executing
+                // Update state to "ready"
                 _CurrentPCB = potentialPCB;
                 _CurrentPCB.state = "ready";
+
+                // Set the PC to the active segment
+                _CPU.PC = _CurrentPCB.assignedSegment.firstByte;
+
+                // And cpu begins executing
                 _CPU.isExecuting = true;
-                _Memory.isFull = false;
             }
         }
 

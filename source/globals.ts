@@ -34,6 +34,7 @@ var _CPU: TSOS.Cpu;  // Utilize TypeScript's type annotation system to ensure th
 
 // Software (OS)
 var _MemoryManager: TSOS.MemoryManager;
+var _Scheduler: TSOS.Scheduler;
 
 var _OSclock: number = 0;  // Page 23.
 

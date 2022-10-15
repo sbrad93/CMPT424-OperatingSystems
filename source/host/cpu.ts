@@ -221,12 +221,9 @@ module TSOS {
             if (this.Zflag == 0) {
                 _MemoryManager.setMAR(this.PC);
                 _MemAccessor.read();
-                console.log("PC: " + Utils.hexLog(this.PC));
-                console.log("MDR: " + Utils.hexLog(_MemoryManager.getMDR()));
                 this.PC += _MemoryManager.getMDR();
-                console.log("PC + MDR: " + Utils.hexLog(this.PC));
                 if (this.PC > 0x100) {
-                    this.PC = (this.PC % 0x100) +  _CurrentPCB.assignedSegment.firstByte;
+                    this.PC = (this.PC % 0x100) +  _CurrentPCB.assignedSegment.base;
                 }
             }
             this.PC++;
@@ -253,7 +250,7 @@ module TSOS {
                 // location in memory where string begins
                 let startingPoint = this.Yreg;
                 let output = "";
-                for (let i=_CurrentPCB.assignedSegment.firstByte; i+startingPoint < _Memory.memSize; i++) {
+                for (let i=_CurrentPCB.assignedSegment.base; i+startingPoint < _Memory.memSize; i++) {
                     // loop until string is terminated with 0x00
                     let byte = _MemoryManager.getMemArr()[startingPoint+i];
                     if (byte == 0x00) {

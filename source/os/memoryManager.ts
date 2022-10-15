@@ -28,6 +28,13 @@ module TSOS {
             }
         }
 
+        // set all segments to inactive
+        resetSegmentsStatus() {
+            for (let i=0; i<this.segmentsList.length; i++) {
+                this.segmentsList[i].isActive = false;
+            }
+        }
+
         // loads a static program into correct segment in memory array
         public load(program_str: string[]): void {
             let i = 0;
@@ -68,9 +75,9 @@ module TSOS {
         // helper method that places a given opcode to the correct position within the correct segment
         public writeImmmediate(program: number[], segment: MemorySegment) {
             let j = 0;
-            let i = segment.firstByte;
+            let i = segment.base;
 
-            while (i<segment.lastByte && j<program.length) { 
+            while (i<segment.limit && j<program.length) { 
                 this.getMemArr()[i++] = program[j++];  
             }
         }

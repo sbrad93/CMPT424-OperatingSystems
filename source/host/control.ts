@@ -88,12 +88,12 @@ module TSOS {
             // .. set focus on the OS console display ...
             document.getElementById("display").focus();
 
-            // Create the Memory Accessor
-            _MemAccessor = new MemAccessor();
-
             // Create and initialize our memory prototype
             _Memory = new Memory();
             _Memory.arrInit();
+
+            // Create the Memory Accessor
+            _MemAccessor = new MemAccessor();
 
             // Check for our testing and enrichment core, which
             // may be referenced here (from index.html) as function Glados().
@@ -107,6 +107,9 @@ module TSOS {
             // ... Create and initialize the CPU (because it's part of the hardware)  ...
             _CPU = new Cpu();  // Note: We could simulate multi-core systems by instantiating more than one instance of the CPU here.
             _CPU.init();       //       There's more to do, like dealing with scheduling and such, but this would be a start. Pretty cool.
+
+            // Create the CPU Scheduler
+            _Scheduler = new Scheduler();
 
             // ... then set the host clock pulse ...
             _hardwareClockID = setInterval(Devices.hostClockPulse, CPU_CLOCK_INTERVAL);
@@ -293,10 +296,10 @@ module TSOS {
             z.innerHTML = Utils.hexLog(_CPU.Zflag);
         }
 
-        public static updatePCBStateInTable(currPID: number): void {
+        public static updatePCBStateInTable(pid: number, state_str: string): void {
             const table = <HTMLTableElement> document.getElementById("pcb-table");
-            const state = table.rows[currPID+1].cells[1];
-            state.innerHTML = _CurrentPCB.state;
+            const state = table.rows[pid+1].cells[1];
+            state.innerHTML = state_str;
         }
 
         public static addRowToPCBTable(): void {

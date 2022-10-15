@@ -10,13 +10,13 @@ module TSOS {
 
     export class MemorySegment {
 
-        public firstByte: number = 0x00;
-        public lastByte: number = 0x00;
+        public base: number = 0x00;
+        public limit: number = 0x00;
         public isActive: boolean = false;
 
-        constructor(first, last) {
-            this.firstByte = first;
-            this.lastByte = last;
+        constructor(baseByte, limitByte) {
+            this.base = baseByte;
+            this.limit = limitByte;
             this.isActive = false;
         }
     }

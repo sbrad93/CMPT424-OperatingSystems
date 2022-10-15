@@ -103,21 +103,28 @@ module TSOS {
                                 "- Tests when kernel traps an OS error and displays BSOD.");
             this.commandList[this.commandList.length] = sc;
             
-            // Load input values into console
+            // load input values into console
             sc = new ShellCommand(this.shellLoad,
                             "load",
                             "<string> - Loads a user program into the console.");
             this.commandList[this.commandList.length] = sc;
 
-            // Run a process
+            // run a process
             sc = new ShellCommand(this.shellRun,
                             "run",
                             "<int> - Runs a specified process.");
             this.commandList[this.commandList.length] = sc;
-            // Memory dump testing
+
+            // memory dump testing
             sc = new ShellCommand(this.shellMemoryDump,
                             "memdump",
                             " - Displays memory in browser console.");
+            this.commandList[this.commandList.length] = sc;
+
+            // clear all memory pertitions
+            sc = new ShellCommand(this.shellClearMem,
+                            "clearmem",
+                            " - Clears all memory partitions.");
             this.commandList[this.commandList.length] = sc;
 
             // ps  - list the running processes and their IDs
@@ -274,13 +281,6 @@ module TSOS {
                 _StdOut.advanceLine();
                 _StdOut.putText(_OsShell.commandList[i].command + " " + _OsShell.commandList[i].description);
             }
-
-            // _StdOut.putText("Commands:");
-            // _StdIn.advanceLine();
-            // for (let i in _OsShell.commandList) {
-            //     Utils.chckShellLineWrap(_OsShell.commandList[i].command + " " +_OsShell.commandList[i].description);
-            // }
-
         }
 
         public shellShutdown(args: string[]) {
@@ -349,6 +349,9 @@ module TSOS {
                         break;
                     case "memdump":
                         _StdOut.putText("Displays memory in browser console.")
+                        break;
+                    case "clearmem":
+                        _StdOut.putText("Clears all memory partitions.")
                         break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
@@ -495,7 +498,7 @@ module TSOS {
                 _CurrentPCB.state = "terminated";
                 // set the last segment to inactive and overwrite memory
                 _MemoryManager.segmentsList[_MemoryManager.segmentsList.length-1].isActive = false;
-                Control.updatePCBStateInTable(_CurrentPCB.pid);
+                Control.updatePCBStateInTable(_CurrentPCB.pid, _CurrentPCB.state);
                 _StdOut.putText(`Process ${_CurrentPCB.pid}: Overwriting Memory...`);
                 _StdOut.advanceLine();
             }
@@ -558,17 +561,46 @@ module TSOS {
                 _CurrentPCB = potentialPCB;
                 _CurrentPCB.state = "ready";
 
+                // Add the process to the ready queue
+                _Scheduler.readyQueue.enqueue(_CurrentPCB);
+
+
+                // ---- CPU scheduling...
                 // Set the PC to the active segment
-                _CPU.PC = _CurrentPCB.assignedSegment.firstByte;
+                _CPU.PC = _CurrentPCB.assignedSegment.base;
 
                 // And cpu begins executing
                 _CPU.isExecuting = true;
+                // --------
+
+
             }
         }
 
         public shellMemoryDump(args: string[]) {
             _MemAccessor.displayMemory(0x300);
             _StdOut.putText("Done.");
+        }
+
+        public shellClearMem(args: string[]) {
+            // Terminate all processes and update output
+            for (let i=0; i<_PCBlist.length; i++) {
+               _PCBlist[i].state = "terminated";
+                Control.updatePCBStateInTable(_PCBlist[i].pid, _PCBlist[i].state);
+            }
+
+            // Reset memory and update output
+            _Memory.reset();
+            Control.updateMemoryOutput();
+
+            // Clear the ready queue
+            _Scheduler.reset();
+
+            // Make all segments inactive
+            _MemoryManager.resetSegmentsStatus();
+
+            // Reset current process to null
+            _CurrentPCB = null;
         }
     }
 }

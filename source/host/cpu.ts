@@ -47,7 +47,7 @@ module TSOS {
             this.decodeNExecute();
 
             // browser console logging
-            this.cpuLog();
+            // this.cpuLog();
 
             // update Processes table, CPU table, and Memory table at the end of each cpu cycle
             Control.updatePCBtable(_CurrentPCB.pid);
@@ -187,25 +187,6 @@ module TSOS {
         public noOp() {
             this.PC ++;
         }
-        // 00
-        public brk() {
-            this.PC ++;
-            this.isExecuting = false;
-            this.out = "";
-
-            // Current process is now terminated so...
-            _CurrentPCB.state = "terminated";
-            // ...the assigned segment can now be reused
-            _CurrentPCB.assignedSegment.isActive = false;
-
-            // Single step mode turned off once program executes
-            Control.turnOffSingleStep();
-
-            _StdOut.advanceLine();
-            _StdOut.putText("Execution completed.")
-            _StdOut.advanceLine();
-            _OsShell.putPrompt();
-        }
         // EC
         public compareWithX() {
             this.PC ++;
@@ -268,6 +249,23 @@ module TSOS {
                 this.out += output;
                 this.Yreg = 0x00;
             } 
+        }
+        // 00
+        public brk() {
+            this.PC ++;
+            this.isExecuting = false;
+            this.out = "";
+
+            // Terminate current process and set associated segment to inactive
+            _CurrentPCB.state = "terminated";
+            _CurrentPCB.assignedSegment.isActive = false;
+            Control.updatePCBStateInTable(_CurrentPCB.pid, _CurrentPCB.state);
+
+            // Single step mode turned off once program executes
+            Control.turnOffSingleStep();
+
+            // Schedule next process
+            _Scheduler.schedule();
         }
 
         public cpuLog() {

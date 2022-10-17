@@ -126,6 +126,11 @@ module TSOS {
                             "clearmem",
                             " - Clears all memory partitions.");
             this.commandList[this.commandList.length] = sc;
+            // clear all memory pertitions
+            sc = new ShellCommand(this.shellRunAll,
+                            "runall",
+                            " - Run all loaded processes.");
+            this.commandList[this.commandList.length] = sc;
 
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -353,6 +358,9 @@ module TSOS {
                     case "clearmem":
                         _StdOut.putText("Clears all memory partitions.")
                         break;
+                    case "clearmem":
+                        _StdOut.putText("Runs all loaded processes.")
+                        break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -567,6 +575,27 @@ module TSOS {
                 // Add the process to the ready queue and schedule it
                 _Scheduler.readyQueue.enqueue(_CurrentPCB);
                 _Scheduler.schedule();
+            }
+        }
+
+        public shellRunAll(args: string[]) {
+            let processExists: boolean = false; 
+
+            for (let i=0; i<_PCBlist.length; i++) {
+                // Add all resident processes to the ready queue
+                // and check that any process even exists
+                if (_PCBlist[i].state == "resident") {
+                    _CurrentPCB = _PCBlist[i];
+                    _CurrentPCB.state = "ready";
+                    _Scheduler.readyQueue.enqueue(_CurrentPCB);
+                    processExists = true;
+                }
+            }
+
+            if (processExists) {
+                _Scheduler.schedule()
+            } else {
+                _StdOut.putText("There are no processes to run. That's embarrassing.")
             }
         }
 

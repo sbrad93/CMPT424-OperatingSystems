@@ -17,6 +17,10 @@ module TSOS {
             return this.q.length;
         }
 
+        public getAt(index: number) {
+            return this.q[index];
+        }
+
         public isEmpty(){
             return (this.q.length == 0);
         }

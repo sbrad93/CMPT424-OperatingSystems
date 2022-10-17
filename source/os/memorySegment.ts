@@ -2,7 +2,7 @@
     MemorySegment.ts
 
     Class Constructor for a Memory Segment. 
-    Implemented to simplify memory allocation/deallocation routines in MemoryManager.ts.
+    Implemented to simplify memory allocation/deallocation and CPU scheduling routines.
     ----------- */
 
 module TSOS {

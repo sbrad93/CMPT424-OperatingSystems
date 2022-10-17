@@ -104,20 +104,18 @@
              onclick="TSOS.Control.hostBtnNextStep_click(this)">
    </div>
 
-<img id="logo" src="distrib/images/logo.png">
+   <img id="logo" src="distrib/images/logo.png">
 
-   <div id="container">
+   <div id="row-1" class="row">
          <div id="col-1">
-            <div id="divConsole" style="width:500px; height:500px; float:left;">
+            <div id="divConsole" style="width:600px; height:500px; float:left;">
                <canvas id="display"
-                       width="500px"
+                       width="600px"
                        height="500px"
                        tabindex="3">
                </canvas>
             </div>
          </div>
-      
-      
       
          <div id="col-2">
             <div id="divLog">
@@ -133,8 +131,6 @@
             </div>
          </div>
    
-   
-      
          <div id="col-3">
             <div id="divUserProgramInput">
                <label class="label">
@@ -142,28 +138,12 @@
                   <br>
                   <textarea name="taProgramInput"
                             id  ="taProgramInput"
-                            rows="8"
-                            cols="48"
-                  ></textarea>
-               </label>
-            </div>
-   
-            <div id="memory">
-               <label class="label">
-                  Memory
-                  <br>
-                  <textarea name="taMemory"
-                            id  ="taMemory"
-                            rows="14"
-                            cols="48"
-                            readonly="readonly"
+                            rows="18"
+                            cols="40"
                   ></textarea>
                </label>
             </div>
          </div>
-   
-   
-   
    
          <div id="col-4">
             <div id="cpu" class="section">
@@ -205,6 +185,21 @@
                         </table>
             </div>
          </div>
+   </div>
+
+   <div id="row-2" class="row">
+      <div id="memory">
+         <label class="label">
+            Memory
+            <br>
+            <textarea name="taMemory"
+                     id  ="taMemory"
+                     rows="20"
+                     cols="45"
+                     readonly="readonly"
+            ></textarea>
+         </label>
+      </div>
    </div>
 </div>
 

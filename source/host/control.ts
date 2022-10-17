@@ -342,27 +342,28 @@ module TSOS {
             var rowByte = 0x00;
 
             for (let j=0; j<_Memory.memArr.length; j++) {
-                // Display memory
-                rowByte += 0x01;
                 let i = j+1;
 
+                // Base case
                 if (j == 0) {
-                    // added an extra space to line up pipe characters for 8 bit and 12 bit hex (bc I'm insane)
-                    memory_out.value += Utils.hexLog(0x00) + "  ||| ";
+                    memory_out.value += '0x' + ('00' + rowByte.toString(16).toUpperCase()).slice(-3);
+                    memory_out.value += " ".repeat(3) + "|||" + " ".repeat(3);
                 }
 
-                memory_out.value += Utils.hexLog(_Memory.memArr[j]);
+                // Print the op code
+                memory_out.value += Utils.hexLog(_Memory.memArr[j]).slice(-2);
 
+                // Print byte value every 8 opcodes
+                rowByte += 0x01;
                 if (i % 8 == 0 && rowByte != 0x300) {
-                    memory_out.value += "\n";
-                    if (rowByte < 0x100) {
-                        // added an extra space to line up pipe characters for 8 bit and 12 bit hex (bc I'm insane)
-                        memory_out.value += Utils.hexLog(rowByte) + "  ||| ";
-                    } else {
-                        memory_out.value += Utils.hexLog(rowByte) + " ||| ";
+                    if (rowByte == 0x100 || rowByte == 0x200) {
+                        memory_out.value += "\n"
                     }
+                    memory_out.value += "\n";
+                    memory_out.value += '0x' + ('00' + rowByte.toString(16).toUpperCase()).slice(-3);
+                    memory_out.value += " ".repeat(3) + "|||" + " ".repeat(3);
                 } else {
-                    memory_out.value += " ";
+                    memory_out.value += (" ".repeat(2));
                 }
             }
         }

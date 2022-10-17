@@ -15,5 +15,12 @@ module TSOS {
             this.readyQueue = new TSOS.Queue();
         }
 
+        public schedule() {
+            if (this.readyQueue.getSize() > 0) {
+                _CPU.init();
+                _CPU.isExecuting = true;
+            }
+        }
+
     }
 }

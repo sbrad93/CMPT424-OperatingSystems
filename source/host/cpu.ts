@@ -22,7 +22,6 @@ module TSOS {
                     public Zflag: number = 0x00,
                     public isExecuting: boolean = false,
                     public instructionReg: number = 0x00,
-                    public step: number = 0x00,
                     public clockCnt: number = 0,
                     public currentPCB: PCB = new PCB(_PidCounter),
                     // for testing purposes
@@ -37,7 +36,6 @@ module TSOS {
             this.Zflag = 0x00;
             this.isExecuting = false;
             this.instructionReg = 0x00;
-            this.step = 0x00;
             this.clockCnt = 0;
         }
 
@@ -63,7 +61,7 @@ module TSOS {
         }
 
         public fetch() {
-            this.instructionReg = _MemoryManager.getMemArr()[this.PC];
+            this.instructionReg = _MemoryManager.getMemArr()[this.PC + _CurrentPCB.assignedSegment.base];
         }
 
         public decodeNExecute() {
@@ -125,13 +123,13 @@ module TSOS {
         // A9
         public loadAccWConstant() {
             this.PC ++;
-            this.acc = _MemoryManager.getMemArr()[this.PC];
+            this.acc = _MemoryManager.getMemArr()[this.PC + _CurrentPCB.assignedSegment.base];
             this.PC ++;
         }
         // AD
         public loadAccFromMemory() {
             this.PC ++;
-            _MemoryManager.calcMAR(this.PC);
+            _MemoryManager.calcMAR(this.PC + _CurrentPCB.assignedSegment.base);
             this.PC ++;
             this.PC ++;
             _MemAccessor.read();
@@ -140,7 +138,7 @@ module TSOS {
         // 8D
         public storeAccInMemory() {
             this.PC ++;
-            _MemoryManager.calcMAR(this.PC);
+            _MemoryManager.calcMAR(this.PC + _CurrentPCB.assignedSegment.base);
             this.PC ++;
             this.PC ++;
             _MemoryManager.setMDR(this.acc);
@@ -149,7 +147,7 @@ module TSOS {
         // 6D
         public addWithCarry() {
             this.PC ++;
-            _MemoryManager.calcMAR(this.PC);
+            _MemoryManager.calcMAR(this.PC + _CurrentPCB.assignedSegment.base);
             this.PC ++;
             this.PC ++;
             _MemAccessor.read();
@@ -158,13 +156,13 @@ module TSOS {
         // A2
         public loadXWithConstant() {
             this.PC ++;
-            this.Xreg = _MemoryManager.getMemArr()[this.PC];
+            this.Xreg = _MemoryManager.getMemArr()[this.PC + _CurrentPCB.assignedSegment.base];
             this.PC ++;
         }
         // AE
         public loadXFromMemory() {
             this.PC ++;
-            _MemoryManager.calcMAR(this.PC);
+            _MemoryManager.calcMAR(this.PC + _CurrentPCB.assignedSegment.base);
             this.PC ++;
             this.PC ++;
             _MemAccessor.read();
@@ -173,13 +171,13 @@ module TSOS {
         // A0
         public loadYWithConstant() {
             this.PC ++;
-            this.Yreg = _MemoryManager.getMemArr()[this.PC];
+            this.Yreg = _MemoryManager.getMemArr()[this.PC + _CurrentPCB.assignedSegment.base];
             this.PC ++;
         }
         // AC
         public loadYFromMemory() {
             this.PC ++;
-            _MemoryManager.calcMAR(this.PC);
+            _MemoryManager.calcMAR(this.PC + _CurrentPCB.assignedSegment.base);
             this.PC ++;
             this.PC ++;
             _MemAccessor.read();
@@ -192,11 +190,17 @@ module TSOS {
         // 00
         public brk() {
             this.PC ++;
-            _CurrentPCB.state = "terminated";
             this.isExecuting = false;
             this.out = "";
+
+            // Current process is now terminated so...
+            _CurrentPCB.state = "terminated";
+            // ...the assigned segment can now be reused
+            _CurrentPCB.assignedSegment.isActive = false;
+
             // Single step mode turned off once program executes
             Control.turnOffSingleStep();
+
             _StdOut.advanceLine();
             _StdOut.putText("Execution completed.")
             _StdOut.advanceLine();
@@ -205,7 +209,7 @@ module TSOS {
         // EC
         public compareWithX() {
             this.PC ++;
-            _MemoryManager.calcMAR(this.PC);
+            _MemoryManager.calcMAR(this.PC + _CurrentPCB.assignedSegment.base);
             this.PC ++;
             this.PC ++;
             _MemAccessor.read();
@@ -219,11 +223,11 @@ module TSOS {
         public branch() {
             this.PC++;
             if (this.Zflag == 0) {
-                _MemoryManager.setMAR(this.PC);
+                _MemoryManager.setMAR(this.PC + _CurrentPCB.assignedSegment.base);
                 _MemAccessor.read();
                 this.PC += _MemoryManager.getMDR();
                 if (this.PC > 0x100) {
-                    this.PC = (this.PC % 0x100) +  _CurrentPCB.assignedSegment.base;
+                    this.PC = (this.PC % 0x100);
                 }
             }
             this.PC++;
@@ -231,7 +235,7 @@ module TSOS {
         // EE
         public increment() {
             this.PC ++;
-            _MemoryManager.calcMAR(this.PC);
+            _MemoryManager.calcMAR(this.PC + _CurrentPCB.assignedSegment.base);
             this.PC ++;
             this.PC ++;
             _MemAccessor.read();
@@ -274,7 +278,6 @@ module TSOS {
                         "xReg: " + Utils.hexLog(this.Xreg) + "\n" +
                         "yReg: " + Utils.hexLog(this.Yreg) + "\n" +
                         "zFlag: " + Utils.hexLog(this.Zflag) + "\n" +
-                        "Step: " + Utils.hexLog(this.step) + "\n" +
                         "Out: " + this.out);
             console.log("---------------------------------------");
         }

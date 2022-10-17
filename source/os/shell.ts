@@ -504,14 +504,17 @@ module TSOS {
             }
             // Clear temp array 
             _Memory.tempArr = [];
+
+            // Clear memory of inactive segments
+            // Implemented to improve memory output updating
+            //  I didn't want to clear segment memory each time a process finished executing bc it felt too abrupt
+            //  ... so I did this instead 
+            _MemoryManager.clearInactiveSegments();
             
             // Get da op codes
             var opcode_str = Control.getOpCodes();
 
             if (opcode_str != null) {
-                // Reset CPU registers and memory (for now)
-                _CPU.init();
-
                 // Create a new process and add to PCB list
                 _CurrentPCB = new PCB(_PidCounter);
                 _PidCounter += 1;
@@ -542,8 +545,8 @@ module TSOS {
 
         public shellRun(args: string[]) {
             let pid = parseInt(args[0]);
-            let potentialPCB = _PCBlist.find(element => element.pid == pid);
-            
+            let potentialPCB = _PCBlist.find(process => process.pid == pid);
+
             if (Number.isNaN(pid)) {
                 _StdOut.putText(`Please enter a valid process id.`);
                 _StdOut.advanceLine();
@@ -561,19 +564,9 @@ module TSOS {
                 _CurrentPCB = potentialPCB;
                 _CurrentPCB.state = "ready";
 
-                // Add the process to the ready queue
+                // Add the process to the ready queue and schedule it
                 _Scheduler.readyQueue.enqueue(_CurrentPCB);
-
-
-                // ---- CPU scheduling...
-                // Set the PC to the active segment
-                _CPU.PC = _CurrentPCB.assignedSegment.base;
-
-                // And cpu begins executing
-                _CPU.isExecuting = true;
-                // --------
-
-
+                _Scheduler.schedule();
             }
         }
 
@@ -585,7 +578,7 @@ module TSOS {
         public shellClearMem(args: string[]) {
             // Terminate all processes and update output
             for (let i=0; i<_PCBlist.length; i++) {
-               _PCBlist[i].state = "terminated";
+                _PCBlist[i].state = "terminated";
                 Control.updatePCBStateInTable(_PCBlist[i].pid, _PCBlist[i].state);
             }
 

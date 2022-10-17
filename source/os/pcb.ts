@@ -1,3 +1,9 @@
+/* ----------- 
+    PCB.ts
+
+    Class constructor for Process Control Block. 
+    ----------- */
+
 module TSOS {
 
     export class PCB {

@@ -10,12 +10,12 @@ module TSOS {
     export class MemoryManager {
 
         constructor( public segmentsList: MemorySegment[] = [],
-                     public segmentSize: number = 0x100 ) { // 256     
+                     public segmentSize: number = 0x100 ) {    
             this.segmentsInit();
         }
 
         // initialize the three segments in memory
-        public segmentsInit() {
+        public segmentsInit(): void {
             // loop through sections of memory array of memory segment size
             for (let i=0; i<_Memory.memSize; i+=this.segmentSize) {
 
@@ -28,8 +28,8 @@ module TSOS {
             }
         }
 
-        // set all segments to inactive
-        resetSegmentsStatus() {
+        // reset all segments to inactive
+        resetSegmentsStatus(): void {
             for (let i=0; i<this.segmentsList.length; i++) {
                 this.segmentsList[i].isActive = false;
             }
@@ -71,9 +71,8 @@ module TSOS {
             Control.updateMemoryOutput();
         }
 
-
         // helper method that places a given opcode to the correct position within the correct segment
-        public writeImmmediate(program: number[], segment: MemorySegment) {
+        public writeImmmediate(program: number[], segment: MemorySegment): void {
             let j = 0;
             let i = segment.base;
 
@@ -84,24 +83,42 @@ module TSOS {
 
         // calculates the MAR in one cycle
         // does so by finding high and low order bytes and adding them together
-        public calcMAR(currPC: number) {
+        public calcMAR(currPC: number): void {
             let nextPC = currPC + 1;
-            this.setMAR(0x0000);
 
-            let lob = this.getMAR() + _MemoryManager.getMemArr()[currPC];
-            let hob = _MemoryManager.getMemArr()[nextPC] * 0x0100;
+            let lob = _MemoryManager.getMemArr()[currPC];
+
+            // Add in the segment base to stay within segment boundaries
+            let hob = (_MemoryManager.getMemArr()[nextPC] * 0x0100) + _CurrentPCB.assignedSegment.base;
 
             this.setMAR(lob + hob);
         }
 
+        // clear memory within any inactive segment
+        public clearInactiveSegments(): void {
+            for (let i=0; i<this.segmentsList.length; i++) {
+                if (!this.segmentsList[i].isActive) {
+                    for (let j=this.segmentsList[i].base; j<this.segmentsList[i].limit; j++) {
+                        _Memory.memArr[j] = 0x00;
+                    }
+                }
+            }
+        }
+
         // all memory properties are reinitialized to zero
-        public reset() {
-            this.setMAR(0x0000);
-            this.setMDR(0x00);
+        public reset(): void {
+            this.resetMAR();
+            this.resetMDR();
             _Memory.arrInit();
         }
 
+        public resetMAR(): void {
+            this.setMAR(0x0000);
+        }
 
+        public resetMDR(): void {
+            this.setMDR(0x0000);
+        }
 
         /* Memory Getters and Setters */
         public getMAR() {

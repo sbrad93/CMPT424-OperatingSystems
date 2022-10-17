@@ -88,12 +88,10 @@ module TSOS {
                     if (_CPU.isExecuting) {                                         // doesn't matter if cpu isn't executing
                         // Change current process state
                         _CurrentPCB.state = "terminated";
-
-                        // Since there's only one process running for now...
                         _CPU.init();
 
                         // Update Process table and memory
-                        Control.updatePCBStateInTable(_CurrentPCB.pid);
+                        Control.updatePCBStateInTable(_CurrentPCB.pid, _CurrentPCB.state);
                         Control.updateMemoryOutput();
                         Control.updateCPUtable();
 

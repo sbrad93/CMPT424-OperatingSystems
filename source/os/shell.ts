@@ -112,7 +112,7 @@ module TSOS {
             // run a process
             sc = new ShellCommand(this.shellRun,
                             "run",
-                            "<int> - Runs a specified process.");
+                            "<pid> - Runs a specified process.");
             this.commandList[this.commandList.length] = sc;
 
             // memory dump testing
@@ -130,6 +130,14 @@ module TSOS {
             sc = new ShellCommand(this.shellRunAll,
                             "runall",
                             " - Run all loaded processes.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new ShellCommand(this.shellPS,
+                            "ps",
+                            " - Displays the PID and state of all processes.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new ShellCommand(this.shellKill,
+                            "kill",
+                            "<pid> - Kills a specified process.");
             this.commandList[this.commandList.length] = sc;
 
             // ps  - list the running processes and their IDs
@@ -360,6 +368,12 @@ module TSOS {
                         break;
                     case "clearmem":
                         _StdOut.putText("Runs all loaded processes.")
+                        break;
+                    case "ps":
+                        _StdOut.putText("Displays the pid and state of all processes.")
+                        break;
+                    case "kill":
+                        _StdOut.putText("Kills a specified process.")
                         break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
@@ -623,6 +637,54 @@ module TSOS {
 
             // Reset current process to null
             _CurrentPCB = null;
+        }
+
+        public shellPS(args: string[]) {
+            _StdOut.putText("-----------------")
+            _StdOut.advanceLine();
+            for (let i=0; i<_PCBlist.length; i++) {
+                _StdOut.putText(`PID: ${_PCBlist[i].pid}`);
+                _StdOut.advanceLine();
+                _StdOut.putText(`State: ${_PCBlist[i].state}`);
+                _StdOut.advanceLine();
+                if (i!=_PCBlist.length-1) {
+                    _StdOut.advanceLine();
+                }
+            }
+            _StdOut.putText("-----------------")
+        }
+
+        shellKill(args: string[]) {
+            let pid = parseInt(args[0]);
+            let targetPCB = _PCBlist.find(process => process.pid == pid);
+
+            if (Number.isNaN(pid)) {
+                _StdOut.putText(`Please enter a valid process id.`);
+                _StdOut.advanceLine();
+                _StdOut.putText("Usage: kill <pid>")
+            } else if (!targetPCB)  {
+                _StdOut.putText(`Process ${pid} does not exist.`);
+            } else if (targetPCB.state != "terminated") {
+                // set the current process to null and reset the CPU if target process is running
+                if (targetPCB.state == "running") {
+                    _CPU.init();
+                    _CurrentPCB = null;
+                    _Scheduler.schedule();
+                }
+                // Set the target state to terminated and remove it from the ready queue
+                targetPCB.state = "terminated";
+                _Scheduler.readyQueue.remove(targetPCB);
+                targetPCB.assignedSegment.isActive = false;
+
+                // Update Process table and memory
+                Control.updatePCBStateInTable(targetPCB.pid, targetPCB.state);
+                Control.updateMemoryOutput();
+                Control.updateCPUtable();
+
+                _StdOut.putText(`Process ${targetPCB.pid} has been successfully terminated.`);
+            } else if (targetPCB.state == "terminated") {
+                _StdOut.putText(`Process ${targetPCB.pid} is already terminated.`);
+            }
         }
     }
 }

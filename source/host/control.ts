@@ -111,6 +111,9 @@ module TSOS {
             // Create the CPU Scheduler
             _Scheduler = new Scheduler();
 
+            // Create the Dispatcher
+            _Dispatcher = new Dispatcher();
+
             // ... then set the host clock pulse ...
             _hardwareClockID = setInterval(Devices.hostClockPulse, CPU_CLOCK_INTERVAL);
             // .. and call the OS Kernel Bootstrap routine.
@@ -347,7 +350,7 @@ module TSOS {
                 // Base case
                 if (j == 0) {
                     memory_out.value += '0x' + ('00' + rowByte.toString(16).toUpperCase()).slice(-3);
-                    memory_out.value += " ".repeat(3) + "|||" + " ".repeat(3);
+                    memory_out.value += " ".repeat(2) + "|||" + " ".repeat(2);
                 }
 
                 // Print the op code
@@ -361,7 +364,7 @@ module TSOS {
                     }
                     memory_out.value += "\n";
                     memory_out.value += '0x' + ('00' + rowByte.toString(16).toUpperCase()).slice(-3);
-                    memory_out.value += " ".repeat(3) + "|||" + " ".repeat(3);
+                    memory_out.value += " ".repeat(2) + "|||" + " ".repeat(2);
                 } else {
                     memory_out.value += (" ".repeat(2));
                 }

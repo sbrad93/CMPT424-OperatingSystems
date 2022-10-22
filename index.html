@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
    <meta name="author"             content="Alan G. Labouseur" />
    <meta name="author"             content="Shannon Brady" />
    <link rel="stylesheet" href="tsos.css" type="text/css" media="screen" />
@@ -108,17 +109,20 @@
    <img id="logo" src="distrib/images/logo.png">
 
    <div id="row-1" class="row">
+
+         <!--Col 1-->
          <div id="col-1">
-            <div id="divConsole" style="width:600px; height:500px; float:left;">
-               <canvas id="display"
-                       width="600px"
-                       height="500px"
-                       tabindex="3">
-               </canvas>
+            <div id="divUserProgramInput">
+               <label class="label">
+                  User Program Input
+                  <br>
+                  <textarea name="taProgramInput"
+                            id  ="taProgramInput"
+                            rows="18"
+                            cols="40"
+                  ></textarea>
+               </label>
             </div>
-         </div>
-      
-         <div id="col-2">
             <div id="divLog">
                <label class="label">
                   Host Log
@@ -132,21 +136,22 @@
             </div>
          </div>
    
-         <div id="col-3">
-            <div id="divUserProgramInput">
-               <label class="label">
-                  User Program Input
-                  <br>
-                  <textarea name="taProgramInput"
-                            id  ="taProgramInput"
-                            rows="18"
-                            cols="40"
-                  ></textarea>
-               </label>
+
+         <!--Col 2-->
+         <div id="col-2">
+            <div id="divConsole" style="width:700px; height:700px; float:left;">
+               <canvas id="display"
+                       width="700px"
+                       height="700px"
+                       tabindex="3">
+               </canvas>
             </div>
          </div>
    
-         <div id="col-4">
+
+
+         <!--Col 3-->
+         <div id="col-3">
             <div id="cpu" class="section">
                <label class="label">CPU</label>
                   <table id="cpu-table">
@@ -170,6 +175,8 @@
                         </tr>
                   </table>
             </div>
+
+
             <div id="processes" class="section">
                      <label class="label">Processes</label>
                         <table id="pcb-table">
@@ -185,22 +192,22 @@
                            </thead>
                         </table>
             </div>
-         </div>
-   </div>
 
-   <div id="row-2" class="row">
-      <div id="memory">
-         <label class="label">
-            Memory
-            <br>
-            <textarea name="taMemory"
-                     id  ="taMemory"
-                     rows="20"
-                     cols="45"
-                     readonly="readonly"
-            ></textarea>
-         </label>
-      </div>
+
+            <div id="memory">
+               <label class="label">
+                  Memory
+                  <br>
+                  <textarea name="taMemory"
+                           id  ="taMemory"
+                           rows="20"
+                           cols="42"
+                           readonly="readonly"
+                  ></textarea>
+               </label>
+            </div>
+
+         </div>
    </div>
 </div>
 

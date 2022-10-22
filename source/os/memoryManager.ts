@@ -29,7 +29,7 @@ module TSOS {
         }
 
         // reset all segments to inactive
-        resetSegmentsStatus(): void {
+        resetSegments(): void {
             for (let i=0; i<this.segmentsList.length; i++) {
                 this.segmentsList[i].isActive = false;
             }
@@ -64,7 +64,6 @@ module TSOS {
             // check if all segments are active
             if (this.segmentsList[this.segmentsList.length-1].isActive) {
                 _Memory.isFull = true;
-                alert("memory is now full");
             }
 
             // update the memory table

@@ -6,16 +6,12 @@ body {
   font-size: 12pt;
   font-weight: normal;
   font-style: normal;
-  color: white
+  color: white;
+  zoom: 80%;
 }
 
 .label {
   font-size: 30px;
-}
-
-#content-body {
-  width: 75%;
-  margin: 0 auto;
 }
 
 h1 {
@@ -94,30 +90,23 @@ h3 {
 
 #col-1 {
   flex-direction: row;
-  margin-left: 10px;
+  margin-left: 150px;
   margin-right: 10px;
-  padding: 10px 10px
+  padding: 10px 10px;
 }
 
 #col-2 {
   flex-direction: row;
   margin-left: 10px;
   margin-right: 10px;
-  padding: 10px 10px
+  padding: 10px 10px;
 }
 
 #col-3 {
   flex-direction: row;
   margin-left: 10px;
   margin-right: 10px;
-  padding: 10px 10px
-}
-
-#col-4 {
-  flex-direction: row;
-  margin-left: 10px;
-  margin-right: 10px;
-  padding: 10px 10px
+  padding: 10px 10px;
 }
 
 .row {
@@ -134,7 +123,8 @@ h3 {
 }
 
 #taMemory {
-  font-size: xx-large;
+  font-size: x-large;
+  resize: none;
 }
 
 #header {
@@ -152,9 +142,8 @@ h3 {
   display: block;
   margin-left: auto;
   margin-right: auto;
-  width: 50%;
-  height: 500px;
-  width: 500px;
+  height: 400px;
+  width: 400px;
 }
 
 #cpu-table {

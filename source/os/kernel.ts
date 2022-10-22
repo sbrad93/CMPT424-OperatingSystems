@@ -89,9 +89,11 @@ module TSOS {
             }else if (_IsSingleStep) {
                 if (_CPU.isExecuting && _CanTakeNextStep) {
                     _CPU.cycle();
+                    _Scheduler.quantumSurveillance();
                 }
             } else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
                 _CPU.cycle();
+                _Scheduler.quantumSurveillance();
             } else {                       // If there are no interrupts and there is nothing being executed then just be idle.
                 this.krnTrace("Idle");
             }

@@ -41,8 +41,8 @@ module TSOS {
 
         public cycle(): void {
             _Kernel.krnTrace('CPU cycle');
-            _CurrentPCB.state = "running";
             this.clockCnt++;
+            _Scheduler.quantaCount++;
             this.fetch();
             this.decodeNExecute();
 
@@ -53,11 +53,21 @@ module TSOS {
             Control.updatePCBtable(_CurrentPCB.pid);
             Control.updateCPUtable();
             Control.updateMemoryOutput();
+            this.synchronizeCPUandPCB();
 
             if (_IsSingleStep) {
                 // check if in single step mode
                 _CanTakeNextStep = false;
             }
+        }
+
+        public synchronizeCPUandPCB(): void {
+            _CurrentPCB.PC = this.PC;
+            _CurrentPCB.instructionReg = this.instructionReg;
+            _CurrentPCB.acc = this.acc;
+            _CurrentPCB.Xreg = this.Xreg;
+            _CurrentPCB.Yreg = this.Yreg;
+            _CurrentPCB.Zflag = this.Zflag;
         }
 
         public fetch() {
@@ -260,6 +270,8 @@ module TSOS {
             _CurrentPCB.state = "terminated";
             _CurrentPCB.assignedSegment.isActive = false;
             Control.updatePCBStateInTable(_CurrentPCB.pid, _CurrentPCB.state);
+
+            _Dispatcher.runningPCB = null;
 
             // Single step mode turned off once program executes
             Control.turnOffSingleStep();

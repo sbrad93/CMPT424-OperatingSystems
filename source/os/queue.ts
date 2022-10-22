@@ -30,6 +30,10 @@ module TSOS {
             }
         }
 
+        public reset() {
+            this.q = new Array();
+        }
+
         public isEmpty(){
             return (this.q.length == 0);
         }

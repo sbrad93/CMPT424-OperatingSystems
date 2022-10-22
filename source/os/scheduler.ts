@@ -8,7 +8,11 @@ module TSOS {
 
     export class Scheduler {
 
-        constructor(public readyQueue = new TSOS.Queue()) {
+        constructor(public readyQueue: Queue = new TSOS.Queue(),
+                    public schedulingAlgorithm: string = ROUND_ROBIN, // default scheduling system
+                    public quantum: number = 6, // default quanta value
+                    public quantaCount: number = 0
+                    ) {
         }
 
         public reset() {
@@ -17,10 +21,12 @@ module TSOS {
 
         public schedule() {
             if (this.readyQueue.getSize() > 0) {
-                // _KernelInputQueue.enqueue(new TSOS.Interrupt(CONTEXT_SWITCH_IRQ, [_Scheduler.readyQueue.getAt(0)]));
-                _CurrentPCB = this.readyQueue.dequeue();
-                _CPU.init();
-                _CPU.isExecuting = true;
+                switch (this.schedulingAlgorithm) {
+                    case ROUND_ROBIN:
+                        // Generate a software interrupt to implement a context switch
+                        this.generateInterrupt()
+                        break;
+                }
             } else {
                 _StdOut.advanceLine();
                 _StdOut.putText("Execution completed.")
@@ -29,5 +35,18 @@ module TSOS {
             }
         }
 
+        public quantumSurveillance() {
+            console.log(this.quantaCount);
+            this.quantaCount++;
+            // Quantum has been used up
+            if (this.schedulingAlgorithm == ROUND_ROBIN && this.quantaCount == this.quantum) {
+                this.generateInterrupt();
+                this.quantaCount = 0;
+            }
+        }
+
+        public generateInterrupt() {
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CONTEXT_SWITCH_IRQ, [this.readyQueue.getAt(0)]));
+        }
     }
 }

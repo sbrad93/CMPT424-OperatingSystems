@@ -42,7 +42,6 @@ module TSOS {
         public cycle(): void {
             _Kernel.krnTrace('CPU cycle');
             this.clockCnt++;
-            _Scheduler.quantaCount++;
             this.fetch();
             this.decodeNExecute();
 
@@ -59,6 +58,9 @@ module TSOS {
                 // check if in single step mode
                 _CanTakeNextStep = false;
             }
+
+            // make sure quantum value hasn't expired (if applicable)
+            _Scheduler.quantumSurveillance();
         }
 
         public synchronizeCPUandPCB(): void {
@@ -277,6 +279,7 @@ module TSOS {
             Control.turnOffSingleStep();
 
             // Schedule next process
+            _Kernel.krnTrace(`Process ${_CurrentPCB.pid}: Process execution complete.`)
             _Scheduler.schedule();
         }
 

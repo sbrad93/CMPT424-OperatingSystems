@@ -680,6 +680,7 @@ module TSOS {
                 if (targetPCB.state == "running") {
                     _CPU.init();
                     _CurrentPCB = null;
+                    _Dispatcher.runningPCB = null;
                     _Scheduler.schedule();
                 }
                 // Set the target state to terminated and remove it from the ready queue
@@ -706,17 +707,19 @@ module TSOS {
                 if (_PCBlist[i].state != "terminated") {
                     _PCBlist[i].state = "terminated";
                     Control.updatePCBStateInTable(_PCBlist[i].pid, _PCBlist[i].state);
+                    processExists = true;
                 }
-                processExists = true;
             }
 
-            // Only clear the ready queue if a process (at any state) exists
+            // Only clear the ready queue if a non-terminated process exists
             if (processExists) {
                 _Scheduler.readyQueue.reset();
+                _Scheduler.quantaCount = 0;
+                _Dispatcher.runningPCB = null;
                 _MemoryManager.resetSegments()
                 _CPU.init();
-                _CurrentPCB = null;
                 Control.updateCPUtable();
+                _CurrentPCB = null;
             } else {
                 _StdOut.putText("There are no processes to kill.")
             }

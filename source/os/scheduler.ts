@@ -36,16 +36,21 @@ module TSOS {
         }
 
         public quantumSurveillance() {
-            console.log(this.quantaCount);
-            this.quantaCount++;
+            console.log("Current process: " + _CurrentPCB.pid);
+            console.log("Quanta Count: " + this.quantaCount);
             // Quantum has been used up
             if (this.schedulingAlgorithm == ROUND_ROBIN && this.quantaCount == this.quantum) {
+                _Kernel.krnTrace("Quantum expired")
+                // Generate a software interrupt to implement a context switch
                 this.generateInterrupt();
                 this.quantaCount = 0;
             }
+
+            this.quantaCount++;
         }
 
         public generateInterrupt() {
+            _Kernel.krnTrace("Context switch: Switching processes...")
             _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CONTEXT_SWITCH_IRQ, [this.readyQueue.getAt(0)]));
         }
     }

@@ -273,6 +273,7 @@ module TSOS {
             _CurrentPCB.assignedSegment.isActive = false;
             Control.updatePCBStateInTable(_CurrentPCB.pid, _CurrentPCB.state);
 
+            // Clear the running process
             _Dispatcher.runningPCB = null;
 
             // Single step mode turned off once program executes

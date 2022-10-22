@@ -143,6 +143,10 @@ module TSOS {
                             "killall",
                             "<pid> - Kills all processes.");
             this.commandList[this.commandList.length] = sc;
+            sc = new ShellCommand(this.shellSetQuantum,
+                            "quantum",
+                            "<int> - Sets the quantum value.");
+            this.commandList[this.commandList.length] = sc;
 
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -356,31 +360,34 @@ module TSOS {
                         _StdOut.putText("Status sets a user-defined status message.");
                         break;
                     case "bsod":
-                        _StdOut.putText("Tests when the kernel traps and OS error and displays BSOD.")
+                        _StdOut.putText("Tests when the kernel traps and OS error and displays BSOD.");
                         break;
                     case "load":
-                        _StdOut.putText("Loads a user program into the console.")
+                        _StdOut.putText("Loads a user program into the console.");
                         break;
                     case "run":
-                        _StdOut.putText("Runs a specified process.")
+                        _StdOut.putText("Runs a specified process.");
                         break;
                     case "memdump":
-                        _StdOut.putText("Displays memory in browser console.")
+                        _StdOut.putText("Displays memory in browser console.");
                         break;
                     case "clearmem":
-                        _StdOut.putText("Clears all memory partitions.")
+                        _StdOut.putText("Clears all memory partitions.");
                         break;
                     case "clearmem":
-                        _StdOut.putText("Runs all loaded processes.")
+                        _StdOut.putText("Runs all loaded processes.");
                         break;
                     case "ps":
-                        _StdOut.putText("Displays the pid and state of all processes.")
+                        _StdOut.putText("Displays the pid and state of all processes.");
                         break;
                     case "kill":
-                        _StdOut.putText("Kills a specified process.")
+                        _StdOut.putText("Kills a specified process.");
                         break;
                     case "killall":
-                        _StdOut.putText("Kills all processes.")
+                        _StdOut.putText("Kills all processes.");
+                        break;
+                    case "quantum":
+                        _StdOut.putText("Sets the quantum value. Default is 6 CPU cycles.");
                         break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
@@ -722,6 +729,14 @@ module TSOS {
                 _CurrentPCB = null;
             } else {
                 _StdOut.putText("There are no processes to kill.")
+            }
+        }
+
+        public shellSetQuantum(args: string[]) {
+            if (Number.isNaN(Number(args[0]))) {
+                _StdOut.putText("Please enter a valid quantum value before I lose it.");
+            } else {
+                _Scheduler.quantum = parseInt(args[0], 10);
             }
         }
     }

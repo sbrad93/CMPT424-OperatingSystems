@@ -11,8 +11,7 @@ module TSOS {
         constructor(public readyQueue: Queue = new TSOS.Queue(),
                     public schedulingAlgorithm: string = ROUND_ROBIN, // default scheduling system
                     public quantum: number = 6, // default quanta value
-                    public quantaCount: number = 0
-                    ) {
+                    public quantaCount: number = 0) {
         }
 
         public reset() {

@@ -9,7 +9,7 @@ module TSOS {
     export class Memory {
 
         constructor(public memArr: number [] = null,
-                    public memSize: number = 0x300, // 768
+                    public memSize: number = 0x300,
                     public tempArr: string[] = null,
                     public mar: number = 0x0000,
                     public mdr: number = 0x00,

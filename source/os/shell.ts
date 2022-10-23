@@ -524,9 +524,6 @@ module TSOS {
 
         public shellTestKrnTrapError(args: string[]) {
             _Kernel.krnTrapError("ChaOS has been shutdown.");
-            _CurrentPCB.state = "terminated";
-            _CPU.isExecuting = false;
-            Control.updatePCBtable(_CurrentPCB.pid);
         }
 
         public shellLoad(args: string[]) {
@@ -728,7 +725,9 @@ module TSOS {
                 Control.updateCPUtable();
                 _CurrentPCB = null;
             } else {
-                _StdOut.putText("There are no processes to kill.")
+                if (!Kernel.isShutdown) {
+                    _StdOut.putText("There are no processes to kill.")
+                }
             }
         }
 

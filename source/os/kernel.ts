@@ -61,8 +61,7 @@ module TSOS {
 
         public krnShutdown() {
             this.krnTrace("begin shutdown OS");
-            // TODO: Check for running processes.  If there are some, alert and stop. Else...
-            // ... Disable the Interrupts.
+            _OsShell.shellKillAll(null);
             this.krnTrace("Disabling the interrupts.");
             this.krnDisableInterrupts();
             //
@@ -182,10 +181,9 @@ module TSOS {
         public krnTrapError(msg) {
             Control.hostLog("OS ERROR - TRAP: " + msg);
 
-            // Clear the screen, reset xy coordinates, reset canvas height
+            // Clear the screen, reset xy coordinates
             _Console.clearScreen();
             _Console.resetXY();
-            _Canvas.height = 500;
 
             // Since it's the 'blue' screen of death...
             _DrawingContext.fillStyle = "blue";
@@ -201,6 +199,8 @@ module TSOS {
 
             Kernel.isShutdown = true;
             this.krnShutdown();
+            // Stop the interval that's simulating our clock pulse.
+            clearInterval(_hardwareClockID);
         }
     }
 }

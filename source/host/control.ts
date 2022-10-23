@@ -127,6 +127,7 @@ module TSOS {
         public static hostBtnHaltOS_click(btn): void {
             Control.hostLog("Emergency halt", "host");
             Control.hostLog("Attempting Kernel shutdown.", "host");
+            (<HTMLButtonElement> document.getElementById("btnHaltOS")).style.backgroundColor = "red";
             Kernel.isShutdown = true;
             // Call the OS shutdown routine.
             _Kernel.krnShutdown();
@@ -369,6 +370,81 @@ module TSOS {
                 } else {
                     memory_out.value += (" ".repeat(2));
                 }
+            }
+        }
+
+        public static addRowToReadyQueueTable():void {
+            // Creates a new row in the Ready Queue table each time a new program is run
+
+            const table = <HTMLTableElement> document.getElementById("queue-table");
+            const row = table.insertRow(-1);
+
+            const state = row.insertCell(0);
+            const location = row.insertCell(1);
+            const base = row.insertCell(2);
+            const limit = row.insertCell(3);
+            const segment = row.insertCell(4);
+            const priority = row.insertCell(5);
+            const quantum = row.insertCell(6);
+
+            state.style.borderRight = "1px solid white";
+            location.style.borderRight = "1px solid white";
+            base.style.borderRight = "1px solid white";
+            limit.style.borderRight = "1px solid white";
+            segment.style.borderRight = "1px solid white";
+            priority.style.borderRight = "1px solid white";
+            quantum.style.borderRight = "1px solid white";
+
+            state.innerHTML = _CurrentPCB.state+"";
+            location.innerHTML = "memory";
+            base.innerHTML = Utils.hexLog(_CurrentPCB.assignedSegment.base);
+            limit.innerHTML = Utils.hexLog(_CurrentPCB.assignedSegment.limit);
+            segment.innerHTML = _CurrentPCB.assignedSegment.sid+"";
+            priority.innerHTML = "";
+            quantum.innerHTML = _Scheduler.quantum+"";
+        }
+
+        public static updateReadyQueueTable():void {
+            // Updates the cell values in the Ready Queue table
+
+            const table = <HTMLTableElement> document.getElementById("queue-table");
+
+            // Since the ready queue size is actively changing,
+            // delete all rows first...
+            while(table.rows.length > 1) {
+                table.deleteRow(1);
+              }
+
+            // ... then recreate new rows according to the processes currently in the queue
+            let i = 0;
+            while (i < _Scheduler.readyQueue.getSize()) {
+                const row = table.insertRow(-1);
+
+                const state = row.insertCell(0);
+                const location = row.insertCell(1);
+                const base = row.insertCell(2);
+                const limit = row.insertCell(3);
+                const segment = row.insertCell(4);
+                const priority = row.insertCell(5);
+                const quantum = row.insertCell(6);
+
+                state.style.borderRight = "1px solid white";
+                location.style.borderRight = "1px solid white";
+                base.style.borderRight = "1px solid white";
+                limit.style.borderRight = "1px solid white";
+                segment.style.borderRight = "1px solid white";
+                priority.style.borderRight = "1px solid white";
+                quantum.style.borderRight = "1px solid white";
+
+                state.innerHTML = _CurrentPCB.state+"";
+                location.innerHTML = "memory";
+                base.innerHTML = Utils.hexLog(_CurrentPCB.assignedSegment.base);
+                limit.innerHTML = Utils.hexLog(_CurrentPCB.assignedSegment.limit);
+                segment.innerHTML = _CurrentPCB.assignedSegment.sid+"";
+                priority.innerHTML = "";
+                quantum.innerHTML = _Scheduler.quantum+"";
+
+                i++;
             }
         }
     }

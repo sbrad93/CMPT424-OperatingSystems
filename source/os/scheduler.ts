@@ -35,8 +35,8 @@ module TSOS {
         }
 
         public quantumSurveillance() {
-            console.log("Current process: " + _CurrentPCB.pid);
-            console.log("Quanta Count: " + this.quantaCount);
+            // console.log("Current process: " + _CurrentPCB.pid);
+            // console.log("Quanta Count: " + this.quantaCount);
             // Quantum has been used up
             if (this.schedulingAlgorithm == ROUND_ROBIN && this.quantaCount == this.quantum) {
                 _Kernel.krnTrace("Quantum expired")

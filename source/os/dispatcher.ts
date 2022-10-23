@@ -10,6 +10,7 @@ module TSOS {
                 // No processes are running, so dequeue from the ready queue and set to current PCB
                 _CurrentPCB = _Scheduler.readyQueue.dequeue();
                 _CurrentPCB.state = "running";
+                Control.updateReadyQueueTable();
 
                 _CPU.init();
                 _CPU.isExecuting = true;
@@ -20,9 +21,12 @@ module TSOS {
                     this.runningPCB.state = "ready";
                     Control.updatePCBStateInTable(this.runningPCB.pid, this.runningPCB.state);
                     _Scheduler.readyQueue.enqueue(this.runningPCB);
+                    Control.updateReadyQueueTable();
+                    
 
                     // Dequeue the next PCB from ready queue and set to current PCB
                     _CurrentPCB = _Scheduler.readyQueue.dequeue();
+                    Control.updateReadyQueueTable();
                     _CurrentPCB.state = "running";
                 }
             }

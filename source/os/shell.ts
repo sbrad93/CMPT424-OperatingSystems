@@ -599,6 +599,7 @@ module TSOS {
 
                 // Add the process to the ready queue and schedule it
                 _Scheduler.readyQueue.enqueue(_CurrentPCB);
+                Control.addRowToReadyQueueTable();
                 _Scheduler.schedule();
             }
         }
@@ -612,6 +613,7 @@ module TSOS {
                     _CurrentPCB = _PCBlist[i];
                     _CurrentPCB.state = "ready";
                     _Scheduler.readyQueue.enqueue(_CurrentPCB);
+                    Control.addRowToReadyQueueTable();
                     processExists = true;
                 }
             }
@@ -642,6 +644,7 @@ module TSOS {
 
             // Clear the ready queue
             _Scheduler.reset();
+            Control.updateReadyQueueTable();
 
             // Make all segments inactive
             _MemoryManager.resetSegments();
@@ -692,10 +695,11 @@ module TSOS {
                 _Scheduler.readyQueue.remove(targetPCB);
                 targetPCB.assignedSegment.isActive = false;
 
-                // Update Process table and memory
+                // Update all tables
                 Control.updatePCBStateInTable(targetPCB.pid, targetPCB.state);
                 Control.updateMemoryOutput();
                 Control.updateCPUtable();
+                Control.updateReadyQueueTable();
 
                 _StdOut.putText(`Process ${targetPCB.pid} has been successfully terminated.`);
             } else if (targetPCB.state == "terminated") {
@@ -717,13 +721,19 @@ module TSOS {
 
             // Only clear the ready queue if a non-terminated process exists
             if (processExists) {
+                // Reset the ready queue and clear quanta count
                 _Scheduler.readyQueue.reset();
+                Control.updateReadyQueueTable();
                 _Scheduler.quantaCount = 0;
+
+                // No processes are running so...
                 _Dispatcher.runningPCB = null;
+                _CurrentPCB = null;
+
+                // Clear memory segments and reintialize CPU
                 _MemoryManager.resetSegments()
                 _CPU.init();
                 Control.updateCPUtable();
-                _CurrentPCB = null;
             } else {
                 if (!Kernel.isShutdown) {
                     _StdOut.putText("There are no processes to kill.")

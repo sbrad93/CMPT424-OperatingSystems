@@ -23,9 +23,7 @@ module TSOS {
                     public isExecuting: boolean = false,
                     public instructionReg: number = 0x00,
                     public clockCnt: number = 0,
-                    public currentPCB: PCB = new PCB(_PidCounter),
-                    // for testing purposes
-                    public out: string = "") {
+                    public currentPCB: PCB = new PCB(_PidCounter)) {
         }
 
         public init(): void {
@@ -121,12 +119,35 @@ module TSOS {
                     this.sysCall();
                     break;
                 default:
-                    this.isExecuting = false;
+                    _CPU.isExecuting = false;
+
+                    // Terminate current process and set associated segment to inactive
                     _CurrentPCB.state = "terminated";
+                    _CurrentPCB.assignedSegment.isActive = false;
+                    Control.updatePCBStateInTable(_CurrentPCB.pid, _CurrentPCB.state);
+
+                    // Clear the running process
+                    _Dispatcher.runningPCB = null;
+
+                    // Turn off single step mode
+                    Control.turnOffSingleStep();
+
+                    _Kernel.krnTrace(`Process ${_CurrentPCB.pid}: Process terminated.`)
                     _StdOut.advanceLine();
-                    _StdOut.putText(`Process ${_CurrentPCB.pid}: Invalid Op Code Error.`);
-                    _StdOut.advanceLine();
-                    _StdOut.putText("CPU stopped and process terminated.");
+                    _StdOut.putText(`Process ${_CurrentPCB.pid}: Invalid Op Code Error -- Process terminated`);
+
+                    if (_Scheduler.readyQueue.getSize() > 0) {
+                        _StdOut.advanceLine();
+                        _StdOut.putText("Execute 'runall' to finish running remaining processes.");
+                        _CPU.init();
+                        for (let i=0; i<_Scheduler.readyQueue.getSize(); i++) {
+                            _Scheduler.readyQueue.getAt(i).state = "resident";
+                            Control.updatePCBStateInTable(_Scheduler.readyQueue.getAt(i).pid, _Scheduler.readyQueue.getAt(i).state);
+                        }
+                        _Scheduler.readyQueue.reset();
+                        Control.updateReadyQueueTable();
+                    }
+
                     _StdOut.advanceLine();
                     _OsShell.putPrompt();
             }
@@ -242,7 +263,6 @@ module TSOS {
             this.PC ++;
             if (this.Xreg == 0x01) {                                                // prints integer in y register
                 _StdOut.putText(this.Yreg.toString(16));
-                this.out += this.Yreg.toString(16);
             } else if (this.Xreg == 0x02) {                                         // prints 0x00 terminated string stored at address in y register;
                 // location in memory where string begins
                 let startingPoint = this.Yreg;
@@ -258,7 +278,6 @@ module TSOS {
                 }
                 // print output to console and reset y register
                 _StdOut.putText(output);
-                this.out += output;
                 this.Yreg = 0x00;
             } 
         }
@@ -266,7 +285,6 @@ module TSOS {
         public brk() {
             this.PC ++;
             this.isExecuting = false;
-            this.out = "";
 
             // Terminate current process and set associated segment to inactive
             _CurrentPCB.state = "terminated";
@@ -294,8 +312,7 @@ module TSOS {
                         "Acc: " + Utils.hexLog(this.acc) + "\n" +
                         "xReg: " + Utils.hexLog(this.Xreg) + "\n" +
                         "yReg: " + Utils.hexLog(this.Yreg) + "\n" +
-                        "zFlag: " + Utils.hexLog(this.Zflag) + "\n" +
-                        "Out: " + this.out);
+                        "zFlag: " + Utils.hexLog(this.Zflag));
             console.log("---------------------------------------");
         }
     }

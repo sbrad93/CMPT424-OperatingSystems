@@ -571,7 +571,7 @@ module TSOS {
                _StdOut.putText(`PID: ${_CurrentPCB.pid}`);
                _StdOut.advanceLine();
                _StdOut.advanceLine();
-               _StdOut.putText(`Execute \"run ${_CurrentPCB.pid}\" to run your program.`)
+               _StdOut.putText(`Execute \'run ${_CurrentPCB.pid}\' to run your program.`)
 
             }
         }

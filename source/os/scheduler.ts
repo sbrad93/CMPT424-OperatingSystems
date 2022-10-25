@@ -35,17 +35,15 @@ module TSOS {
         }
 
         public quantumSurveillance() {
-            // console.log("Current process: " + _CurrentPCB.pid);
-            // console.log("Quanta Count: " + this.quantaCount);
             // Quantum has been used up
             if (this.schedulingAlgorithm == ROUND_ROBIN && this.quantaCount == this.quantum) {
-                _Kernel.krnTrace("Quantum expired")
+                _Kernel.krnTrace("Quantum expired");
                 // Generate a software interrupt to implement a context switch
                 this.generateInterrupt();
                 this.quantaCount = 0;
+            } else {
+                this.quantaCount++;
             }
-
-            this.quantaCount++;
         }
 
         public generateInterrupt() {

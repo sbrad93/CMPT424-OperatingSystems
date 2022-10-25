@@ -9,11 +9,13 @@ module TSOS {
             if (this.runningPCB == null) {
                 // No processes are running, so dequeue from the ready queue and set to current PCB
                 _CurrentPCB = _Scheduler.readyQueue.dequeue();
-                _CurrentPCB.state = "running";
-                Control.updateReadyQueueTable();
+                if (_CurrentPCB != null) {
+                    _CurrentPCB.state = "running";
+                    Control.updateReadyQueueTable();
 
-                _CPU.init();
-                _CPU.isExecuting = true;
+                    _CPU.init();
+                    _CPU.isExecuting = true;
+                }
             } else {
                 // Can't switch processes if there aren't any waiting to run
                 if (_Scheduler.readyQueue.getSize() > 0) {
@@ -21,7 +23,7 @@ module TSOS {
                     this.runningPCB.state = "ready";
                     Control.updatePCBStateInTable(this.runningPCB.pid, this.runningPCB.state);
                     _Scheduler.readyQueue.enqueue(this.runningPCB);
-                    // Control.updateReadyQueueTable();
+                    Control.updateReadyQueueTable();
                     
 
                     // Dequeue the next PCB from ready queue and set to current PCB
@@ -34,7 +36,9 @@ module TSOS {
             this.runningPCB = _CurrentPCB;
 
             // Set the CPU registers to the saved registers in the current PCB
-            this.updateCPU();
+            if (_CurrentPCB != null) {
+                this.updateCPU();
+            }
         }
 
         public updateCPU() {

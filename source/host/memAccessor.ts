@@ -65,12 +65,22 @@ module TSOS {
             // Turn off single step mode
             Control.turnOffSingleStep();
 
-            // Schedule next process
-            _Kernel.krnTrace(`Process ${_CurrentPCB.pid}: Process execution complete.`)
-            _Scheduler.schedule();
-
+            _Kernel.krnTrace(`Process ${_CurrentPCB.pid}: Process terminated.`)
             _StdOut.advanceLine();
-            _StdOut.putText("Memory Bounds Error: Access Violation ");
+            _StdOut.putText(`Process ${_CurrentPCB.pid}: Memory Bounds Error -- Process terminated`);
+
+            if (_Scheduler.readyQueue.getSize() > 0) {
+                _StdOut.advanceLine();
+                _StdOut.putText("Execute 'runall' to finish running remaining processes.");
+                _CPU.init();
+                for (let i=0; i<_Scheduler.readyQueue.getSize(); i++) {
+                    _Scheduler.readyQueue.getAt(i).state = "resident";
+                    Control.updatePCBStateInTable(_Scheduler.readyQueue.getAt(i).pid, _Scheduler.readyQueue.getAt(i).state);
+                }
+                _Scheduler.readyQueue.reset();
+                Control.updateReadyQueueTable();
+            }
+
             _StdOut.advanceLine();
             _OsShell.putPrompt();
         }

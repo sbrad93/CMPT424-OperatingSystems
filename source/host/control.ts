@@ -267,7 +267,6 @@ module TSOS {
             acc.style.borderRight = "1px solid white";
             x.style.borderRight = "1px solid white";
             y.style.borderRight = "1px solid white";
-            z.style.borderRight = "1px solid white";
 
             pc.innerHTML = Utils.hexLog(_CPU.PC);
             ir.innerHTML = Utils.hexLog(_CPU.instructionReg);
@@ -329,7 +328,6 @@ module TSOS {
             acc.style.borderRight = "1px solid white";
             x.style.borderRight = "1px solid white";
             y.style.borderRight = "1px solid white";
-            z.style.borderRight = "1px solid white";
 
             pid.innerHTML = _CurrentPCB.pid+"";
             state.innerHTML = _CurrentPCB.state;
@@ -342,34 +340,59 @@ module TSOS {
         }
 
         public static updateMemoryOutput(): void {
-            var memory_out = <HTMLInputElement> document.getElementById("taMemory");
-            memory_out.value = "";
+            var table = <HTMLTableElement> document.getElementById("memory-table");
             var rowByte = 0x00;
+            let i = 0;
 
-            for (let j=0; j<_Memory.memArr.length; j++) {
-                let i = j+1;
+            // Since memory is actively changing,
+            // delete all rows first...
+            while(table.rows.length > 0) {
+                table.deleteRow(0);
+            }
+
+            while (i<_Memory.memSize) {
+                let row = table.insertRow(-1);
+                let byteVal = row.insertCell(0);
+                let bit = null;
+
+                byteVal.style.backgroundColor = "#087098";
+                byteVal.style.borderRadius = "15px";
+                byteVal.innerHTML = '0x' + ('00' + rowByte.toString(16).toUpperCase()).slice(-3);
 
                 // Base case
-                if (j == 0) {
-                    memory_out.value += '0x' + ('00' + rowByte.toString(16).toUpperCase()).slice(-3);
-                    memory_out.value += " ".repeat(2) + "|||" + " ".repeat(2);
+                if (i == 0x00) {
+                    bit = row.insertCell(-1);
+                    bit.style.borderRight = "1px solid white";
+                    bit.innerHTML = Utils.hexLog(_Memory.memArr[i]).slice(-2);
+                    i++;
                 }
 
-                // Print the op code
-                memory_out.value += Utils.hexLog(_Memory.memArr[j]).slice(-2);
+                // Loop through each byte
+                let k = 1;
+                while (k%8 != 0) {
+                    bit = row.insertCell(-1);
+                    bit.style.borderRight = "1px solid white";
+                    bit.innerHTML = Utils.hexLog(_Memory.memArr[i]).slice(-2);
+                    i++;
 
-                // Print byte value every 8 opcodes
-                rowByte += 0x01;
-                if (i % 8 == 0 && rowByte != 0x300) {
-                    if (rowByte == 0x100 || rowByte == 0x200) {
-                        memory_out.value += "\n"
+                    // Edge cases -- Include the 8th element of each row before loop terminates
+                    if (k==7 && i!=8) {
+                        bit = row.insertCell(-1);
+                        bit.style.borderRight = "1px solid white";
+                        bit.innerHTML = Utils.hexLog(_Memory.memArr[i]).slice(-2);
+                        i++;
                     }
-                    memory_out.value += "\n";
-                    memory_out.value += '0x' + ('00' + rowByte.toString(16).toUpperCase()).slice(-3);
-                    memory_out.value += " ".repeat(2) + "|||" + " ".repeat(2);
-                } else {
-                    memory_out.value += (" ".repeat(2));
+                    k++;
                 }
+                
+                // Add empty row in between memory segments
+                if (rowByte == 0x0F8 || rowByte == 0x1F8) {
+                    row = table.insertRow(-1);
+                    byteVal = row.insertCell(0);
+                    byteVal.innerHTML = "-------";
+                }
+
+                rowByte += 0x08;
             }
         }
 
@@ -393,7 +416,6 @@ module TSOS {
             limit.style.borderRight = "1px solid white";
             segment.style.borderRight = "1px solid white";
             priority.style.borderRight = "1px solid white";
-            quantum.style.borderRight = "1px solid white";
 
             state.innerHTML = _CurrentPCB.state+"";
             location.innerHTML = "memory";
@@ -413,7 +435,7 @@ module TSOS {
             // delete all rows first...
             while(table.rows.length > 1) {
                 table.deleteRow(1);
-              }
+            }
 
             // ... then recreate new rows according to the processes currently in the queue
             let i = 0;
@@ -434,13 +456,12 @@ module TSOS {
                 limit.style.borderRight = "1px solid white";
                 segment.style.borderRight = "1px solid white";
                 priority.style.borderRight = "1px solid white";
-                quantum.style.borderRight = "1px solid white";
 
-                state.innerHTML = _CurrentPCB.state+"";
+                state.innerHTML = _Scheduler.readyQueue.getAt(i).state+"";
                 location.innerHTML = "memory";
-                base.innerHTML = Utils.hexLog(_CurrentPCB.assignedSegment.base);
-                limit.innerHTML = Utils.hexLog(_CurrentPCB.assignedSegment.limit);
-                segment.innerHTML = _CurrentPCB.assignedSegment.sid+"";
+                base.innerHTML = Utils.hexLog(_Scheduler.readyQueue.getAt(i).assignedSegment.base);
+                limit.innerHTML = Utils.hexLog(_Scheduler.readyQueue.getAt(i).assignedSegment.limit);
+                segment.innerHTML = _Scheduler.readyQueue.getAt(i).assignedSegment.sid+"";
                 priority.innerHTML = "";
                 quantum.innerHTML = _Scheduler.quantum+"";
 
@@ -449,3 +470,39 @@ module TSOS {
         }
     }
 }
+
+// // Base case
+// if (j==0) {
+//     console.log("base case")
+//     bit = row.insertCell(-1);
+//     bit.style.borderRight = "1px solid white";
+//     bit.innerHTML = Utils.hexLog(_Memory.memArr[j]).slice(-2);
+//     j++;
+//     console.log(j)
+// }
+
+// // Loop through each byte
+// console.log("start loop")
+// while (j%8 != 0) {
+//     bit = row.insertCell(-1);
+//     bit.style.borderRight = "1px solid white";
+//     bit.innerHTML = Utils.hexLog(_Memory.memArr[j]).slice(-2);
+
+//     // Prevent very last bit from being skipped
+//     // if (j == _Memory.memSize-1) {
+//     //     bit = row.insertCell(-1);
+//     //     bit.style.borderRight = "1px solid white";
+//     //     bit.innerHTML = Utils.hexLog(_Memory.memArr[j]).slice(-2);
+//     // }
+//     j++;
+//     console.log(j)
+// }
+// console.log("end loop")
+
+// // Edge cases
+// // if (j!= _Memory.memSize && j!=8) {
+// //     console.log(j)
+// //     bit = row.insertCell(-1);
+// //     bit.style.borderRight = "1px solid white";
+// //     bit.innerHTML = Utils.hexLog(_Memory.memArr[j]).slice(-2);
+// // }

@@ -21,7 +21,7 @@ module TSOS {
                     this.runningPCB.state = "ready";
                     Control.updatePCBStateInTable(this.runningPCB.pid, this.runningPCB.state);
                     _Scheduler.readyQueue.enqueue(this.runningPCB);
-                    Control.updateReadyQueueTable();
+                    // Control.updateReadyQueueTable();
                     
 
                     // Dequeue the next PCB from ready queue and set to current PCB

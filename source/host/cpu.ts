@@ -273,6 +273,9 @@ module TSOS {
             _CurrentPCB.assignedSegment.isActive = false;
             Control.updatePCBStateInTable(_CurrentPCB.pid, _CurrentPCB.state);
 
+            // Memory can't be full if a process completes
+            _Memory.isFull = false;
+
             // Clear the running process
             _Dispatcher.runningPCB = null;
 

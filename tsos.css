@@ -130,6 +130,7 @@ h3 {
 .ta {
   resize: none;
   font-family: inherit;
+  margin-bottom: 20px;
 }
 
 #header {
@@ -159,9 +160,14 @@ h3 {
   border: 2px solid white;
 }
 
-#pcb-div, #readyQ-div {
+#memory-table {
+  width: 400px;
+  margin-right: 10px;
+}
+
+#pcb-div, #readyQ-div, #memory-div {
   height: 250px;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 #cpu-div {

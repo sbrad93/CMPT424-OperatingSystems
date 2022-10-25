@@ -9,8 +9,8 @@ module TSOS {
 
     export class MemoryManager {
 
-        constructor( public segmentsList: MemorySegment[] = [],
-                     public segmentSize: number = 0x100 ) {    
+        constructor(public segmentsList: MemorySegment[] = [],
+                     public segmentSize: number = 0x100) {    
             this.segmentsInit();
         }
 
@@ -64,6 +64,8 @@ module TSOS {
             // check if all segments are active
             if (this.segmentsList[this.segmentsList.length-1].isActive) {
                 _Memory.isFull = true;
+            } else {
+                _Memory.isFull = false;
             }
 
             // update the memory table

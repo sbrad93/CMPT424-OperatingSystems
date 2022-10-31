@@ -632,25 +632,41 @@ module TSOS {
         }
 
         public shellClearMem(args: string[]) {
-            // Terminate all processes and update output
-            for (let i=0; i<_PCBlist.length; i++) {
-                _PCBlist[i].state = "terminated";
-                Control.updatePCBStateInTable(_PCBlist[i].pid, _PCBlist[i].state);
+            let i = 0;
+            let canClearMem = false;
+            while (i<_PCBlist.length) {
+                if (_PCBlist[i].state == "running") {
+                    canClearMem = false;
+                    break;
+                } else {
+                    canClearMem = true;
+                }
+                i++;
             }
 
-            // Reset memory and update output
-            _Memory.reset();
-            Control.updateMemoryOutput();
+            if (canClearMem) {
+                // Terminate all processes and update output
+                for (let i=0; i<_PCBlist.length; i++) {
+                    _PCBlist[i].state = "terminated";
+                    Control.updatePCBStateInTable(_PCBlist[i].pid, _PCBlist[i].state);
+                }
 
-            // Clear the ready queue
-            _Scheduler.reset();
-            Control.updateReadyQueueTable();
+                // Reset memory and update output
+                _Memory.reset();
+                Control.updateMemoryOutput();
 
-            // Make all segments inactive
-            _MemoryManager.resetSegments();
+                // Clear the ready queue
+                _Scheduler.reset();
+                Control.updateReadyQueueTable();
 
-            // Reset current process to null
-            _CurrentPCB = null;
+                // Make all segments inactive
+                _MemoryManager.resetSegments();
+
+                // Reset current process to null
+                _CurrentPCB = null;
+            } else {
+                _StdOut.putText("Cannot clear memory while processes are running. Not cool...");
+            }
         }
 
         public shellPS(args: string[]) {

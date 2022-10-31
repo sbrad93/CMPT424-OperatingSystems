@@ -40,6 +40,12 @@ module TSOS {
             // Initialize the memory manager and create segments
             _MemoryManager = new MemoryManager();
 
+            // Create the CPU Scheduler
+            _Scheduler = new Scheduler();
+
+            // Create the Dispatcher
+            _Dispatcher = new Dispatcher();
+
             //
             // ... more?
             //

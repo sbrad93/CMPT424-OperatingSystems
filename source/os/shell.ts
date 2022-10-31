@@ -731,20 +731,23 @@ module TSOS {
                 _CurrentPCB = null;
 
                 // Clear memory segments and reintialize CPU
-                _MemoryManager.resetSegments()
+                _MemoryManager.resetSegments();
                 _CPU.init();
                 Control.updateCPUtable();
             } else {
                 if (!Kernel.isShutdown) {
-                    _StdOut.putText("There are no processes to kill.")
+                    _StdOut.putText("There are no processes to kill.");
                 }
             }
         }
 
         public shellSetQuantum(args: string[]) {
             if (Number.isNaN(Number(args[0]))) {
-                _StdOut.putText("Please enter a valid quantum value before I lose it.");
+                _StdOut.putText("Please enter a valid quantum value.");
             } else {
+                _StdOut.putText("Quantum change successful.");
+                _StdOut.advanceLine();
+                _StdOut.putText(`Switching quantum ${_Scheduler.quantum} to ${parseInt(args[0], 10)}.`);
                 _Scheduler.quantum = parseInt(args[0], 10);
             }
         }

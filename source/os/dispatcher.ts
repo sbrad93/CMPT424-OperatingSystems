@@ -25,14 +25,12 @@ module TSOS {
                     _Scheduler.readyQueue.enqueue(this.runningPCB);
                     Control.updateReadyQueueTable();
                     
-
                     // Dequeue the next PCB from ready queue and set to current PCB
                     _CurrentPCB = _Scheduler.readyQueue.dequeue();
                     Control.updateReadyQueueTable();
                     _CurrentPCB.state = "running";
                 }
             }
-
             this.runningPCB = _CurrentPCB;
 
             // Set the CPU registers to the saved registers in the current PCB

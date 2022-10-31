@@ -147,7 +147,6 @@ module TSOS {
                         _Scheduler.readyQueue.reset();
                         Control.updateReadyQueueTable();
                     }
-
                     _StdOut.advanceLine();
                     _OsShell.putPrompt();
             }

@@ -87,18 +87,7 @@ module TSOS {
                 } else if (chr == "ctrl-c") {
                     if (_CPU.isExecuting) {                                         // doesn't matter if cpu isn't executing
                         // Change current process state
-                        _CurrentPCB.state = "terminated";
-                        _CPU.init();
-
-                        // Update Process table and memory
-                        Control.updatePCBStateInTable(_CurrentPCB.pid, _CurrentPCB.state);
-                        Control.updateMemoryOutput();
-                        Control.updateCPUtable();
-
-                        _StdOut.advanceLine();
-                        _StdOut.putText(`Process ${_CurrentPCB.pid} has been successfully terminated.`);
-                        _StdOut.advanceLine();
-                        _OsShell.putPrompt();
+                        _OsShell.shellKillAll(null);
                     }
                 } else {
                     if (chr != '\0') {                                              // NUL char, https://news.ycombinator.com/item?id=22283042 -- This helped me understand what the heck this was (and provide mild amusement)

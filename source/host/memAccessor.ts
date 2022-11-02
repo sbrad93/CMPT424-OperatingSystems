@@ -14,12 +14,22 @@ module TSOS {
 
         //reads memory at the location in the MAR and updates the MDR accordingly
         public read() {
-            _MemoryManager.setMDR(_Memory.memArr[_MemoryManager.getMAR()]);
+            if (_MemoryManager.getMAR() > _CurrentPCB.assignedSegment.limit) {
+                // check for memory access violation
+                this.memoryBoundsError();
+            } else {
+                _MemoryManager.setMDR(_Memory.memArr[_MemoryManager.getMAR()]);
+            }
         }
 
         //writes the contents of the MDR to memory at the location indicated by the MAR
         public write() {
-            _Memory.memArr[_MemoryManager.getMAR()] = _MemoryManager.getMDR();
+            if (_MemoryManager.getMAR() > _CurrentPCB.assignedSegment.limit) {
+               // check for memory access violation
+               this.memoryBoundsError();
+            } else {
+                _Memory.memArr[_MemoryManager.getMAR()] = _MemoryManager.getMDR();
+            }
         }
 
         //displays the memory content up to a given address in browser console
@@ -39,6 +49,40 @@ module TSOS {
             }
             console.log("---------------------------------------");
             console.log("Memory Dump: Complete");
+        }
+
+        public memoryBoundsError() {
+            _CPU.isExecuting = false;
+
+            // Terminate current process and set associated segment to inactive
+            _CurrentPCB.state = "terminated";
+            _CurrentPCB.assignedSegment.isActive = false;
+            Control.updatePCBStateInTable(_CurrentPCB.pid, _CurrentPCB.state);
+
+            // Clear the running process
+            _Dispatcher.runningPCB = null;
+
+            // Turn off single step mode
+            Control.turnOffSingleStep();
+
+            _Kernel.krnTrace(`Process ${_CurrentPCB.pid}: Process terminated.`)
+            _StdOut.advanceLine();
+            _StdOut.putText(`Process ${_CurrentPCB.pid}: Memory Bounds Error -- Process terminated`);
+
+            if (_Scheduler.readyQueue.getSize() > 0) {
+                _StdOut.advanceLine();
+                _StdOut.putText("Execute 'runall' to finish running remaining processes.");
+                _CPU.init();
+                for (let i=0; i<_Scheduler.readyQueue.getSize(); i++) {
+                    _Scheduler.readyQueue.getAt(i).state = "resident";
+                    Control.updatePCBStateInTable(_Scheduler.readyQueue.getAt(i).pid, _Scheduler.readyQueue.getAt(i).state);
+                }
+                _Scheduler.readyQueue.reset();
+                Control.updateReadyQueueTable();
+            }
+
+            _StdOut.advanceLine();
+            _OsShell.putPrompt();
         }
     }
 }

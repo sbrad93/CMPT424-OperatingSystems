@@ -87,18 +87,7 @@ module TSOS {
                 } else if (chr == "ctrl-c") {
                     if (_CPU.isExecuting) {                                         // doesn't matter if cpu isn't executing
                         // Change current process state
-                        _CurrentPCB.state = "terminated";
-
-                        // Since there's only one process running for now...
-                        _CPU.init();
-
-                        // Update Process table and memory
-                        Control.updatePCBStateInTable(_CurrentPCB.pid);
-                        Control.updateMemoryOutput();
-                        Control.updateCPUtable();
-
-                        _StdOut.advanceLine();
-                        _StdOut.putText(`Process ${_CurrentPCB.pid} has been successfully terminated.`);
+                        _OsShell.shellKillAll(null);
                         _StdOut.advanceLine();
                         _OsShell.putPrompt();
                     }
@@ -140,8 +129,8 @@ module TSOS {
                 this.prevXPosition = this.currentXPosition;
                 Console.positionStack.push(this.prevXPosition);
                 
-                // Since canvas width is 500px and each char is roughly 8px (and I waned to account for some extra space)...
-                const index = 55;
+                // Since canvas width is 700px and each char is roughly 8px (and I wanted to account for some extra space)...
+                const index = 65;
                 if (text.length > index) {
                     // Place newline char once text exceeds console view
                     resStr = text.slice(0,index) + "\n" + text.slice(index);

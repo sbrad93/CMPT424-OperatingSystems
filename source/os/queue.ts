@@ -17,6 +17,23 @@ module TSOS {
             return this.q.length;
         }
 
+        public getAt(index) {
+            return this.q[index];
+        }
+
+        public remove(pcb) {
+            // remove the target element
+            for (let i=0; i<this.q.length; i++) {
+                if (pcb == this.q[i]) {
+                    this.q.splice(i, 1);
+                }
+            }
+        }
+
+        public reset() {
+            this.q = new Array();
+        }
+
         public isEmpty(){
             return (this.q.length == 0);
         }

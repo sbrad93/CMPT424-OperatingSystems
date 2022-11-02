@@ -22,7 +22,6 @@ module TSOS {
                     public Zflag: number = 0x00,
                     public isExecuting: boolean = false,
                     public instructionReg: number = 0x00,
-                    public step: number = 0x00,
                     public clockCnt: number = 0,
                     public currentPCB: PCB = new PCB(_PidCounter)) {
         }
@@ -35,33 +34,47 @@ module TSOS {
             this.Zflag = 0x00;
             this.isExecuting = false;
             this.instructionReg = 0x00;
-            this.step = 0x00;
             this.clockCnt = 0;
         }
 
         public cycle(): void {
             _Kernel.krnTrace('CPU cycle');
-            _CurrentPCB.state = "running";
             this.clockCnt++;
             this.fetch();
             this.decodeNExecute();
 
             // browser console logging
-            this.cpuLog();
+            // this.cpuLog();
 
             // update Processes table, CPU table, and Memory table at the end of each cpu cycle
             Control.updatePCBtable(_CurrentPCB.pid);
             Control.updateCPUtable();
             Control.updateMemoryOutput();
+            this.synchronizeCPUandPCB();
 
             if (_IsSingleStep) {
                 // check if in single step mode
                 _CanTakeNextStep = false;
             }
+
+            // Increment turnaround cylces for every cylce in running state
+            _CurrentPCB.turnAroundCycles++;
+
+            // make sure quantum value hasn't expired (if applicable)
+            _Scheduler.quantumSurveillance();
+        }
+
+        public synchronizeCPUandPCB(): void {
+            _CurrentPCB.PC = this.PC;
+            _CurrentPCB.instructionReg = this.instructionReg;
+            _CurrentPCB.acc = this.acc;
+            _CurrentPCB.Xreg = this.Xreg;
+            _CurrentPCB.Yreg = this.Yreg;
+            _CurrentPCB.Zflag = this.Zflag;
         }
 
         public fetch() {
-            this.instructionReg = _MemoryManager.getMemArr()[this.PC];
+            this.instructionReg = _MemoryManager.getMemArr()[this.PC + _CurrentPCB.assignedSegment.base];
         }
 
         public decodeNExecute() {
@@ -109,12 +122,34 @@ module TSOS {
                     this.sysCall();
                     break;
                 default:
-                    this.isExecuting = false;
+                    _CPU.isExecuting = false;
+
+                    // Terminate current process and set associated segment to inactive
                     _CurrentPCB.state = "terminated";
+                    _CurrentPCB.assignedSegment.isActive = false;
+                    Control.updatePCBStateInTable(_CurrentPCB.pid, _CurrentPCB.state);
+
+                    // Clear the running process
+                    _Dispatcher.runningPCB = null;
+
+                    // Turn off single step mode
+                    Control.turnOffSingleStep();
+
+                    _Kernel.krnTrace(`Process ${_CurrentPCB.pid}: Process terminated.`)
                     _StdOut.advanceLine();
-                    _StdOut.putText(`Process ${_CurrentPCB.pid}: Invalid Op Code Error.`);
-                    _StdOut.advanceLine();
-                    _StdOut.putText("CPU stopped and process terminated.");
+                    _StdOut.putText(`Process ${_CurrentPCB.pid}: Invalid Op Code Error -- Process terminated`);
+
+                    if (_Scheduler.readyQueue.getSize() > 0) {
+                        _StdOut.advanceLine();
+                        _StdOut.putText("Execute 'runall' to finish running remaining processes.");
+                        _CPU.init();
+                        for (let i=0; i<_Scheduler.readyQueue.getSize(); i++) {
+                            _Scheduler.readyQueue.getAt(i).state = "resident";
+                            Control.updatePCBStateInTable(_Scheduler.readyQueue.getAt(i).pid, _Scheduler.readyQueue.getAt(i).state);
+                        }
+                        _Scheduler.readyQueue.reset();
+                        Control.updateReadyQueueTable();
+                    }
                     _StdOut.advanceLine();
                     _OsShell.putPrompt();
             }
@@ -123,16 +158,14 @@ module TSOS {
         // A9
         public loadAccWConstant() {
             this.PC ++;
-            this.acc = _MemoryManager.getMemArr()[this.PC];
+            this.acc = _MemoryManager.getMemArr()[this.PC + _CurrentPCB.assignedSegment.base];
             this.PC ++;
         }
         // AD
         public loadAccFromMemory() {
             this.PC ++;
-            _MemoryManager.setMAR(0x00);
-            _MemoryManager.setLowOrderByte(_MemoryManager.getMemArr()[this.PC]);
+            _MemoryManager.calcMAR(this.PC + _CurrentPCB.assignedSegment.base);
             this.PC ++;
-            _MemoryManager.setHighOrderByte(_MemoryManager.getMemArr()[this.PC]);
             this.PC ++;
             _MemAccessor.read();
             this.acc = _MemoryManager.getMDR();
@@ -140,10 +173,8 @@ module TSOS {
         // 8D
         public storeAccInMemory() {
             this.PC ++;
-            _MemoryManager.setMAR(0x00);
-            _MemoryManager.setLowOrderByte(_MemoryManager.getMemArr()[this.PC]);
+            _MemoryManager.calcMAR(this.PC + _CurrentPCB.assignedSegment.base);
             this.PC ++;
-            _MemoryManager.setHighOrderByte(_MemoryManager.getMemArr()[this.PC]);
             this.PC ++;
             _MemoryManager.setMDR(this.acc);
             _MemAccessor.write();
@@ -151,10 +182,8 @@ module TSOS {
         // 6D
         public addWithCarry() {
             this.PC ++;
-            _MemoryManager.setMAR(0x00);
-            _MemoryManager.setLowOrderByte(_MemoryManager.getMemArr()[this.PC]);
+            _MemoryManager.calcMAR(this.PC + _CurrentPCB.assignedSegment.base);
             this.PC ++;
-            _MemoryManager.setHighOrderByte(_MemoryManager.getMemArr()[this.PC]);
             this.PC ++;
             _MemAccessor.read();
             this.acc += _MemoryManager.getMDR();
@@ -162,16 +191,14 @@ module TSOS {
         // A2
         public loadXWithConstant() {
             this.PC ++;
-            this.Xreg = _MemoryManager.getMemArr()[this.PC];
+            this.Xreg = _MemoryManager.getMemArr()[this.PC + _CurrentPCB.assignedSegment.base];
             this.PC ++;
         }
         // AE
         public loadXFromMemory() {
             this.PC ++;
-            _MemoryManager.setMAR(0x00);
-            _MemoryManager.setLowOrderByte(_MemoryManager.getMemArr()[this.PC]);
+            _MemoryManager.calcMAR(this.PC + _CurrentPCB.assignedSegment.base);
             this.PC ++;
-            _MemoryManager.setHighOrderByte(_MemoryManager.getMemArr()[this.PC]);
             this.PC ++;
             _MemAccessor.read();
             this.Xreg = _MemoryManager.getMDR();
@@ -179,16 +206,14 @@ module TSOS {
         // A0
         public loadYWithConstant() {
             this.PC ++;
-            this.Yreg = _MemoryManager.getMemArr()[this.PC];
+            this.Yreg = _MemoryManager.getMemArr()[this.PC + _CurrentPCB.assignedSegment.base];
             this.PC ++;
         }
         // AC
         public loadYFromMemory() {
             this.PC ++;
-            _MemoryManager.setMAR(0x00);
-            _MemoryManager.setLowOrderByte(_MemoryManager.getMemArr()[this.PC]);
+            _MemoryManager.calcMAR(this.PC + _CurrentPCB.assignedSegment.base);
             this.PC ++;
-            _MemoryManager.setHighOrderByte(_MemoryManager.getMemArr()[this.PC]);
             this.PC ++;
             _MemAccessor.read();
             this.Yreg = _MemoryManager.getMDR();
@@ -197,25 +222,11 @@ module TSOS {
         public noOp() {
             this.PC ++;
         }
-        // 00
-        public brk() {
-            this.PC ++;
-            _CurrentPCB.state = "terminated";
-            this.isExecuting = false;
-            // Single step mode turned off once program executes
-            Control.turnOffSingleStep();
-            _StdOut.advanceLine();
-            _StdOut.putText("Execution completed.")
-            _StdOut.advanceLine();
-            _OsShell.putPrompt();
-        }
         // EC
         public compareWithX() {
             this.PC ++;
-            _MemoryManager.setMAR(0x00);
-            _MemoryManager.setLowOrderByte(_MemoryManager.getMemArr()[this.PC]);
+            _MemoryManager.calcMAR(this.PC + _CurrentPCB.assignedSegment.base);
             this.PC ++;
-            _MemoryManager.setHighOrderByte(_MemoryManager.getMemArr()[this.PC]);
             this.PC ++;
             _MemAccessor.read();
             if (this.Xreg == _MemoryManager.getMDR()) {
@@ -228,11 +239,11 @@ module TSOS {
         public branch() {
             this.PC++;
             if (this.Zflag == 0) {
-                _MemoryManager.modMAR(this.PC);
+                _MemoryManager.setMAR(this.PC + _CurrentPCB.assignedSegment.base);
                 _MemAccessor.read();
                 this.PC += _MemoryManager.getMDR();
                 if (this.PC > 0x100) {
-                    this.PC = this.PC % 0x100;
+                    this.PC = (this.PC % 0x100);
                 }
             }
             this.PC++;
@@ -240,11 +251,8 @@ module TSOS {
         // EE
         public increment() {
             this.PC ++;
-            _MemoryManager.setMAR(0x00);
-            _MemoryManager.setLowOrderByte(_MemoryManager.getMemArr()[this.PC]);
-            this.step = 2;
+            _MemoryManager.calcMAR(this.PC + _CurrentPCB.assignedSegment.base);
             this.PC ++;
-            _MemoryManager.setHighOrderByte(_MemoryManager.getMemArr()[this.PC]);
             this.PC ++;
             _MemAccessor.read();
             this.acc = _MemoryManager.getMDR();
@@ -261,7 +269,7 @@ module TSOS {
                 // location in memory where string begins
                 let startingPoint = this.Yreg;
                 let output = "";
-                for (let i=0; i+startingPoint < _Memory.memSize; i++) {
+                for (let i=_CurrentPCB.assignedSegment.base; i+startingPoint < _Memory.memSize; i++) {
                     // loop until string is terminated with 0x00
                     let byte = _MemoryManager.getMemArr()[startingPoint+i];
                     if (byte == 0x00) {
@@ -275,6 +283,35 @@ module TSOS {
                 this.Yreg = 0x00;
             } 
         }
+        // 00
+        public brk() {
+            this.PC ++;
+            this.isExecuting = false;
+
+            // Terminate current process and set associated segment to inactive
+            _CurrentPCB.state = "terminated";
+            _CurrentPCB.assignedSegment.isActive = false;
+            Control.updatePCBStateInTable(_CurrentPCB.pid, _CurrentPCB.state);
+
+            // Save the waiting and turnaround times to be displayed once all processes execute
+            let waitTime = _Scheduler.calcWaitTime(_CurrentPCB);
+            _WaitTimeList.push("Process " + _CurrentPCB.pid + ": " + waitTime.toFixed(2) + " CPU cycles/process");
+            let turnAroundTime = _Scheduler.calcTurnAroundTime(_CurrentPCB);
+            _TurnAroundTimeList.push("Process " + _CurrentPCB.pid + ": " + turnAroundTime.toFixed(2) + " CPU cycles/process");
+
+            // Memory can't be full if a process completes
+            _Memory.isFull = false;
+
+            // Clear the running process
+            _Dispatcher.runningPCB = null;
+
+            // Single step mode turned off once program executes
+            Control.turnOffSingleStep();
+
+            // Schedule next process
+            _Kernel.krnTrace(`Process ${_CurrentPCB.pid}: Process execution complete.`)
+            _Scheduler.schedule();
+        }
 
         public cpuLog() {
             //logging information for each member of CPU class
@@ -283,8 +320,7 @@ module TSOS {
                         "Acc: " + Utils.hexLog(this.acc) + "\n" +
                         "xReg: " + Utils.hexLog(this.Xreg) + "\n" +
                         "yReg: " + Utils.hexLog(this.Yreg) + "\n" +
-                        "zFlag: " + Utils.hexLog(this.Zflag) + "\n" +
-                        "Step: " + Utils.hexLog(this.step) + "\n");
+                        "zFlag: " + Utils.hexLog(this.Zflag));
             console.log("---------------------------------------");
         }
     }

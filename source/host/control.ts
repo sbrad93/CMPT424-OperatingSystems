@@ -88,12 +88,12 @@ module TSOS {
             // .. set focus on the OS console display ...
             document.getElementById("display").focus();
 
-            // Create the Memory Accessor
-            _MemAccessor = new MemAccessor();
-
             // Create and initialize our memory prototype
             _Memory = new Memory();
             _Memory.arrInit();
+
+            // Create the Memory Accessor
+            _MemAccessor = new MemAccessor();
 
             // Check for our testing and enrichment core, which
             // may be referenced here (from index.html) as function Glados().
@@ -121,6 +121,8 @@ module TSOS {
         public static hostBtnHaltOS_click(btn): void {
             Control.hostLog("Emergency halt", "host");
             Control.hostLog("Attempting Kernel shutdown.", "host");
+            (<HTMLButtonElement> document.getElementById("btnHaltOS")).style.backgroundColor = "red";
+            Kernel.isShutdown = true;
             // Call the OS shutdown routine.
             _Kernel.krnShutdown();
             // Stop the interval that's simulating our clock pulse.
@@ -259,7 +261,6 @@ module TSOS {
             acc.style.borderRight = "1px solid white";
             x.style.borderRight = "1px solid white";
             y.style.borderRight = "1px solid white";
-            z.style.borderRight = "1px solid white";
 
             pc.innerHTML = Utils.hexLog(_CPU.PC);
             ir.innerHTML = Utils.hexLog(_CPU.instructionReg);
@@ -293,10 +294,10 @@ module TSOS {
             z.innerHTML = Utils.hexLog(_CPU.Zflag);
         }
 
-        public static updatePCBStateInTable(currPID: number): void {
+        public static updatePCBStateInTable(pid: number, state_str: string): void {
             const table = <HTMLTableElement> document.getElementById("pcb-table");
-            const state = table.rows[currPID+1].cells[1];
-            state.innerHTML = _CurrentPCB.state;
+            const state = table.rows[pid+1].cells[1];
+            state.innerHTML = state_str;
         }
 
         public static addRowToPCBTable(): void {
@@ -321,38 +322,181 @@ module TSOS {
             acc.style.borderRight = "1px solid white";
             x.style.borderRight = "1px solid white";
             y.style.borderRight = "1px solid white";
-            z.style.borderRight = "1px solid white";
 
             pid.innerHTML = _CurrentPCB.pid+"";
+            state.innerHTML = _CurrentPCB.state;
             pc.innerHTML = Utils.hexLog(0x00);
             ir.innerHTML = Utils.hexLog(0x00);
             acc.innerHTML = Utils.hexLog(0x00);
             x.innerHTML = Utils.hexLog(0x00);
             y.innerHTML =Utils.hexLog(0x00);
             z.innerHTML = Utils.hexLog(0x00);
-            state.innerHTML = _CurrentPCB.state;
         }
 
         public static updateMemoryOutput(): void {
-            var memory_out = <HTMLInputElement> document.getElementById("taMemory");
-            memory_out.value = "";
+            var table = <HTMLTableElement> document.getElementById("memory-table");
             var rowByte = 0x00;
+            let i = 0;
 
-            for (let j=0; j<_Memory.memArr.length; j++) {
-                // Display memory
-                rowByte += 0x01;
-                let i = j+1;
-                if (j == 0) {
-                    memory_out.value += Utils.hexLog(0x00) + " ||| ";
+            // Since memory is actively changing,
+            // delete all rows first...
+            while(table.rows.length > 0) {
+                table.deleteRow(0);
+            }
+
+            while (i<_Memory.memSize) {
+                let row = table.insertRow(-1);
+                let byteVal = row.insertCell(0);
+                let bit = null;
+
+                byteVal.style.backgroundColor = "#087098";
+                byteVal.style.borderRadius = "15px";
+                byteVal.innerHTML = '0x' + ('00' + rowByte.toString(16).toUpperCase()).slice(-3);
+
+                // Base case
+                if (i == 0x00) {
+                    bit = row.insertCell(-1);
+                    bit.style.borderRight = "1px solid white";
+                    bit.innerHTML = Utils.hexLog(_Memory.memArr[i]).slice(-2);
+                    i++;
                 }
-                memory_out.value += Utils.hexLog(_Memory.memArr[j]);
-                if (i % 8 == 0 && rowByte != 0x100) {
-                    memory_out.value += "\n";
-                    memory_out.value += Utils.hexLog(rowByte) + " ||| ";
-                } else {
-                    memory_out.value += " ";
+
+                // Loop through each byte
+                let k = 1;
+                while (k%8 != 0) {
+                    bit = row.insertCell(-1);
+                    bit.style.borderRight = "1px solid white";
+                    bit.innerHTML = Utils.hexLog(_Memory.memArr[i]).slice(-2);
+                    i++;
+
+                    // Edge cases -- Include the 8th element of each row before loop terminates
+                    if (k==7 && i!=8) {
+                        bit = row.insertCell(-1);
+                        bit.style.borderRight = "1px solid white";
+                        bit.innerHTML = Utils.hexLog(_Memory.memArr[i]).slice(-2);
+                        i++;
+                    }
+                    k++;
                 }
+                
+                // Add empty row in between memory segments
+                if (rowByte == 0x0F8 || rowByte == 0x1F8) {
+                    row = table.insertRow(-1);
+                    byteVal = row.insertCell(0);
+                    byteVal.innerHTML = "-------";
+                }
+
+                rowByte += 0x08;
+            }
+        }
+
+        public static addRowToReadyQueueTable():void {
+            // Creates a new row in the Ready Queue table each time a new program is run
+
+            const table = <HTMLTableElement> document.getElementById("queue-table");
+            const row = table.insertRow(-1);
+
+            const state = row.insertCell(0);
+            const location = row.insertCell(1);
+            const base = row.insertCell(2);
+            const limit = row.insertCell(3);
+            const segment = row.insertCell(4);
+            const priority = row.insertCell(5);
+            const quantum = row.insertCell(6);
+
+            state.style.borderRight = "1px solid white";
+            location.style.borderRight = "1px solid white";
+            base.style.borderRight = "1px solid white";
+            limit.style.borderRight = "1px solid white";
+            segment.style.borderRight = "1px solid white";
+            priority.style.borderRight = "1px solid white";
+
+            state.innerHTML = _CurrentPCB.state+"";
+            location.innerHTML = "memory";
+            base.innerHTML = Utils.hexLog(_CurrentPCB.assignedSegment.base);
+            limit.innerHTML = Utils.hexLog(_CurrentPCB.assignedSegment.limit);
+            segment.innerHTML = _CurrentPCB.assignedSegment.sid+"";
+            priority.innerHTML = "";
+            quantum.innerHTML = _Scheduler.quantum+"";
+        }
+
+        public static updateReadyQueueTable():void {
+            // Updates the cell values in the Ready Queue table
+
+            const table = <HTMLTableElement> document.getElementById("queue-table");
+
+            // Since the ready queue size is actively changing,
+            // delete all rows first...
+            while(table.rows.length > 1) {
+                table.deleteRow(1);
+            }
+
+            // ... then recreate new rows according to the processes currently in the queue
+            let i = 0;
+            while (i < _Scheduler.readyQueue.getSize()) {
+                const row = table.insertRow(-1);
+
+                const state = row.insertCell(0);
+                const location = row.insertCell(1);
+                const base = row.insertCell(2);
+                const limit = row.insertCell(3);
+                const segment = row.insertCell(4);
+                const priority = row.insertCell(5);
+                const quantum = row.insertCell(6);
+
+                state.style.borderRight = "1px solid white";
+                location.style.borderRight = "1px solid white";
+                base.style.borderRight = "1px solid white";
+                limit.style.borderRight = "1px solid white";
+                segment.style.borderRight = "1px solid white";
+                priority.style.borderRight = "1px solid white";
+
+                state.innerHTML = _Scheduler.readyQueue.getAt(i).state+"";
+                location.innerHTML = "memory";
+                base.innerHTML = Utils.hexLog(_Scheduler.readyQueue.getAt(i).assignedSegment.base);
+                limit.innerHTML = Utils.hexLog(_Scheduler.readyQueue.getAt(i).assignedSegment.limit);
+                segment.innerHTML = _Scheduler.readyQueue.getAt(i).assignedSegment.sid+"";
+                priority.innerHTML = "";
+                quantum.innerHTML = _Scheduler.quantum+"";
+
+                i++;
             }
         }
     }
 }
+
+// // Base case
+// if (j==0) {
+//     console.log("base case")
+//     bit = row.insertCell(-1);
+//     bit.style.borderRight = "1px solid white";
+//     bit.innerHTML = Utils.hexLog(_Memory.memArr[j]).slice(-2);
+//     j++;
+//     console.log(j)
+// }
+
+// // Loop through each byte
+// console.log("start loop")
+// while (j%8 != 0) {
+//     bit = row.insertCell(-1);
+//     bit.style.borderRight = "1px solid white";
+//     bit.innerHTML = Utils.hexLog(_Memory.memArr[j]).slice(-2);
+
+//     // Prevent very last bit from being skipped
+//     // if (j == _Memory.memSize-1) {
+//     //     bit = row.insertCell(-1);
+//     //     bit.style.borderRight = "1px solid white";
+//     //     bit.innerHTML = Utils.hexLog(_Memory.memArr[j]).slice(-2);
+//     // }
+//     j++;
+//     console.log(j)
+// }
+// console.log("end loop")
+
+// // Edge cases
+// // if (j!= _Memory.memSize && j!=8) {
+// //     console.log(j)
+// //     bit = row.insertCell(-1);
+// //     bit.style.borderRight = "1px solid white";
+// //     bit.innerHTML = Utils.hexLog(_Memory.memArr[j]).slice(-2);
+// // }

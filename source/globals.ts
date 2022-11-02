@@ -20,11 +20,15 @@ const TIMER_IRQ: number = 0;  // Pages 23 (timer), 9 (interrupts), and 561 (inte
                               // NOTE: The timer is different from hardware/host clock pulses. Don't confuse these.
 const KEYBOARD_IRQ: number = 1;
 
+const CONTEXT_SWITCH_IRQ: number = 2;
 
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
 //
+
+// Scheduling Algorithms
+const ROUND_ROBIN: string = "RR";
 
 // Hardware (host)
 var _Memory: TSOS.Memory;
@@ -34,6 +38,10 @@ var _CPU: TSOS.Cpu;  // Utilize TypeScript's type annotation system to ensure th
 
 // Software (OS)
 var _MemoryManager: TSOS.MemoryManager;
+var _Scheduler: TSOS.Scheduler;
+var _Dispatcher: TSOS.Dispatcher;
+var _WaitTimeList: string[] = [];
+var _TurnAroundTimeList: string[] = [];
 
 var _OSclock: number = 0;  // Page 23.
 

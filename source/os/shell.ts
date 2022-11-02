@@ -103,21 +103,49 @@ module TSOS {
                                 "- Tests when kernel traps an OS error and displays BSOD.");
             this.commandList[this.commandList.length] = sc;
             
-            // Load input values into console
+            // load input values into console
             sc = new ShellCommand(this.shellLoad,
                             "load",
                             "<string> - Loads a user program into the console.");
             this.commandList[this.commandList.length] = sc;
 
-            // Run a process
+            // run a process
             sc = new ShellCommand(this.shellRun,
                             "run",
-                            "<int> - Runs a specified process.");
+                            "<pid> - Runs a specified process.");
             this.commandList[this.commandList.length] = sc;
-            // Memory dump testing
+
+            // memory dump testing
             sc = new ShellCommand(this.shellMemoryDump,
                             "memdump",
                             " - Displays memory in browser console.");
+            this.commandList[this.commandList.length] = sc;
+
+            // clear all memory pertitions
+            sc = new ShellCommand(this.shellClearMem,
+                            "clearmem",
+                            " - Clears all memory partitions.");
+            this.commandList[this.commandList.length] = sc;
+            // clear all memory pertitions
+            sc = new ShellCommand(this.shellRunAll,
+                            "runall",
+                            " - Run all loaded processes.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new ShellCommand(this.shellPS,
+                            "ps",
+                            " - Displays the PID and state of all processes.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new ShellCommand(this.shellKill,
+                            "kill",
+                            "<pid> - Kills a specified process.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new ShellCommand(this.shellKillAll,
+                            "killall",
+                            "<pid> - Kills all processes.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new ShellCommand(this.shellSetQuantum,
+                            "quantum",
+                            "<int> - Sets the quantum value.");
             this.commandList[this.commandList.length] = sc;
 
             // ps  - list the running processes and their IDs
@@ -274,13 +302,6 @@ module TSOS {
                 _StdOut.advanceLine();
                 _StdOut.putText(_OsShell.commandList[i].command + " " + _OsShell.commandList[i].description);
             }
-
-            // _StdOut.putText("Commands:");
-            // _StdIn.advanceLine();
-            // for (let i in _OsShell.commandList) {
-            //     Utils.chckShellLineWrap(_OsShell.commandList[i].command + " " +_OsShell.commandList[i].description);
-            // }
-
         }
 
         public shellShutdown(args: string[]) {
@@ -339,16 +360,34 @@ module TSOS {
                         _StdOut.putText("Status sets a user-defined status message.");
                         break;
                     case "bsod":
-                        _StdOut.putText("Tests when the kernel traps and OS error and displays BSOD.")
+                        _StdOut.putText("Tests when the kernel traps and OS error and displays BSOD.");
                         break;
                     case "load":
-                        _StdOut.putText("Loads a user program into the console.")
+                        _StdOut.putText("Loads a user program into the console.");
                         break;
                     case "run":
-                        _StdOut.putText("Runs a specified process.")
+                        _StdOut.putText("Runs a specified process.");
                         break;
                     case "memdump":
-                        _StdOut.putText("Displays memory in browser console.")
+                        _StdOut.putText("Displays memory in browser console.");
+                        break;
+                    case "clearmem":
+                        _StdOut.putText("Clears all memory partitions.");
+                        break;
+                    case "clearmem":
+                        _StdOut.putText("Runs all loaded processes.");
+                        break;
+                    case "ps":
+                        _StdOut.putText("Displays the pid and state of all processes.");
+                        break;
+                    case "kill":
+                        _StdOut.putText("Kills a specified process.");
+                        break;
+                    case "killall":
+                        _StdOut.putText("Kills all processes.");
+                        break;
+                    case "quantum":
+                        _StdOut.putText("Sets the quantum value. Default is 6 CPU cycles.");
                         break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
@@ -485,62 +524,66 @@ module TSOS {
 
         public shellTestKrnTrapError(args: string[]) {
             _Kernel.krnTrapError("ChaOS has been shutdown.");
-            _CurrentPCB.state = "terminated";
-            _CPU.isExecuting = false;
-            Control.updatePCBtable(_CurrentPCB.pid);
         }
 
         public shellLoad(args: string[]) {
-            if ((_Memory.isFull) && (_CurrentPCB != null)) {
-                _CurrentPCB.state = "terminated";
-                Control.updatePCBStateInTable(_CurrentPCB.pid);
-                _StdOut.putText(`Process ${_CurrentPCB.pid}: Overwriting Memory...`);
-                _StdOut.advanceLine();
-            }
-            // Clear temp array 
-            _Memory.tempArr = [];
-            
-            // Get da op codes
-            var opcode_str = Control.getOpCodes();
-
-            if (opcode_str != null) {
-                // Reset CPU registers and memory (for now)
-                _CPU.init();
-                _Memory.arrInit();
-
-                // Create a new process and add to PCB list
-                _CurrentPCB = new PCB(_PidCounter);
-                _PidCounter += 1;
-                _PCBlist.push(_CurrentPCB);
+            if (_CPU.isExecuting) {
+                _StdOut.putText("Load Error: Please wait for the current process(s) to finish executing.");
+            } else {
+                if ((_Memory.isFull) && (_CurrentPCB != null)) {
+                    _CurrentPCB.state = "terminated";
+                    // set the last segment to inactive and overwrite memory
+                    _MemoryManager.segmentsList[_MemoryManager.segmentsList.length-1].isActive = false;
+                    Control.updatePCBStateInTable(_CurrentPCB.pid, _CurrentPCB.state);
+                    _StdOut.putText(`Process ${_CurrentPCB.pid}: Overwriting Memory...`);
+                    _StdOut.advanceLine();
+                }
+                // Clear temp array 
+                _Memory.tempArr = [];
+    
+                // Clear memory of inactive segments
+                // Implemented to improve memory output updating
+                //  I didn't want to clear segment memory each time a process finished executing bc it felt too abrupt
+                //  ... so I did this instead 
+                _MemoryManager.clearInactiveSegments();
                 
-                // Regex that splits hex string into a list of individual op codes
-                // Assign to a temporary memory array
-               _Memory.tempArr = opcode_str.match(/.{1,2}/g);
-
-               // Add a new row to the Processes table
-               Control.addRowToPCBTable();
-
-               // Memory output
-               var memory_out = <HTMLInputElement> document.getElementById("taMemory");
-               memory_out.value = "";
-
-               // Load the program into memory at location $0000	
-               _MemoryManager.load(_Memory.tempArr);
-
-               _StdOut.putText("Successfuly loaded program into memory.");
-               _StdOut.advanceLine();
-               _StdOut.putText(`PID: ${_CurrentPCB.pid}`);
-               _StdOut.advanceLine();
-               _StdOut.advanceLine();
-               _StdOut.putText(`Execute \"run ${_CurrentPCB.pid}\" to run your program.`)
-
-            }
+                // Get da op codes
+                var opcode_str = Control.getOpCodes();
+    
+                if (opcode_str != null) {
+                    // Create a new process and add to PCB list
+                    _CurrentPCB = new PCB(_PidCounter);
+                    _PidCounter += 1;
+                    _PCBlist.push(_CurrentPCB);
+                    
+                    // Regex that splits hex string into a list of individual op codes
+                    // Assign to a temporary memory array
+                   _Memory.tempArr = opcode_str.match(/.{1,2}/g);
+    
+                   // Add a new row to the Processes table
+                   Control.addRowToPCBTable();
+    
+                   // Memory output
+                   var memory_out = <HTMLInputElement> document.getElementById("taMemory");
+    
+                   // Load the program into memory	
+                   _MemoryManager.load(_Memory.tempArr);
+    
+                   _StdOut.putText("Successfuly loaded program into memory.");
+                   _StdOut.advanceLine();
+                   _StdOut.putText(`PID: ${_CurrentPCB.pid}`);
+                   _StdOut.advanceLine();
+                   _StdOut.advanceLine();
+                   _StdOut.putText(`Execute \'run ${_CurrentPCB.pid}\' to run your program.`)
+                }
+            } 
         }
 
         public shellRun(args: string[]) {
             let pid = parseInt(args[0]);
-            let potentialPCB = _PCBlist.find(element => element.pid == pid);
-            
+            let potentialPCB = _PCBlist.find(process => process.pid == pid);
+            _Scheduler.numActiveProcesses = 0;
+
             if (Number.isNaN(pid)) {
                 _StdOut.putText(`Please enter a valid process id.`);
                 _StdOut.advanceLine();
@@ -554,17 +597,186 @@ module TSOS {
                 _StdOut.putText(`Process ${pid} is terminated.`);
             } else {
                 // Our potential process is legit so we set it the current process
-                // Update state to "ready" and cpu begins executing
+                // Update state to "ready"
                 _CurrentPCB = potentialPCB;
                 _CurrentPCB.state = "ready";
-                _CPU.isExecuting = true;
-                _Memory.isFull = false;
+
+                // Add the process to the ready queue and schedule it
+                _Scheduler.readyQueue.enqueue(_CurrentPCB);
+                _Scheduler.numActiveProcesses++;
+                Control.addRowToReadyQueueTable();
+                _Scheduler.schedule();
+            }
+        }
+
+        public shellRunAll(args: string[]) {
+            let processExists: boolean = false;
+            _Scheduler.numActiveProcesses = 0;
+
+            for (let i=0; i<_PCBlist.length; i++) {
+                // Add all resident processes to the ready queue
+                if (_PCBlist[i].state == "resident") {
+                    _CurrentPCB = _PCBlist[i];
+                    _CurrentPCB.state = "ready";
+                    _Scheduler.readyQueue.enqueue(_CurrentPCB);
+                    _Scheduler.numActiveProcesses++;
+                    Control.addRowToReadyQueueTable();
+                    processExists = true;
+                }
+            }
+
+            // Only schedule if a resident process exists
+            if (processExists) {
+                _Scheduler.schedule()
+            } else {
+                _StdOut.putText("There are no processes to run.")
             }
         }
 
         public shellMemoryDump(args: string[]) {
             _MemAccessor.displayMemory(0x300);
             _StdOut.putText("Done.");
+        }
+
+        public shellClearMem(args: string[]) {
+            let i = 0;
+            let canClearMem = false;
+            while (i<_PCBlist.length) {
+                if (_PCBlist[i].state == "running") {
+                    canClearMem = false;
+                    break;
+                } else {
+                    canClearMem = true;
+                }
+                i++;
+            }
+
+            if (canClearMem) {
+                // Terminate all processes and update output
+                for (let i=0; i<_PCBlist.length; i++) {
+                    _PCBlist[i].state = "terminated";
+                    Control.updatePCBStateInTable(_PCBlist[i].pid, _PCBlist[i].state);
+                }
+
+                // Reset memory and update output
+                _Memory.reset();
+                Control.updateMemoryOutput();
+
+                // Clear the ready queue
+                _Scheduler.reset();
+                Control.updateReadyQueueTable();
+
+                // Make all segments inactive
+                _MemoryManager.resetSegments();
+
+                // Reset current process to null
+                _CurrentPCB = null;
+            } else {
+                _StdOut.putText("Cannot clear memory while processes are running. Not cool...");
+            }
+        }
+
+        public shellPS(args: string[]) {
+            _StdOut.putText("-----------------")
+            _StdOut.advanceLine();
+            if (_PCBlist.length == 0) {
+                _StdOut.putText("No active processes.");
+            } else {
+                for (let i=0; i<_PCBlist.length; i++) {
+                    _StdOut.putText(`PID: ${_PCBlist[i].pid}`);
+                    _StdOut.advanceLine();
+                    _StdOut.putText(`State: ${_PCBlist[i].state}`);
+                    _StdOut.advanceLine();
+                    if (i!=_PCBlist.length-1) {
+                        _StdOut.advanceLine();
+                    }
+                }
+                _StdOut.putText("-----------------")
+            }
+        }
+
+        public shellKill(args: string[]) {
+            let pid = parseInt(args[0]);
+            let targetPCB = _PCBlist.find(process => process.pid == pid);
+
+            if (Number.isNaN(pid)) {
+                _StdOut.putText(`Please enter a valid process id.`);
+                _StdOut.advanceLine();
+                _StdOut.putText("Usage: kill <pid>")
+            } else if (!targetPCB)  {
+                _StdOut.putText(`Process ${pid} does not exist.`);
+            } else if (targetPCB.state != "terminated") {
+                // Set the current process to null and reset the CPU if target process is running
+                if (targetPCB.state == "running") {
+                    _CPU.init();
+                    _CurrentPCB = null;
+                    _Dispatcher.runningPCB = null;
+                    _Scheduler.schedule();
+                }
+                // Set the target state to terminated and remove it from the ready queue
+                targetPCB.state = "terminated";
+                _Scheduler.readyQueue.remove(targetPCB);
+                targetPCB.assignedSegment.isActive = false;
+
+                // Update all tables
+                Control.updatePCBStateInTable(targetPCB.pid, targetPCB.state);
+                Control.updateMemoryOutput();
+                Control.updateCPUtable();
+                Control.updateReadyQueueTable();
+
+                _StdOut.putText(`Process ${targetPCB.pid} has been successfully terminated.`);
+            } else if (targetPCB.state == "terminated") {
+                _StdOut.putText(`Process ${targetPCB.pid} is already terminated.`);
+            }
+        }
+
+        public shellKillAll(args: string[]) {
+            let processExists: boolean = false; 
+
+            for (let i=0; i<_PCBlist.length; i++) {
+                // Set the state of all non-terminated processes to terminated
+                if (_PCBlist[i].state != "terminated") {
+                    _PCBlist[i].state = "terminated";
+                    Control.updatePCBStateInTable(_PCBlist[i].pid, _PCBlist[i].state);
+                    processExists = true;
+                }
+            }
+
+            // Only clear the ready queue if a non-terminated process exists
+            if (processExists) {
+                // Reset the ready queue and clear quanta count
+                _Scheduler.readyQueue.reset();
+                Control.updateReadyQueueTable();
+                _Scheduler.quantaCount = 0;
+
+                // No processes are running so...
+                _Dispatcher.runningPCB = null;
+                _CurrentPCB = null;
+
+                // Clear memory segments and reintialize CPU
+                _MemoryManager.resetSegments();
+                _CPU.init();
+                Control.updateCPUtable();
+
+                if (!Kernel.isShutdown) {
+                    _StdOut.putText("All processes have been killed.")
+                }
+            } else {
+                if (!Kernel.isShutdown) {
+                    _StdOut.putText("There are no processes to kill.");
+                }
+            }
+        }
+
+        public shellSetQuantum(args: string[]) {
+            if (Number.isNaN(Number(args[0]))) {
+                _StdOut.putText("Please enter a valid quantum value.");
+            } else {
+                _StdOut.putText("Quantum change successful.");
+                _StdOut.advanceLine();
+                _StdOut.putText(`Switching quantum ${_Scheduler.quantum} to ${parseInt(args[0], 10)}.`);
+                _Scheduler.quantum = parseInt(args[0], 10);
+            }
         }
     }
 }

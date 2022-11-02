@@ -47,7 +47,11 @@ module TSOS {
         public static hexLog(num: number): string {
             // takes in a number and outputs the properly formatted 8-bit hexadecimal equivalent
             let ans: string;
-            ans = '0x' + ('00' + num.toString(16).toUpperCase()).slice(-2);
+            if (num < 0x100) {
+                ans = '0x' + ('00' + num.toString(16).toUpperCase()).slice(-2);
+            } else {
+                ans = '0x' + (num.toString(16).toUpperCase());
+            }
             return ans;
         }
     }

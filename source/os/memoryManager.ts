@@ -9,52 +9,116 @@ module TSOS {
 
     export class MemoryManager {
 
-        constructor() {
+        constructor(public segmentsList: MemorySegment[] = [],
+                     public segmentSize: number = 0x100) {    
+            this.segmentsInit();
         }
 
-        // loads a static program into memory array
-        public load(program: string[]): void {
-            for (let i=0; i<program.length; i++) {
-                // load program into memory array
-                let opCode_val = parseInt(program[i], 16);
-                _MemoryManager.writeImmmediate(i, opCode_val);
-            }
-            // since memory can only hold one program right now...
-            _Memory.isFull = true;
-            Control.updateMemoryOutput();
-        }
+        // initialize the three segments in memory
+        public segmentsInit(): void {
+            // loop through sections of memory array of memory segment size
+            for (let i=0; i<_Memory.memSize; i+=this.segmentSize) {
 
-        // helper method that inserts given memory byte into specified memory address
-        public writeImmmediate(addr: number, dat: number) {
-            for (let i=0; i<this.getMemArr().length; i++) { 
-                if(i == addr) {
-                    this.getMemArr()[i] = dat;
+                // if another segment can still be traversed within memory...
+                if (i+this.segmentSize <= _Memory.memSize) {
+
+                    // ...create a segment in that section in memory
+                    this.segmentsList.push(new MemorySegment(i, this.segmentSize+i-1))
                 }
             }
         }
 
-        // updates last two hex digits in MAR
-        public setLowOrderByte(lob: number) {
-            this.setMAR(this.getMAR() + lob);
+        // reset all segments to inactive
+        resetSegments(): void {
+            for (let i=0; i<this.segmentsList.length; i++) {
+                this.segmentsList[i].isActive = false;
+            }
         }
 
-        // updates first two hex digits in MAR
-        public setHighOrderByte(hob: number) {
-            let hob_mod = hob * 0x0100;
-            this.setMAR(hob_mod + this.getMAR());
+        // loads a static program into correct segment in memory array
+        public load(program_str: string[]): void {
+            let i = 0;
+            let activeSegment = null;
+
+            while (i < this.segmentsList.length && activeSegment == null) {
+                // find the first inactive segment and set to active
+                if (!this.segmentsList[i].isActive) {
+                    activeSegment = this.segmentsList[i];
+                    activeSegment.isActive = true;
+                }
+                i++;
+            }
+
+            let program = [];
+            for (let i=0; i<program_str.length; i++) {
+                // create an array of numeric opcodes
+                program.push(parseInt(program_str[i], 16));
+            }
+
+            // write program to memory
+            _MemoryManager.writeImmmediate(program, activeSegment);
+
+            // assign the segment to the current process
+            _CurrentPCB.assignedSegment = activeSegment;
+            
+            // check if all segments are active
+            if (this.segmentsList[this.segmentsList.length-1].isActive) {
+                _Memory.isFull = true;
+            } else {
+                _Memory.isFull = false;
+            }
+
+            // update the memory table
+            Control.updateMemoryOutput();
         }
 
-        // updates 16 bit MAR in one cycle
-        public modMAR(lob: number) {
-            this.setMAR(0x0000);
-            this.setLowOrderByte(lob);
+        // helper method that places a given opcode to the correct position within the correct segment
+        public writeImmmediate(program: number[], segment: MemorySegment): void {
+            let j = 0;
+            let i = segment.base;
+
+            while (i<segment.limit && j<program.length) { 
+                this.getMemArr()[i++] = program[j++];  
+            }
+        }
+
+        // calculates the MAR in one cycle
+        // does so by finding high and low order bytes and adding them together
+        public calcMAR(currPC: number): void {
+            let nextPC = currPC + 1;
+
+            let lob = _MemoryManager.getMemArr()[currPC];
+
+            // Add in the segment base to stay within segment boundaries
+            let hob = (_MemoryManager.getMemArr()[nextPC] * 0x0100) + _CurrentPCB.assignedSegment.base;
+
+            this.setMAR(lob + hob);
+        }
+
+        // clear memory within any inactive segment
+        public clearInactiveSegments(): void {
+            for (let i=0; i<this.segmentsList.length; i++) {
+                if (!this.segmentsList[i].isActive) {
+                    for (let j=this.segmentsList[i].base; j<this.segmentsList[i].limit; j++) {
+                        _Memory.memArr[j] = 0x00;
+                    }
+                }
+            }
         }
 
         // all memory properties are reinitialized to zero
-        public reset() {
-            this.setMAR(0x0000);
-            this.setMDR(0x00);
+        public reset(): void {
+            this.resetMAR();
+            this.resetMDR();
             _Memory.arrInit();
+        }
+
+        public resetMAR(): void {
+            this.setMAR(0x0000);
+        }
+
+        public resetMDR(): void {
+            this.setMDR(0x0000);
         }
 
         /* Memory Getters and Setters */

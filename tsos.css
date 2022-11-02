@@ -6,16 +6,16 @@ body {
   font-size: 12pt;
   font-weight: normal;
   font-style: normal;
-  color: white
+  color: white;
+  zoom: 80%;
+}
+
+#divMain {
+  margin-bottom: 100px;
 }
 
 .label {
-  font-size: xx-large;
-}
-
-#content-body {
-  width: 75%;
-  margin: 0 auto;
+  font-size: 30px;
 }
 
 h1 {
@@ -40,6 +40,10 @@ h3 {
   font-style: normal;
 }
 
+#divConsole {
+  margin-top: 10px;
+}
+
 #display {
   background-color:#702662;
   border: 2px solid #1e7199;
@@ -47,8 +51,8 @@ h3 {
   overflow: hidden;
 }
 
-.normal_button {
-  width: 150px;
+#display:focus {
+  outline: 0;
 }
 
 .footerText {
@@ -69,7 +73,7 @@ h3 {
 
 #divButtonBar {
   margin: 0 auto;
-  width: 30%;
+  width: 40%;
   margin-top: 30px;
   display: flex;
   align-items: center;
@@ -79,57 +83,61 @@ h3 {
 .normal_button {
   border-color: black;
   height: 50px;
-  width: 115px;
+  width: 100px;
   font-size: medium;
+  font-family:Verdana, Geneva, Tahoma, sans-serif;
   margin-right: 10px;
   font-weight: bold; 
   cursor: pointer;
   transition: 0.3s;
+  background-color: white;
+}
+
+.normal_button:focus {
+  outline: 0;
 }
 
 #btnToggleSingleStep {
   margin-left: 20px;
-  width: 150px
+  width: 160px;
 }
 
 #col-1 {
   flex-direction: row;
-  margin-left: 10px;
   margin-right: 10px;
-  padding: 10px 10px
+  padding: 10px 10px;
 }
 
 #col-2 {
   flex-direction: row;
   margin-left: 10px;
   margin-right: 10px;
-  padding: 10px 10px
+  padding: 10px 10px;
 }
 
 #col-3 {
   flex-direction: row;
   margin-left: 10px;
   margin-right: 10px;
-  padding: 10px 10px
+  padding: 10px 10px;
 }
 
-#col-4 {
-  flex-direction: row;
-  margin-left: 10px;
-  margin-right: 10px;
-  padding: 10px 10px
-}
-
-#container {
+.row {
   display: flex;
+  justify-content: center;
 }
 
-#processes {
-  margin-top: 40px;
+.section {
+  margin-bottom: 40px;
+  height: 200px;
+  overflow-y: auto;
+  border: 2px solid white;
 }
 
-#memory {
-  margin-top: 20px;
+.ta {
+  resize: none;
+  font-family: inherit;
+  margin-bottom: 20px;
 }
 
 #header {
@@ -147,24 +155,23 @@ h3 {
   display: block;
   margin-left: auto;
   margin-right: auto;
-  width: 50%;
-  height: 500px;
-  width: 500px;
+  height: 400px;
+  width: 400px;
 }
 
-#cpu-table {
-  width: 300px;
+.table {
+  width: 650px;
   text-align: center;
   font-size: x-large;
   padding: 10px;
-  border: 1px solid white;
 }
 
-#pcb-table {
-  width: 300px;
-  text-align: center;
-  font-size: x-large;
-  padding: 10px;
-  border: 1px solid white;
+#memory-table {
+  width: 400px;
+  margin-right: 10px;
+}
+
+#cpu-div {
+  height: 100px;
 }
 

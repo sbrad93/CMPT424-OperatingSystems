@@ -37,8 +37,14 @@ module TSOS {
             _krnKeyboardDriver.driverEntry();                    // Call the driverEntry() initialization routine.
             this.krnTrace(_krnKeyboardDriver.status);
 
-            // Initialze the memory manager
+            // Initialize the memory manager and create segments
             _MemoryManager = new MemoryManager();
+
+            // Create the CPU Scheduler
+            _Scheduler = new Scheduler();
+
+            // Create the Dispatcher
+            _Dispatcher = new Dispatcher();
 
             //
             // ... more?
@@ -61,8 +67,7 @@ module TSOS {
 
         public krnShutdown() {
             this.krnTrace("begin shutdown OS");
-            // TODO: Check for running processes.  If there are some, alert and stop. Else...
-            // ... Disable the Interrupts.
+            _OsShell.shellKillAll(null);
             this.krnTrace("Disabling the interrupts.");
             this.krnDisableInterrupts();
             //
@@ -88,7 +93,7 @@ module TSOS {
                 this.krnInterruptHandler(interrupt.irq, interrupt.params);
             }else if (_IsSingleStep) {
                 if (_CPU.isExecuting && _CanTakeNextStep) {
-                    _CPU.cycle();
+                    _CPU.cycle();                
                 }
             } else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
                 _CPU.cycle();
@@ -129,6 +134,9 @@ module TSOS {
                 case KEYBOARD_IRQ:
                     _krnKeyboardDriver.isr(params);   // Kernel mode device driver
                     _StdIn.handleInput();
+                    break;
+                case CONTEXT_SWITCH_IRQ:
+                    _Dispatcher.contextSwitch();
                     break;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
@@ -179,10 +187,9 @@ module TSOS {
         public krnTrapError(msg) {
             Control.hostLog("OS ERROR - TRAP: " + msg);
 
-            // Clear the screen, reset xy coordinates, reset canvas height
+            // Clear the screen, reset xy coordinates
             _Console.clearScreen();
             _Console.resetXY();
-            _Canvas.height = 500;
 
             // Since it's the 'blue' screen of death...
             _DrawingContext.fillStyle = "blue";
@@ -198,6 +205,8 @@ module TSOS {
 
             Kernel.isShutdown = true;
             this.krnShutdown();
+            // Stop the interval that's simulating our clock pulse.
+            clearInterval(_hardwareClockID);
         }
     }
 }

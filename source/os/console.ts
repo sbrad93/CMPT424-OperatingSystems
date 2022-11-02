@@ -88,6 +88,8 @@ module TSOS {
                     if (_CPU.isExecuting) {                                         // doesn't matter if cpu isn't executing
                         // Change current process state
                         _OsShell.shellKillAll(null);
+                        _StdOut.advanceLine();
+                        _OsShell.putPrompt();
                     }
                 } else {
                     if (chr != '\0') {                                              // NUL char, https://news.ycombinator.com/item?id=22283042 -- This helped me understand what the heck this was (and provide mild amusement)

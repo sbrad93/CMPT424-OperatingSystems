@@ -527,58 +527,62 @@ module TSOS {
         }
 
         public shellLoad(args: string[]) {
-            if ((_Memory.isFull) && (_CurrentPCB != null)) {
-                _CurrentPCB.state = "terminated";
-                // set the last segment to inactive and overwrite memory
-                _MemoryManager.segmentsList[_MemoryManager.segmentsList.length-1].isActive = false;
-                Control.updatePCBStateInTable(_CurrentPCB.pid, _CurrentPCB.state);
-                _StdOut.putText(`Process ${_CurrentPCB.pid}: Overwriting Memory...`);
-                _StdOut.advanceLine();
-            }
-            // Clear temp array 
-            _Memory.tempArr = [];
-
-            // Clear memory of inactive segments
-            // Implemented to improve memory output updating
-            //  I didn't want to clear segment memory each time a process finished executing bc it felt too abrupt
-            //  ... so I did this instead 
-            _MemoryManager.clearInactiveSegments();
-            
-            // Get da op codes
-            var opcode_str = Control.getOpCodes();
-
-            if (opcode_str != null) {
-                // Create a new process and add to PCB list
-                _CurrentPCB = new PCB(_PidCounter);
-                _PidCounter += 1;
-                _PCBlist.push(_CurrentPCB);
+            if (_CPU.isExecuting) {
+                _StdOut.putText("Load Error: Please wait for the current process(s) to finish executing.");
+            } else {
+                if ((_Memory.isFull) && (_CurrentPCB != null)) {
+                    _CurrentPCB.state = "terminated";
+                    // set the last segment to inactive and overwrite memory
+                    _MemoryManager.segmentsList[_MemoryManager.segmentsList.length-1].isActive = false;
+                    Control.updatePCBStateInTable(_CurrentPCB.pid, _CurrentPCB.state);
+                    _StdOut.putText(`Process ${_CurrentPCB.pid}: Overwriting Memory...`);
+                    _StdOut.advanceLine();
+                }
+                // Clear temp array 
+                _Memory.tempArr = [];
+    
+                // Clear memory of inactive segments
+                // Implemented to improve memory output updating
+                //  I didn't want to clear segment memory each time a process finished executing bc it felt too abrupt
+                //  ... so I did this instead 
+                _MemoryManager.clearInactiveSegments();
                 
-                // Regex that splits hex string into a list of individual op codes
-                // Assign to a temporary memory array
-               _Memory.tempArr = opcode_str.match(/.{1,2}/g);
-
-               // Add a new row to the Processes table
-               Control.addRowToPCBTable();
-
-               // Memory output
-               var memory_out = <HTMLInputElement> document.getElementById("taMemory");
-
-               // Load the program into memory	
-               _MemoryManager.load(_Memory.tempArr);
-
-               _StdOut.putText("Successfuly loaded program into memory.");
-               _StdOut.advanceLine();
-               _StdOut.putText(`PID: ${_CurrentPCB.pid}`);
-               _StdOut.advanceLine();
-               _StdOut.advanceLine();
-               _StdOut.putText(`Execute \'run ${_CurrentPCB.pid}\' to run your program.`)
-
-            }
+                // Get da op codes
+                var opcode_str = Control.getOpCodes();
+    
+                if (opcode_str != null) {
+                    // Create a new process and add to PCB list
+                    _CurrentPCB = new PCB(_PidCounter);
+                    _PidCounter += 1;
+                    _PCBlist.push(_CurrentPCB);
+                    
+                    // Regex that splits hex string into a list of individual op codes
+                    // Assign to a temporary memory array
+                   _Memory.tempArr = opcode_str.match(/.{1,2}/g);
+    
+                   // Add a new row to the Processes table
+                   Control.addRowToPCBTable();
+    
+                   // Memory output
+                   var memory_out = <HTMLInputElement> document.getElementById("taMemory");
+    
+                   // Load the program into memory	
+                   _MemoryManager.load(_Memory.tempArr);
+    
+                   _StdOut.putText("Successfuly loaded program into memory.");
+                   _StdOut.advanceLine();
+                   _StdOut.putText(`PID: ${_CurrentPCB.pid}`);
+                   _StdOut.advanceLine();
+                   _StdOut.advanceLine();
+                   _StdOut.putText(`Execute \'run ${_CurrentPCB.pid}\' to run your program.`)
+                }
+            } 
         }
 
         public shellRun(args: string[]) {
             let pid = parseInt(args[0]);
             let potentialPCB = _PCBlist.find(process => process.pid == pid);
+            _Scheduler.numActiveProcesses = 0;
 
             if (Number.isNaN(pid)) {
                 _StdOut.putText(`Please enter a valid process id.`);
@@ -599,13 +603,15 @@ module TSOS {
 
                 // Add the process to the ready queue and schedule it
                 _Scheduler.readyQueue.enqueue(_CurrentPCB);
+                _Scheduler.numActiveProcesses++;
                 Control.addRowToReadyQueueTable();
                 _Scheduler.schedule();
             }
         }
 
         public shellRunAll(args: string[]) {
-            let processExists: boolean = false; 
+            let processExists: boolean = false;
+            _Scheduler.numActiveProcesses = 0;
 
             for (let i=0; i<_PCBlist.length; i++) {
                 // Add all resident processes to the ready queue
@@ -613,6 +619,7 @@ module TSOS {
                     _CurrentPCB = _PCBlist[i];
                     _CurrentPCB.state = "ready";
                     _Scheduler.readyQueue.enqueue(_CurrentPCB);
+                    _Scheduler.numActiveProcesses++;
                     Control.addRowToReadyQueueTable();
                     processExists = true;
                 }
@@ -750,6 +757,10 @@ module TSOS {
                 _MemoryManager.resetSegments();
                 _CPU.init();
                 Control.updateCPUtable();
+
+                if (!Kernel.isShutdown) {
+                    _StdOut.putText("All processes have been killed.")
+                }
             } else {
                 if (!Kernel.isShutdown) {
                     _StdOut.putText("There are no processes to kill.");

@@ -57,6 +57,9 @@ module TSOS {
                 _CanTakeNextStep = false;
             }
 
+            // Increment turnaround cylces for every cylce in running state
+            _CurrentPCB.turnAroundCycles++;
+
             // make sure quantum value hasn't expired (if applicable)
             _Scheduler.quantumSurveillance();
         }
@@ -289,6 +292,12 @@ module TSOS {
             _CurrentPCB.state = "terminated";
             _CurrentPCB.assignedSegment.isActive = false;
             Control.updatePCBStateInTable(_CurrentPCB.pid, _CurrentPCB.state);
+
+            // Save the waiting and turnaround times to be displayed once all processes execute
+            let waitTime = _Scheduler.calcWaitTime(_CurrentPCB);
+            _WaitTimeList.push("Process " + _CurrentPCB.pid + ": " + waitTime.toFixed(2) + " CPU cycles/process");
+            let turnAroundTime = _Scheduler.calcTurnAroundTime(_CurrentPCB);
+            _TurnAroundTimeList.push("Process " + _CurrentPCB.pid + ": " + turnAroundTime.toFixed(2) + " CPU cycles/process");
 
             // Memory can't be full if a process completes
             _Memory.isFull = false;

@@ -24,6 +24,10 @@ module TSOS {
                     Control.updatePCBStateInTable(this.runningPCB.pid, this.runningPCB.state);
                     _Scheduler.readyQueue.enqueue(this.runningPCB);
                     Control.updateReadyQueueTable();
+
+                    // Incremement waiting and turn around cycles every time a process is placed back in ready queue
+                    this.runningPCB.waitingCycles++;
+                    this.runningPCB.turnAroundCycles++;
                     
                     // Dequeue the next PCB from ready queue and set to current PCB
                     _CurrentPCB = _Scheduler.readyQueue.dequeue();

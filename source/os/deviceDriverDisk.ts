@@ -15,7 +15,7 @@ module TSOS {
             for (let i=0; i<this.disk.trackCtn; i++) {
                 for (let j=0; j<this.disk.sectorCnt; j++) {
                     for (let k=0; k<this.disk.blockCnt; k++) {
-                        // sessionStorage.setItem(this.createStorageKey(i, j, k));
+                        sessionStorage.setItem(this.createStorageKey(i, j, k), this.emptyBlockInit());
                     }
                 }
             }
@@ -26,12 +26,7 @@ module TSOS {
         }
 
         public emptyBlockInit() {
-            let emptyBlock = [];
-            interface Array<T> {
-                fill(string: T): Array<T>;
-            }
-            emptyBlock = Array<string>(this.disk.blockSize).fill("0");
-            return emptyBlock;
+            return "0".repeat(this.disk.blockSize);
         }
 
     }

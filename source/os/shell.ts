@@ -91,65 +91,119 @@ module TSOS {
                                 "<string> - Displays song recommendations based on your mood.");
             this.commandList[this.commandList.length] = sc;
 
-            // status
+            // status <string>
             sc = new ShellCommand(this.shellStatus,
                                 "status",
                                 "<string> - Sets the status message.");
             this.commandList[this.commandList.length] = sc;
 
-            // test kernel trap error
+            // bsod
             sc = new ShellCommand(this.shellTestKrnTrapError,
                                 "bsod",
                                 "- Tests when kernel traps an OS error and displays BSOD.");
             this.commandList[this.commandList.length] = sc;
             
-            // load input values into console
+            // load <string>
             sc = new ShellCommand(this.shellLoad,
                             "load",
                             "<string> - Loads a user program into the console.");
             this.commandList[this.commandList.length] = sc;
 
-            // run a process
+            // run <pid>
             sc = new ShellCommand(this.shellRun,
                             "run",
                             "<pid> - Runs a specified process.");
             this.commandList[this.commandList.length] = sc;
 
-            // memory dump testing
+            // memdump
             sc = new ShellCommand(this.shellMemoryDump,
                             "memdump",
                             " - Displays memory in browser console.");
             this.commandList[this.commandList.length] = sc;
 
-            // clear all memory pertitions
+            // clearmem
             sc = new ShellCommand(this.shellClearMem,
                             "clearmem",
                             " - Clears all memory partitions.");
             this.commandList[this.commandList.length] = sc;
-            // clear all memory pertitions
+
+            // runall
             sc = new ShellCommand(this.shellRunAll,
                             "runall",
                             " - Run all loaded processes.");
             this.commandList[this.commandList.length] = sc;
+
+            // ps
             sc = new ShellCommand(this.shellPS,
                             "ps",
                             " - Displays the PID and state of all processes.");
             this.commandList[this.commandList.length] = sc;
+
+            // kill <pid>
             sc = new ShellCommand(this.shellKill,
                             "kill",
                             "<pid> - Kills a specified process.");
             this.commandList[this.commandList.length] = sc;
+
+            // killall
             sc = new ShellCommand(this.shellKillAll,
                             "killall",
                             "<pid> - Kills all processes.");
             this.commandList[this.commandList.length] = sc;
+
+            // quantum <int>
             sc = new ShellCommand(this.shellSetQuantum,
                             "quantum",
                             "<int> - Sets the quantum value.");
             this.commandList[this.commandList.length] = sc;
 
-            // ps  - list the running processes and their IDs
-            // kill <id> - kills the specified process id.
+            // format
+            sc = new ShellCommand(this.shellFormat,
+                            "format",
+                            "- Initializes all disk blocks.");
+            this.commandList[this.commandList.length] = sc;
+
+            // create <filename>
+            sc = new ShellCommand(this.shellCreate,
+                            "create",
+                            "<filename> - Creates the file.");
+            this.commandList[this.commandList.length] = sc;
+
+            // read <filename>
+            sc = new ShellCommand(this.shellRead,
+                            "read",
+                            "<filename> - Read and displays contents of <filename>.");
+            this.commandList[this.commandList.length] = sc;
+
+            // write <filename> "data"
+            sc = new ShellCommand(this.shellWrite,
+                            "write",
+                            "<filename> \"data\" - Write data inside quotes to <filename>.");
+            this.commandList[this.commandList.length] = sc;
+
+            // delete <filename>
+            sc = new ShellCommand(this.shellDelete,
+                            "delete",
+                            "<filename> - Remove <filename> from storage.");
+            this.commandList[this.commandList.length] = sc;
+
+            // copy <existing filename> <new filename>
+            sc = new ShellCommand(this.shellCopy,
+                            "copy",
+                            "<existing filename> <new filename> - Copies an existing file.");
+            this.commandList[this.commandList.length] = sc;
+
+            // rename <existing filename> <new filename>
+            sc = new ShellCommand(this.shellRename,
+                            "rename",
+                            "<existing filename> <new filename> - Renames an existing file.");
+            this.commandList[this.commandList.length] = sc;
+
+            // ls
+            sc = new ShellCommand(this.shellLS,
+                            "ls",
+                            "- List the files currently stored on the disk.");
+            this.commandList[this.commandList.length] = sc;
 
             // Display the initial prompt.
             this.putPrompt();
@@ -388,6 +442,30 @@ module TSOS {
                         break;
                     case "quantum":
                         _StdOut.putText("Sets the quantum value. Default is 6 CPU cycles.");
+                        break;
+                    case "format":
+                        _StdOut.putText("Initializes all disk blocks.");
+                        break;
+                    case "create":
+                        _StdOut.putText("Creates a file.");
+                        break;
+                    case "read":
+                        _StdOut.putText("Reads and displays contents of a given file.");
+                        break;
+                    case "write":
+                        _StdOut.putText("Writes data to a file.");
+                        break;
+                    case "delete":
+                        _StdOut.putText("Deletes an existing file.");
+                        break;
+                    case "copy":
+                        _StdOut.putText("Copies an existing file.");
+                        break;
+                    case "rename":
+                        _StdOut.putText("Renames an existing file.");
+                        break;
+                    case "ls":
+                        _StdOut.putText("Lists all files on the disk.");
                         break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
@@ -777,6 +855,38 @@ module TSOS {
                 _StdOut.putText(`Switching quantum ${_Scheduler.quantum} to ${parseInt(args[0], 10)}.`);
                 _Scheduler.quantum = parseInt(args[0], 10);
             }
+        }
+
+        public shellFormat(args: string[]) {
+
+        }
+
+        public shellCreate(args: string[]) {
+            
+        }
+
+        public shellRead(args: string[]) {
+            
+        }
+
+        public shellWrite(args: string[]) {
+            
+        }
+
+        public shellDelete(args: string[]) {
+            
+        }
+
+        public shellCopy(args: string[]) {
+            
+        }
+
+        public shellRename(args: string[]) {
+            
+        }
+
+        public shellLS(args: string[]) {
+            
         }
     }
 }

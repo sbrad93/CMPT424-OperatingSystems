@@ -769,9 +769,10 @@ module TSOS {
         }
 
         public shellSetQuantum(args: string[]) {
-            if (Number.isNaN(Number(args[0]))) {
+            if (Number.isNaN(Number(args[0])) || Number(args[0])<=0) {
                 _StdOut.putText("Please enter a valid quantum value.");
             } else {
+                console.log(args);
                 _StdOut.putText("Quantum change successful.");
                 _StdOut.advanceLine();
                 _StdOut.putText(`Switching quantum ${_Scheduler.quantum} to ${parseInt(args[0], 10)}.`);

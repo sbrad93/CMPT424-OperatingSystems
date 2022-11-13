@@ -5,6 +5,6 @@ module TSOS {
                     public sectorCnt: number = 8,
                     public blockCnt: number = 8,
                     public blockSize: number = 64) {
-                    }
+        }
     }
 }

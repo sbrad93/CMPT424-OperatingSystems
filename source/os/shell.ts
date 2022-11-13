@@ -858,7 +858,12 @@ module TSOS {
         }
 
         public shellFormat(args: string[]) {
-
+            let isFormatted = _krnDiskDriver.format();
+            if (isFormatted) {
+                _StdOut.putText("Disk successfully formatted.");
+            } else {
+                _StdOut.putText("ERR: Could not format disk.");
+            }
         }
 
         public shellCreate(args: string[]) {

@@ -54,5 +54,9 @@ module TSOS {
             }
             return ans;
         }
+
+        public static replaceAt(value: string, index: number, replacement: string): string {
+            return value.substring(0, index) + replacement + value.substring(index + replacement.length);
+        }
     }
 }

@@ -616,6 +616,16 @@ module TSOS {
                     _StdOut.putText(`Process ${_CurrentPCB.pid}: Overwriting Memory...`);
                     _StdOut.advanceLine();
                 }
+
+                if (_krnDiskDriver.disk.isFormatted) {
+                    // ???
+                }
+
+
+
+
+                
+
                 // Clear temp array 
                 _Memory.tempArr = [];
     
@@ -640,9 +650,6 @@ module TSOS {
     
                    // Add a new row to the Processes table
                    Control.addRowToPCBTable();
-    
-                   // Memory output
-                   var memory_out = <HTMLInputElement> document.getElementById("taMemory");
     
                    // Load the program into memory	
                    _MemoryManager.load(_Memory.tempArr);

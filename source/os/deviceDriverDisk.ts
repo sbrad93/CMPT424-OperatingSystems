@@ -11,17 +11,19 @@ module TSOS {
             this.status = "loaded";
         }
 
+        // Initializes all blocks
         public format():boolean {
             let isFormatted = false;
             try {
-                for (let i=0; i<this.disk.trackCtn; i++) {
-                    for (let j=0; j<this.disk.sectorCnt; j++) {
-                        for (let k=0; k<this.disk.blockCnt; k++) {
-                            sessionStorage.setItem(this.createStorageKey(i, j, k), this.emptyBlockInit());
+                for (let t=0; t<this.disk.trackCtn; t++) {
+                    for (let s=0; s<this.disk.sectorCnt; s++) {
+                        for (let b=0; b<this.disk.blockCnt; b++) {
+                            sessionStorage.setItem(this.createStorageKey(t, s, b), this.emptyBlockInit());
                         }
                     }
                 }
                 isFormatted = true;
+                this.disk.isFormatted = true;
             } catch(err) {
                 console.log(err);
                 isFormatted = false;
@@ -29,24 +31,153 @@ module TSOS {
             return isFormatted;
         }
 
-        public createStorageKey(trackCnt:number, sectorCnt:number, blockCnt:number):string {
-            return trackCnt+sectorCnt+blockCnt+"";
-        }
+        public createFile(fileName) {
+            let fileKey = this.getNextDirBlockKey();
+            let found = this.findFile(fileName);
 
-        public emptyBlockInit():string {
-            return "0".repeat(this.disk.blockSize);
-        }
-
-        public getNext(key:string):string {
-            let res = "";
-            let data = sessionStorage.getItem(key);
-            if (data) {
-                res = data.substring(1, 4);
+            if (found) {
+                console.log("file exists already");
             } else {
-                res = "---";
+                let nextKey = this.getNextDataBlockKey();
+                let next = sessionStorage.getItem(nextKey);
+                this.setUseStatus(nextKey, true);
+
+                // get next data block
+                // set to used
+
+
+                // get file block
+                // set to used
+                // set file name to file name
+                // set file next to next data block
             }
-            return res;
+
         }
+
+        // Returns boolean indicating if a file already exists
+        public findFile(fileName):boolean {
+            let found = false;
+
+            blockSearch:
+            for (let t=0; t<1; t++) {
+                for (let s=0; s<this.disk.sectorCnt; s++) {
+                    for (let b=0; b<this.disk.blockCnt; b++) {
+                        let potentialKey = this.createStorageKey(t, s, b);
+
+                        let dataArr = sessionStorage.getItem(potentialKey).split(":");
+                        if (dataArr) {
+                            let metaData = dataArr[0];
+                            let fileData = dataArr[1];
+                            let isUsed = this.checkIfInUse(metaData);
+
+                            if (isUsed || fileData.includes(fileName)) {
+                                found = true;
+                                break blockSearch;
+                            }
+                        }
+                    }
+                }
+            }
+            return found;
+        }
+
+        public checkIfInUse(metadata: string) {
+            let isUsed = false;
+            let dataArr = metadata.split("");
+            if (dataArr[0] === "1") {
+                isUsed = true;
+            }
+            return isUsed;
+        }
+
+        public setUseStatus(key, doUse) {
+            let data = sessionStorage.getItem(key);
+            console.log(data)
+            if (data) {
+                if (doUse) {
+                    sessionStorage.setItem(key, Utils.replaceAt(data, 0, "1"));
+                    console.log(Utils.replaceAt(data, 0, "1"));
+                } else {
+                    sessionStorage.setItem(key, Utils.replaceAt(data, 0, "0"));
+                    console.log(Utils.replaceAt(data, 0, "0"));
+                }
+            }
+        }
+
+        // Creates a key value for a given TSB location
+        public createStorageKey(track:number, sector:number, block:number):string {
+            return track.toString() + sector.toString() + block.toString();
+        }
+
+        // Returns an empty block
+        public emptyBlockInit():string {
+            return "0".repeat(4) + ":" + "0".repeat(this.disk.blockSize-4);
+        }
+
+        // Returns the key of the next available block
+        public getNextDataBlockKey():string {
+            let nextKey = "";
+
+            blockSearch:
+            for (let t=1; t<this.disk.trackCtn; t++) {
+                for (let s=0; s<this.disk.sectorCnt; s++) {
+                    for (let b=0; b<this.disk.blockCnt; b++) {
+
+                        let potentialKey = this.createStorageKey(t, s, b);
+                        let block = sessionStorage.getItem(potentialKey);
+                        if (block && this.isBlockEmpty(block)) {
+                            nextKey = potentialKey;
+                            // we found an empty block, so break from the routine
+                            break blockSearch;
+                        }
+                    }
+                }
+            }
+            return nextKey;
+        }
+
+        // Returns the key of the next available directory block
+        public getNextDirBlockKey():string {
+            let nextKey = "";
+
+            blockSearch:
+            for (let t=0; t<1; t++) {
+                for (let s=0; s<this.disk.sectorCnt; s++) {
+                    for (let b=0; b<this.disk.blockCnt; b++) {
+
+                        let potentialKey = this.createStorageKey(t, s, b);
+                        // Skip the master boot record
+                        if (potentialKey == "000") {
+                            continue;
+                        }
+
+                        let block = sessionStorage.getItem(potentialKey);
+                        if (block && this.isBlockEmpty(block)) {
+                            nextKey = potentialKey;
+                            // we found an empty block, so break from the routine
+                            break blockSearch;
+                        }
+                    }
+                }
+            }
+            return nextKey;
+        }
+
+        // Returns boolean indicating if given block is empty
+        public isBlockEmpty(block:string):boolean {
+            return (block.charAt(0) == "0");
+        }
+
+        // public getNext(key:string):string {
+        //     let res = "";
+        //     let data = sessionStorage.getItem(key);
+        //     if (data) {
+        //         res = data.substring(1, 4);
+        //     } else {
+        //         res = "***";
+        //     }
+        //     return res;
+        // }
 
         // public readBlock(diskLocation)
 

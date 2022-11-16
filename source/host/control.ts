@@ -116,6 +116,18 @@ module TSOS {
             
             // Display empty memory
             Control.updateMemoryOutput();
+
+
+
+
+
+
+
+
+            // testing
+            _krnDiskDriver.format();
+            // console.log(_krnDiskDriver.getNextDataBlockKey());
+            _krnDiskDriver.createFile("hi");
         }
 
         public static hostBtnHaltOS_click(btn): void {
@@ -464,39 +476,3 @@ module TSOS {
         }
     }
 }
-
-// // Base case
-// if (j==0) {
-//     console.log("base case")
-//     bit = row.insertCell(-1);
-//     bit.style.borderRight = "1px solid white";
-//     bit.innerHTML = Utils.hexLog(_Memory.memArr[j]).slice(-2);
-//     j++;
-//     console.log(j)
-// }
-
-// // Loop through each byte
-// console.log("start loop")
-// while (j%8 != 0) {
-//     bit = row.insertCell(-1);
-//     bit.style.borderRight = "1px solid white";
-//     bit.innerHTML = Utils.hexLog(_Memory.memArr[j]).slice(-2);
-
-//     // Prevent very last bit from being skipped
-//     // if (j == _Memory.memSize-1) {
-//     //     bit = row.insertCell(-1);
-//     //     bit.style.borderRight = "1px solid white";
-//     //     bit.innerHTML = Utils.hexLog(_Memory.memArr[j]).slice(-2);
-//     // }
-//     j++;
-//     console.log(j)
-// }
-// console.log("end loop")
-
-// // Edge cases
-// // if (j!= _Memory.memSize && j!=8) {
-// //     console.log(j)
-// //     bit = row.insertCell(-1);
-// //     bit.style.borderRight = "1px solid white";
-// //     bit.innerHTML = Utils.hexLog(_Memory.memArr[j]).slice(-2);
-// // }

@@ -125,9 +125,7 @@ module TSOS {
 
 
             // testing
-            _krnDiskDriver.format();
-            // console.log(_krnDiskDriver.getNextDataBlockKey());
-            _krnDiskDriver.createFile("hi");
+            
         }
 
         public static hostBtnHaltOS_click(btn): void {

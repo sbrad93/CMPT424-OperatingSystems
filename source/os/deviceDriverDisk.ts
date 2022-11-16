@@ -31,27 +31,38 @@ module TSOS {
             return isFormatted;
         }
 
-        public createFile(fileName) {
+        public createFile(fileName):boolean {
             let fileKey = this.getNextDirBlockKey();
-            let found = this.findFile(fileName);
+            let created = false;
 
-            if (found) {
-                console.log("file exists already");
+            let found = false;
+            // Can have more than one untitled file
+            if (fileName == "untitled") {
+                found = false;
             } else {
+                // Check if the file already exists
+                found = this.findFile(fileName);
+            }
+
+            if (!found) {
+                // Get the next available data block and set to in use
                 let nextKey = this.getNextDataBlockKey();
                 let next = sessionStorage.getItem(nextKey);
                 this.setUseStatus(nextKey, true);
 
-                // get next data block
-                // set to used
+                // Put the file name in the file block and set to in use
+                let file = sessionStorage.getItem(fileKey);
+                sessionStorage.setItem(fileKey, Utils.replaceAt(file, 5, fileName))
+                this.setUseStatus(fileKey, true);
 
+                // Put the key of the file starting block in the file meta data
+                file = sessionStorage.getItem(fileKey);
+                sessionStorage.setItem(fileKey, Utils.replaceAt(file, 1, nextKey))
 
-                // get file block
-                // set to used
-                // set file name to file name
-                // set file next to next data block
+                created = true;
+                console.log(sessionStorage.getItem(fileKey))
             }
-
+            return created;
         }
 
         // Returns boolean indicating if a file already exists
@@ -70,7 +81,7 @@ module TSOS {
                             let fileData = dataArr[1];
                             let isUsed = this.checkIfInUse(metaData);
 
-                            if (isUsed || fileData.includes(fileName)) {
+                            if (isUsed && fileData.includes(fileName)) {
                                 found = true;
                                 break blockSearch;
                             }
@@ -96,10 +107,10 @@ module TSOS {
             if (data) {
                 if (doUse) {
                     sessionStorage.setItem(key, Utils.replaceAt(data, 0, "1"));
-                    console.log(Utils.replaceAt(data, 0, "1"));
+                    // console.log(Utils.replaceAt(data, 0, "1"));
                 } else {
                     sessionStorage.setItem(key, Utils.replaceAt(data, 0, "0"));
-                    console.log(Utils.replaceAt(data, 0, "0"));
+                    // console.log(Utils.replaceAt(data, 0, "0"));
                 }
             }
         }

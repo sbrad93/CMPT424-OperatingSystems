@@ -624,7 +624,7 @@ module TSOS {
 
 
 
-                
+
 
                 // Clear temp array 
                 _Memory.tempArr = [];
@@ -874,7 +874,17 @@ module TSOS {
         }
 
         public shellCreate(args: string[]) {
-            
+            let fileName = args[0];
+            if (!fileName) {
+                fileName = "untitled";
+            } 
+
+            let created = _krnDiskDriver.createFile(fileName);
+            if (created) {
+                _StdOut.putText(`File ${fileName} successfully created`)
+            } else {
+                _StdOut.putText(`ERR: File ${fileName} already exists`)
+            }
         }
 
         public shellRead(args: string[]) {

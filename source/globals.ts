@@ -87,6 +87,8 @@ var _krnDiskDriver: TSOS.DeviceDriverDisk  = null;
 
 var _hardwareClockID: number = null;
 
+var _UntitledCnt: number = 0;
+
 // For testing (and enrichment)...
 var Glados: any = null;  // This is the function Glados() in glados-ip*.js http://alanclasses.github.io/TSOS/test/ .
 var _GLaDOS: any = null; // If the above is linked in, this is the instantiated instance of Glados.

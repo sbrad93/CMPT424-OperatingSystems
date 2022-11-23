@@ -125,7 +125,6 @@ module TSOS {
 
 
             // testing
-            
         }
 
         public static hostBtnHaltOS_click(btn): void {

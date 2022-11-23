@@ -58,5 +58,13 @@ module TSOS {
         public static replaceAt(value: string, index: number, replacement: string): string {
             return value.substring(0, index) + replacement + value.substring(index + replacement.length);
         }
+
+        public static textToHex(str):string {
+            let hexStr = "";
+            for (let i=0; i<str.length; i++) {
+                hexStr += str.charCodeAt(i).toString(16)
+            }
+            return hexStr;
+        }
     }
 }

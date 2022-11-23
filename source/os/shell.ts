@@ -874,17 +874,24 @@ module TSOS {
         }
 
         public shellCreate(args: string[]) {
-            let fileName = args[0];
-            if (!fileName) {
-                fileName = "untitled";
-            } 
-
-            let created = _krnDiskDriver.createFile(fileName);
-            if (created) {
-                _StdOut.putText(`File ${fileName} successfully created`)
+            // check if disk is formatted first
+            if (!_krnDiskDriver.disk.isFormatted) {
+                _StdOut.putText("Please format the disk first.");
             } else {
-                _StdOut.putText(`ERR: File ${fileName} already exists`)
+                let fileName = args[0];
+                if (!fileName) {
+                    fileName = "untitled" + ++_UntitledCnt;
+                } 
+    
+                // false returned if file already exists
+                let created = _krnDiskDriver.createFile(fileName);
+                if (created) {
+                    _StdOut.putText(`File ${fileName} successfully created.`);
+                } else {
+                    _StdOut.putText(`ERR: File ${fileName} already exists.`);
+                }
             }
+            
         }
 
         public shellRead(args: string[]) {

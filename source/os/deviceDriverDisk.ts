@@ -52,7 +52,7 @@ module TSOS {
 
                 // Put the file name in the file block and set to in use
                 let file = sessionStorage.getItem(fileKey);
-                sessionStorage.setItem(fileKey, Utils.replaceAt(file, 5, fileName))
+                sessionStorage.setItem(fileKey, Utils.replaceAt(file, 5, Utils.textToHex(fileName)))
                 this.setUseStatus(fileKey, true);
 
                 // Put the key of the file starting block in the file meta data
@@ -63,6 +63,16 @@ module TSOS {
                 console.log(sessionStorage.getItem(fileKey))
             }
             return created;
+        }
+
+        public readFile(fileName) {
+            // get the file key
+            // get the first block data
+            // read the first block data
+                // while data isn't terminated
+                    // get the tsb of the next block
+                    // get the next block data
+                    // read the next block data
         }
 
         // Returns boolean indicating if a file already exists
@@ -81,7 +91,7 @@ module TSOS {
                             let fileData = dataArr[1];
                             let isUsed = this.checkIfInUse(metaData);
 
-                            if (isUsed && fileData.includes(fileName)) {
+                            if (isUsed && fileData.includes(Utils.textToHex(fileName))) {
                                 found = true;
                                 break blockSearch;
                             }
@@ -103,14 +113,11 @@ module TSOS {
 
         public setUseStatus(key, doUse) {
             let data = sessionStorage.getItem(key);
-            console.log(data)
             if (data) {
                 if (doUse) {
                     sessionStorage.setItem(key, Utils.replaceAt(data, 0, "1"));
-                    // console.log(Utils.replaceAt(data, 0, "1"));
                 } else {
                     sessionStorage.setItem(key, Utils.replaceAt(data, 0, "0"));
-                    // console.log(Utils.replaceAt(data, 0, "0"));
                 }
             }
         }

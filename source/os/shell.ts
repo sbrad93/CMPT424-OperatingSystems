@@ -874,7 +874,7 @@ module TSOS {
         }
 
         public shellCreate(args: string[]) {
-            // check if disk is formatted first
+            // check if disk is formatted
             if (!_krnDiskDriver.disk.isFormatted) {
                 _StdOut.putText("Please format the disk first.");
             } else {
@@ -899,7 +899,36 @@ module TSOS {
         }
 
         public shellWrite(args: string[]) {
-            
+            // check if disk is formatted
+            if (!_krnDiskDriver.disk.isFormatted) {
+                _StdOut.putText("Please format the disk first.");
+            } else {
+                if (args.length >= 2) {
+                    if (args[1].startsWith('"') && args[args.length-1].endsWith('"')) {
+                        console.log('valid quote');
+                        let fileName = args[0];
+
+                        // get the array of input data
+                        let dataArr = args.slice(1, args.length);
+                        // combine the array into a single string
+                        let data = dataArr.join(' ').slice(1, -1);
+
+                        let msg = _krnDiskDriver.writeFile(fileName, data);
+                        if (msg == 'success') {
+                            _StdOut.putText("File " + fileName + " successfully written to. (yay)");
+                        } else if (msg == 'does not exist') {
+                            _StdOut.putText("File " + fileName + " doesn't exist.");
+                        } else {
+                            _StdOut.putText("File " + fileName + " already has data. Please recreate the file if you want to overwrite the existing data.");
+                        }
+                    } else {
+                        _StdOut.putText('Input must be wrapped in quotations: Usage -- write <filename> "data"')
+                    }
+                    // console.log(args)
+                } else {
+                    _StdOut.putText('Invalid input: Usage -- write <filename> "data"');
+                }
+            }
         }
 
         public shellDelete(args: string[]) {

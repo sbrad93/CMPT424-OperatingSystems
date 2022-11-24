@@ -91,7 +91,7 @@ module TSOS {
 
         public convertSpecialCases(_keyCode): number {
             // Convert key event value to unicode value for all instances where the two values are not equivalent
-            var uni;
+            let uni;
             switch (_keyCode) {
                 // )
                 case 48:
@@ -169,6 +169,9 @@ module TSOS {
                 case -191:
                     uni = 63;
                     break;
+                // "
+                case -222:
+                    uni = 34;
             }
             return uni;
         }

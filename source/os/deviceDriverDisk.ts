@@ -31,6 +31,7 @@ module TSOS {
             return isFormatted;
         }
 
+        // Returns boolean indicating if file was successfully created
         public createFile(fileName):boolean {
             let fileKey = this.getNextDirBlockKey();
             let created = false;
@@ -45,41 +46,78 @@ module TSOS {
             }
 
             if (!startingBlockKey) {
-                // Get the next available data block and set to in use
+                // Get the next available data block and set it at the end of the file chain
                 let nextKey = this.getNextDataBlockKey();
                 this.setFinalDataBlock(nextKey);
-                this.setUseStatus(nextKey, true);
 
-                // Put the file name in the file block and set to in use
+                // Put the file name in the file block
                 let file = sessionStorage.getItem(fileKey);
                 sessionStorage.setItem(fileKey, Utils.replaceAt(file, 5, Utils.textToHex(fileName)))
-                this.setUseStatus(fileKey, true);
 
                 // Put the key of the file starting block in the file meta data
                 file = sessionStorage.getItem(fileKey);
                 sessionStorage.setItem(fileKey, Utils.replaceAt(file, 1, nextKey))
 
                 created = true;
-                console.log(sessionStorage.getItem(fileKey))
             }
             return created;
         }
 
-        public readFile(fileName) {
-            // get the file key
-            // get the first block data
-            // read the first block data
-                // while data isn't terminated
-                    // get the tsb of the next block
-                    // get the next block data
-                    // read the next block data
+        // Returns all content within a file
+        public readFile(fileName):string {
+            let startingBlockKey = this.findFile(fileName);
+            let dataStr = '';
+
+            if (!startingBlockKey) {
+                dataStr = null;
+            } else {
+                let block = sessionStorage.getItem(startingBlockKey);
+                let blockArr = block.split(':');
+                let metaData = blockArr[0];
+                let data = blockArr[1];
+
+                dataStr += this.readBlockData(data);
+
+                // File contains more than 1 block
+                if (metaData.slice(1,4) != '---') {
+                    let nextKey = metaData.slice(1,4);
+                    let nextData = sessionStorage.getItem(nextKey);
+
+                    while (nextKey != '---') {
+                        dataStr += this.readBlockData(nextData.split(':')[1]);
+                        nextKey = nextData.split(':')[0].slice(1,4);
+                        nextData = sessionStorage.getItem(nextKey);
+                    }
+                } 
+                return Utils.hexToText(dataStr);
+            }
         }
 
-        // returns a message indicating if data was written to a file
+        // returns the hex string contained within a data block
+        public readBlockData(data: string): string {
+            // split the data into an array of hex pairings
+            let hexCodesArr = data.match(/.{1,2}/g);
+            let res = '';
+            let i = 0;
+            // loop through array and build res string until break is reached
+            while (i < hexCodesArr.length) {
+                if (hexCodesArr[i] != '00') {
+                    res += hexCodesArr[i];
+                } else {
+                    break;
+                }
+                i++;
+            }
+            return res;
+        }
+
+        // returns a message indicating if input data was written to a file
         public writeFile(fileName, input) {
-            input = Utils.textToHex(input);
             let startingBlockKey = this.findFile(fileName);
             let returnMsg = '';
+
+            // convert input string to hex
+            input = Utils.textToHex(input);
 
             // check if file exists
             if (!startingBlockKey) {
@@ -87,36 +125,30 @@ module TSOS {
             } else {
                 // get the block data
                 let data = sessionStorage.getItem(startingBlockKey);
-                console.log(data)
 
                 // only write data if block is empty
-                if (data.split(':')[1] == '0'.repeat(60)) {
+                if (!this.doesBlockHaveData(data)) {
                     // check if input fits in one block
                     if (input.length <= 60) {
                         sessionStorage.setItem(startingBlockKey, '1---:' + this.writeDataToBlock(data, input));
-                        console.log(input)
-                        console.log(sessionStorage.getItem(startingBlockKey));
                     } else {
                         // split the input into array, with each element having a max length of 60
                         let inputArr = input.match(/.{1,60}/g);
                         console.log(inputArr);
 
+                        let currKey = startingBlockKey;
                         // loop through each input chunk
                         for (let i=0; i<inputArr.length; i++) {
-                            // get next available data block key
+                            let data = sessionStorage.getItem(currKey);
                             let nextKey = this.getNextDataBlockKey();
-                            console.log(nextKey)
-
-                            // write the input chunk to the next available data block
-                            data = sessionStorage.getItem(nextKey);
 
                             // last input chunk doesn't have a block to link to
                             if (i == inputArr.length-1) {
-                                sessionStorage.setItem(nextKey, '1---:' + this.writeDataToBlock(data, inputArr[i]));
+                                sessionStorage.setItem(currKey, '1---:' + this.writeDataToBlock(data, inputArr[i]));
                             } else {
-                                sessionStorage.setItem(nextKey, '1' + nextKey + ':' + this.writeDataToBlock(data, inputArr[i]));
-                            }  
-                            console.log(sessionStorage.getItem(nextKey))
+                                sessionStorage.setItem(currKey, '1' + nextKey + ':' + this.writeDataToBlock(data, inputArr[i]));
+                            }
+                            currKey = nextKey;
                         }
                     }
                     returnMsg = 'success';
@@ -127,6 +159,7 @@ module TSOS {
             return returnMsg; 
         }
 
+        // Writes hex data to a single block
         public writeDataToBlock(block, data): string {
             let blockArr = block.split(':');
             let blockData = blockArr[1].match(/.{1,2}/g);
@@ -165,24 +198,7 @@ module TSOS {
             return startingBlockKey;
         }
 
-        // returns the hex string contained within a data block
-        public readBlockData(data: string): string {
-            // split the data into an array of hex pairings
-            let hexCodesArr = data.match(/.{1,2}/g);
-            let res = '';
-            let i = 0;
-            // loop through array and build res string until break is reached
-            while (i < hexCodesArr.length) {
-                if (hexCodesArr[i] != '00') {
-                    res += hexCodesArr[i];
-                } else {
-                    break;
-                }
-                i++;
-            }
-            return res;
-        }
-
+        // Returns boolean indicating if block is active
         public checkIfInUse(metadata: string) {
             let isUsed = false;
             let dataArr = metadata.split("");
@@ -192,6 +208,7 @@ module TSOS {
             return isUsed;
         }
 
+        // Sets block string as active, (indicated by '1')
         public setUseStatus(key, doUse) {
             let data = sessionStorage.getItem(key);
             if (data) {
@@ -203,6 +220,7 @@ module TSOS {
             }
         }
 
+        // Sets block string as final block in chain (indicated by '---')
         public setFinalDataBlock(key) {
             let data = sessionStorage.getItem(key);
             if (data) {
@@ -237,6 +255,7 @@ module TSOS {
                         let block = sessionStorage.getItem(potentialKey);
                         if (block && this.isBlockEmpty(block)) {
                             nextKey = potentialKey;
+                            this.setUseStatus(nextKey, true);
                             // we found an empty block, so break from the routine
                             break blockSearch;
                         }
@@ -250,7 +269,7 @@ module TSOS {
         public getNextDirBlockKey():string {
             let nextKey = "";
 
-            blockSearch:
+            directorySearch:
             for (let t=0; t<1; t++) {
                 for (let s=0; s<this.disk.sectorCnt; s++) {
                     for (let b=0; b<this.disk.blockCnt; b++) {
@@ -264,8 +283,9 @@ module TSOS {
                         let block = sessionStorage.getItem(potentialKey);
                         if (block && this.isBlockEmpty(block)) {
                             nextKey = potentialKey;
+                            this.setUseStatus(nextKey, true);
                             // we found an empty block, so break from the routine
-                            break blockSearch;
+                            break directorySearch;
                         }
                     }
                 }
@@ -274,22 +294,12 @@ module TSOS {
         }
 
         // Returns boolean indicating if given block is empty
-        public isBlockEmpty(block:string):boolean {
+        public isBlockEmpty(block): boolean {
             return (block.charAt(0) == "0");
         }
 
-        // public getNext(key:string):string {
-        //     let res = "";
-        //     let data = sessionStorage.getItem(key);
-        //     if (data) {
-        //         res = data.substring(1, 4);
-        //     } else {
-        //         res = "***";
-        //     }
-        //     return res;
-        // }
-
-        // public readBlock(diskLocation)
-
+        public doesBlockHaveData(block): boolean {
+            return block.split(':')[1] != '0'.repeat(60);
+        }
     }
 }

@@ -895,7 +895,15 @@ module TSOS {
         }
 
         public shellRead(args: string[]) {
-            
+            let data = _krnDiskDriver.readFile(args[0])
+
+            if (data == null) {
+                _StdOut.putText("\'" + args[0] + "\' does not exist.");
+            } else if (data == '') {
+                _StdOut.putText("\'" + args[0] + "\' has no content.");
+            } else {
+                _StdOut.putText(data);
+            }
         }
 
         public shellWrite(args: string[]) {
@@ -905,21 +913,21 @@ module TSOS {
             } else {
                 if (args.length >= 2) {
                     if (args[1].startsWith('"') && args[args.length-1].endsWith('"')) {
-                        console.log('valid quote');
                         let fileName = args[0];
 
                         // get the array of input data
                         let dataArr = args.slice(1, args.length);
+
                         // combine the array into a single string
                         let data = dataArr.join(' ').slice(1, -1);
 
                         let msg = _krnDiskDriver.writeFile(fileName, data);
                         if (msg == 'success') {
-                            _StdOut.putText("File " + fileName + " successfully written to. (yay)");
+                            _StdOut.putText("\'" + fileName + "\' successfully edited (yay).");
                         } else if (msg == 'does not exist') {
-                            _StdOut.putText("File " + fileName + " doesn't exist.");
+                            _StdOut.putText("\'" + fileName + "\' doesn't exist.");
                         } else {
-                            _StdOut.putText("File " + fileName + " already has data. Please recreate the file if you want to overwrite the existing data.");
+                            _StdOut.putText("\'" + fileName + "\' already has content. Please recreate the file before making changes.");
                         }
                     } else {
                         _StdOut.putText('Input must be wrapped in quotations: Usage -- write <filename> "data"')

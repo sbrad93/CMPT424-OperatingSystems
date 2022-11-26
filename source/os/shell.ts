@@ -880,29 +880,36 @@ module TSOS {
             } else {
                 let fileName = args[0];
                 if (!fileName) {
-                    fileName = "untitled" + ++_UntitledCnt;
-                } 
-    
-                // false returned if file already exists
-                let created = _krnDiskDriver.createFile(fileName);
-                if (created) {
-                    _StdOut.putText(`File ${fileName} successfully created.`);
+                    _StdOut.putText("Invalid input: Usage -- create <filename>");
                 } else {
-                    _StdOut.putText(`ERR: File ${fileName} already exists.`);
+                    // false returned if file already exists
+                    let created = _krnDiskDriver.createFile(fileName);
+                    if (created) {
+                        _StdOut.putText(`File ${fileName} successfully created.`);
+                    } else {
+                        _StdOut.putText(`ERR: File ${fileName} already exists.`);
+                    }
                 }
             }
             
         }
 
         public shellRead(args: string[]) {
-            let data = _krnDiskDriver.readFile(args[0])
-
-            if (data == null) {
-                _StdOut.putText("\'" + args[0] + "\' does not exist.");
-            } else if (data == '') {
-                _StdOut.putText("\'" + args[0] + "\' has no content.");
+            if (_krnDiskDriver.disk.isFormatted) {
+                if (args.length > 0) {
+                    let data = _krnDiskDriver.readFile(args[0])
+                    if (data == null) {
+                        _StdOut.putText("\'" + args[0] + "\' does not exist.");
+                    } else if (data == '') {
+                        _StdOut.putText("\'" + args[0] + "\' has no content.");
+                    } else {
+                        _StdOut.putText(data);
+                    }
+                } else {
+                    _StdOut.putText('Invalid input: Usage -- read <filename>');
+                }
             } else {
-                _StdOut.putText(data);
+                _StdOut.putText("Please format the disk first.");
             }
         }
 
@@ -932,7 +939,6 @@ module TSOS {
                     } else {
                         _StdOut.putText('Input must be wrapped in quotations: Usage -- write <filename> "data"')
                     }
-                    // console.log(args)
                 } else {
                     _StdOut.putText('Invalid input: Usage -- write <filename> "data"');
                 }
@@ -940,7 +946,12 @@ module TSOS {
         }
 
         public shellDelete(args: string[]) {
-            
+            let isDeleted = _krnDiskDriver.deleteFile(args[0]);
+            if (isDeleted) {
+                _StdOut.putText(args[0] + ' successfully deleted.');
+            } else {
+                _StdOut.putText(args[0] + ' does not exist.');
+            }
         }
 
         public shellCopy(args: string[]) {
@@ -952,7 +963,9 @@ module TSOS {
         }
 
         public shellLS(args: string[]) {
-            
+            _krnDiskDriver.getAllData();
         }
+
+
     }
 }

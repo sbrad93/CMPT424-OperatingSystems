@@ -36,15 +36,7 @@ module TSOS {
             let fileKey = this.getNextDirBlockKey();
             let created = false;
 
-            let startingBlockKey = null;
-            // Can have more than one untitled file
-            if (fileName == "untitled") {
-                startingBlockKey = null;
-            } else {
-                // Check if the file already exists
-                startingBlockKey = this.findFile(fileName);
-            }
-
+            let startingBlockKey = this.findFile(fileName);
             if (!startingBlockKey) {
                 // Get the next available data block and set it at the end of the file chain
                 let nextKey = this.getNextDataBlockKey();
@@ -52,7 +44,7 @@ module TSOS {
 
                 // Put the file name in the file block
                 let file = sessionStorage.getItem(fileKey);
-                sessionStorage.setItem(fileKey, Utils.replaceAt(file, 5, Utils.textToHex(fileName)))
+                sessionStorage.setItem(fileKey, Utils.replaceAt(file, 5, Utils.textToHex(fileName)));
 
                 // Put the key of the file starting block in the file meta data
                 file = sessionStorage.getItem(fileKey);
@@ -171,7 +163,7 @@ module TSOS {
             return (blockData.join(''));
         }
 
-        // Returns boolean indicating if a file already exists
+        // returns the key of where file content begins
         public findFile(fileName):string {
             let startingBlockKey = null;
 
@@ -196,6 +188,52 @@ module TSOS {
                 }
             }
             return startingBlockKey;
+        }
+
+        public deleteFile(fileName) {
+            let key = this.getFileKey(fileName);
+            let isDeleted = false;
+
+            if (key) {
+                sessionStorage.setItem(key, this.emptyBlockInit());
+                isDeleted = true;
+            }
+            return isDeleted;
+        }
+
+        public getFileKey(fileName) {
+            let key = null;
+            directorySearch:
+            for (let t=0; t<1; t++) {
+                for (let s=0; s<this.disk.sectorCnt; s++) {
+                    for (let b=0; b<this.disk.blockCnt; b++) {
+                        let potentialKey = this.createStorageKey(t, s, b);
+                        let dataArr = sessionStorage.getItem(potentialKey).split(":");
+
+                        if (dataArr) {
+                            let metaData = dataArr[0];
+                            let fileData = dataArr[1];
+                            let isUsed = this.checkIfInUse(metaData);
+
+                            if (isUsed && this.readBlockData(fileData) == (Utils.textToHex(fileName))) {
+                                key = potentialKey;
+                                break directorySearch;
+                            }
+                        }
+                    }
+                }
+            }
+            return key;
+        }
+
+        public getAllData() {
+            for (let t=0; t<this.disk.trackCtn; t++) {
+                for (let s=0; s<this.disk.sectorCnt; s++) {
+                    for (let b=0; b<this.disk.blockCnt; b++) {
+                        console.log(sessionStorage.getItem(this.createStorageKey(t, s, b)))
+                    }
+                }
+            }
         }
 
         // Returns boolean indicating if block is active

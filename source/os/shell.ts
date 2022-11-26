@@ -955,7 +955,22 @@ module TSOS {
         }
 
         public shellCopy(args: string[]) {
-            
+            if (!_krnDiskDriver.disk.isFormatted) {
+                _StdOut.putText("Please format the disk first.");
+            } else {
+                if (args.length == 2) {
+                    let msg = _krnDiskDriver.copyFile(args[0], args[1]);
+                    if (msg == 'success') {
+                        _StdOut.putText('Copy successful.');
+                    } else if (msg == 'new file exists') {
+                        _StdOut.putText("\'" + args[1] + '\' already exists.');
+                    } else {
+                        _StdOut.putText("\'" + args[0] + '\' does not exist.');
+                    }
+                } else {
+                    _StdOut.putText('Invalid input: Usage -- copy <existing filename> <new filename>');
+                }
+            }
         }
 
         public shellRename(args: string[]) {

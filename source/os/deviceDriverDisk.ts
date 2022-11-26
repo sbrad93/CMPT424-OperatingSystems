@@ -36,7 +36,7 @@ module TSOS {
             let fileKey = this.getNextDirBlockKey();
             let created = false;
 
-            let startingBlockKey = this.findFile(fileName);
+            let startingBlockKey = this.findFile(fileName)[1];
             if (!startingBlockKey) {
                 // Get the next available data block and set it at the end of the file chain
                 let nextKey = this.getNextDataBlockKey();
@@ -57,7 +57,7 @@ module TSOS {
 
         // Returns all content within a file
         public readFile(fileName):string {
-            let startingBlockKey = this.findFile(fileName);
+            let startingBlockKey = this.findFile(fileName)[1];
             let dataStr = '';
 
             if (!startingBlockKey) {
@@ -105,48 +105,53 @@ module TSOS {
 
         // returns a message indicating if input data was written to a file
         public writeFile(fileName, input) {
-            let startingBlockKey = this.findFile(fileName);
+            let startingBlockKey = this.findFile(fileName)[1];
             let returnMsg = '';
 
-            // convert input string to hex
-            input = Utils.textToHex(input);
+            if (input) {
+                // convert input string to hex
+                input = Utils.textToHex(input);
 
-            // check if file exists
-            if (!startingBlockKey) {
-                returnMsg = 'does not exist';
-            } else {
-                // get the block data
-                let data = sessionStorage.getItem(startingBlockKey);
-
-                // only write data if block is empty
-                if (!this.doesBlockHaveData(data)) {
-                    // check if input fits in one block
-                    if (input.length <= 60) {
-                        sessionStorage.setItem(startingBlockKey, '1---:' + this.writeDataToBlock(data, input));
-                    } else {
-                        // split the input into array, with each element having a max length of 60
-                        let inputArr = input.match(/.{1,60}/g);
-                        console.log(inputArr);
-
-                        let currKey = startingBlockKey;
-                        // loop through each input chunk
-                        for (let i=0; i<inputArr.length; i++) {
-                            let data = sessionStorage.getItem(currKey);
-                            let nextKey = this.getNextDataBlockKey();
-
-                            // last input chunk doesn't have a block to link to
-                            if (i == inputArr.length-1) {
-                                sessionStorage.setItem(currKey, '1---:' + this.writeDataToBlock(data, inputArr[i]));
-                            } else {
-                                sessionStorage.setItem(currKey, '1' + nextKey + ':' + this.writeDataToBlock(data, inputArr[i]));
-                            }
-                            currKey = nextKey;
-                        }
-                    }
-                    returnMsg = 'success';
+                // check if file exists
+                if (!startingBlockKey) {
+                    returnMsg = 'does not exist';
                 } else {
-                    returnMsg = 'overwrite';
+                    // get the block data
+                    let data = sessionStorage.getItem(startingBlockKey);
+
+                    // only write data if block is empty
+                    if (!this.doesBlockHaveData(data)) {
+                        // check if input fits in one block
+                        if (input.length <= 60) {
+                            sessionStorage.setItem(startingBlockKey, '1---:' + this.writeDataToBlock(data, input));
+                        } else {
+                            // split the input into array, with each element having a max length of 60
+                            let inputArr = input.match(/.{1,60}/g);
+                            console.log(inputArr);
+
+                            let currKey = startingBlockKey;
+                            // loop through each input chunk
+                            for (let i=0; i<inputArr.length; i++) {
+                                let data = sessionStorage.getItem(currKey);
+                                let nextKey = this.getNextDataBlockKey();
+
+                                // last input chunk doesn't have a block to link to
+                                if (i == inputArr.length-1) {
+                                    sessionStorage.setItem(currKey, '1---:' + this.writeDataToBlock(data, inputArr[i]));
+                                } else {
+                                    sessionStorage.setItem(currKey, '1' + nextKey + ':' + this.writeDataToBlock(data, inputArr[i]));
+                                }
+                                currKey = nextKey;
+                            }
+                        }
+                        returnMsg = 'success';
+                    } else {
+                        returnMsg = 'overwrite';
+                    }
                 }
+            } else {
+                // writing nothing is still successful
+                returnMsg = 'success';
             }
             return returnMsg; 
         }
@@ -164,8 +169,9 @@ module TSOS {
         }
 
         // returns the key of where file content begins
-        public findFile(fileName):string {
+        public findFile(fileName):string[] {
             let startingBlockKey = null;
+            let fileArr = [];
 
             directorySearch:
             for (let t=0; t<1; t++) {
@@ -181,17 +187,22 @@ module TSOS {
 
                             if (isUsed && this.readBlockData(fileData) == (Utils.textToHex(fileName))) {
                                 startingBlockKey = metaData.slice(1,4);
+                                // directory key
+                                fileArr.push(potentialKey);
+                                // starting block key
+                                fileArr.push(metaData.slice(1,4));
                                 break directorySearch;
                             }
                         }
                     }
                 }
             }
-            return startingBlockKey;
+            return fileArr;
         }
 
+        // returns boolean indicating if file was deleted
         public deleteFile(fileName) {
-            let key = this.getFileKey(fileName);
+            let key = this.findFile(fileName)[0];
             let isDeleted = false;
 
             if (key) {
@@ -201,29 +212,33 @@ module TSOS {
             return isDeleted;
         }
 
-        public getFileKey(fileName) {
-            let key = null;
-            directorySearch:
-            for (let t=0; t<1; t++) {
-                for (let s=0; s<this.disk.sectorCnt; s++) {
-                    for (let b=0; b<this.disk.blockCnt; b++) {
-                        let potentialKey = this.createStorageKey(t, s, b);
-                        let dataArr = sessionStorage.getItem(potentialKey).split(":");
-
-                        if (dataArr) {
-                            let metaData = dataArr[0];
-                            let fileData = dataArr[1];
-                            let isUsed = this.checkIfInUse(metaData);
-
-                            if (isUsed && this.readBlockData(fileData) == (Utils.textToHex(fileName))) {
-                                key = potentialKey;
-                                break directorySearch;
-                            }
-                        }
+        // returns message indicating if copy command was sccessful
+        public copyFile(fileName, newName) {
+            let returnMsg = '';
+            // find the existing file
+            if (this.findFile(fileName)[0]) {
+                // create the new file
+                let isCreated = this.createFile(newName);
+                if (isCreated) {
+                    // get all the file date in the existing file
+                    let fileData = this.getFileData(fileName);
+                    // write the file data to the new file (can still copy if !fileData)
+                    let msg = this.writeFile(newName, fileData);
+                    if (msg == 'success') {
+                        returnMsg = 'success';
                     }
+                } else {
+                    returnMsg = 'new file exists';
                 }
+            } else {
+                returnMsg = 'no existing file';
             }
-            return key;
+            return returnMsg;
+        }
+
+        public getFileData(fileName) {
+            let fileContent = this.readFile(fileName);
+            return fileContent;
         }
 
         public getAllData() {

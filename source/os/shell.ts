@@ -946,12 +946,20 @@ module TSOS {
         }
 
         public shellDelete(args: string[]) {
-            let isDeleted = _krnDiskDriver.deleteFile(args[0]);
-            if (isDeleted) {
-                _StdOut.putText(args[0] + ' successfully deleted.');
+            if (_krnDiskDriver.disk.isFormatted) {
+                _StdOut.putText("Please format the disk first.");
             } else {
-                _StdOut.putText(args[0] + ' does not exist.');
-            }
+                if (args.length > 0) {
+                    let isDeleted = _krnDiskDriver.deleteFile(args[0]);
+                    if (isDeleted) {
+                        _StdOut.putText(args[0] + ' successfully deleted.');
+                    } else {
+                        _StdOut.putText(args[0] + ' does not exist.');
+                    }
+                } else {
+                    _StdOut.putText('Invalid input: Usage -- delete <filename>');
+                }
+            } 
         }
 
         public shellCopy(args: string[]) {
@@ -974,7 +982,22 @@ module TSOS {
         }
 
         public shellRename(args: string[]) {
-            
+            if (!_krnDiskDriver.disk.isFormatted) {
+                _StdOut.putText("Please format the disk first.");
+            } else {
+                if (args.length > 0) {
+                    let msg = _krnDiskDriver.renameFile(args[0], args[1])
+                    if (msg == 'success') {
+                        _StdOut.putText('Rename successful. ' + args[0] + ' => ' + args[1]);
+                    } else if (msg == 'cannot find file') {
+                        _StdOut.putText(args[0] + ' does not exist.');
+                    } else {
+                        _StdOut.putText(args[1] + ' already exists.');
+                    }
+                } else {
+                    _StdOut.putText('Invalid input: Usage -- rename <existing filename> <new filename>');
+                }
+            }    
         }
 
         public shellLS(args: string[]) {

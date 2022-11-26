@@ -241,6 +241,28 @@ module TSOS {
             return fileContent;
         }
 
+        public renameFile(fileName, newName) {
+            let returnMsg = '';
+            let key = this.findFile(fileName)[0];
+            let otherKey = this.findFile(newName)[0];
+
+            // make sure existing file actually exists and new file name isn't already in use
+            if (key && !otherKey) {
+                let data = sessionStorage.getItem(key);
+                sessionStorage.setItem(key, Utils.replaceAt(data, 5, '0'.repeat(60)));
+
+                data = sessionStorage.getItem(key);
+                sessionStorage.setItem(key, Utils.replaceAt(data, 5, Utils.textToHex(newName)));
+
+                returnMsg = 'success';
+            } else if (!key) {
+                returnMsg = 'cannot find file'
+            } else if (otherKey) {
+                returnMsg = 'name taken';
+            }
+            return returnMsg;
+        }
+
         public getAllData() {
             for (let t=0; t<this.disk.trackCtn; t++) {
                 for (let s=0; s<this.disk.sectorCnt; s++) {
@@ -306,7 +328,7 @@ module TSOS {
 
                         let potentialKey = this.createStorageKey(t, s, b);
                         let block = sessionStorage.getItem(potentialKey);
-                        if (block && this.isBlockEmpty(block)) {
+                        if (block && this.isBlockInUse(block)) {
                             nextKey = potentialKey;
                             this.setUseStatus(nextKey, true);
                             // we found an empty block, so break from the routine
@@ -334,7 +356,7 @@ module TSOS {
                         }
 
                         let block = sessionStorage.getItem(potentialKey);
-                        if (block && this.isBlockEmpty(block)) {
+                        if (block && this.isBlockInUse(block)) {
                             nextKey = potentialKey;
                             this.setUseStatus(nextKey, true);
                             // we found an empty block, so break from the routine
@@ -346,11 +368,12 @@ module TSOS {
             return nextKey;
         }
 
-        // Returns boolean indicating if given block is empty
-        public isBlockEmpty(block): boolean {
+        // Returns boolean indicating if given block is being used
+        public isBlockInUse(block): boolean {
             return (block.charAt(0) == "0");
         }
 
+        // Returns boolean indicating is there is data within a block
         public doesBlockHaveData(block): boolean {
             return block.split(':')[1] != '0'.repeat(60);
         }

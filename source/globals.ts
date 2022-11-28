@@ -40,6 +40,8 @@ var _CPU: TSOS.Cpu;  // Utilize TypeScript's type annotation system to ensure th
 var _MemoryManager: TSOS.MemoryManager;
 var _Scheduler: TSOS.Scheduler;
 var _Dispatcher: TSOS.Dispatcher;
+var _Swapper: TSOS.Swapper;
+
 var _WaitTimeList: string[] = [];
 var _TurnAroundTimeList: string[] = [];
 

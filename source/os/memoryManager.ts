@@ -36,34 +36,41 @@ module TSOS {
         }
 
         // loads a static program into correct segment in memory array
-        public load(program_str: string[]): void {
+        public load(pid:number, program_str: string[]): void {
+            console.log(pid)
+            console.log(program_str)
             let i = 0;
             let activeSegment = null;
 
-            while (i < this.segmentsList.length && activeSegment == null) {
-                // find the first inactive segment and set to active
-                if (!this.segmentsList[i].isActive) {
-                    activeSegment = this.segmentsList[i];
-                    activeSegment.isActive = true;
+            if (_Memory.isFull) {
+                _krnDiskDriver.createSwapFile(pid, program_str.join(''));
+            } else {
+                while (i < this.segmentsList.length && activeSegment == null) {
+                    // find the first inactive segment and set to active
+                    if (!this.segmentsList[i].isActive) {
+                        activeSegment = this.segmentsList[i];
+                        activeSegment.isActive = true;
+                    }
+                    i++;
                 }
-                i++;
+    
+                let program = [];
+                for (let i=0; i<program_str.length; i++) {
+                    // create an array of numeric opcodes
+                    program.push(parseInt(program_str[i], 16));
+                }
+    
+                // write program to memory
+                _MemoryManager.writeImmmediate(program, activeSegment);
+    
+                // assign the segment to the current process
+                _CurrentPCB.assignedSegment = activeSegment;
             }
-
-            let program = [];
-            for (let i=0; i<program_str.length; i++) {
-                // create an array of numeric opcodes
-                program.push(parseInt(program_str[i], 16));
-            }
-
-            // write program to memory
-            _MemoryManager.writeImmmediate(program, activeSegment);
-
-            // assign the segment to the current process
-            _CurrentPCB.assignedSegment = activeSegment;
             
             // check if all segments are active
             if (this.segmentsList[this.segmentsList.length-1].isActive) {
                 _Memory.isFull = true;
+                console.log('memory full')
             } else {
                 _Memory.isFull = false;
             }
@@ -104,6 +111,29 @@ module TSOS {
                     }
                 }
             }
+        }
+
+        public getSwapPcb(): PCB {
+            let freeSegment = null;
+            let target = null;
+            for (let i=0; i<this.segmentsList.length; i++) {
+                if (!this.segmentsList[i].isActive) {
+                    freeSegment = this.segmentsList[i];
+                    console.log('free segment: ' + freeSegment)
+                }
+            }
+            if (!freeSegment) {
+                console.log('hyjacking last segment')
+                freeSegment = this.segmentsList[this.segmentsList.length-1];
+                console.log('free segment: ' + freeSegment)
+            }
+
+            for (let i=0; i<_PCBlist.length; i++) {
+                if (_PCBlist[i].assignedSegment === freeSegment) {
+                    target = _PCBlist[i];
+                }
+            }
+            return target;
         }
 
         // all memory properties are reinitialized to zero

@@ -11,8 +11,13 @@ module TSOS {
 
         }
 
-        public rollOut() {
+        public rollOut(pcb: PCB) {
+            console.log(pcb)
 
+            let program = _MemAccessor.getSegmentData(pcb.assignedSegment)
+            console.log(program)
+
+            _krnDiskDriver.createSwapFile(pcb.pid, program.join(''));
         }
     }
 }

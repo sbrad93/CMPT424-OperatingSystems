@@ -31,6 +31,20 @@ module TSOS {
             return isFormatted;
         }
 
+        // creates the swap file based on given pid
+        public createSwapFile(pid, data) {
+            console.log('creating swap file...')
+            let fileName = '.swap' + pid;
+
+            console.log('file name: ' + fileName);
+            console.log('file data: ' + data);
+
+            let isCreated = this.createFile(fileName);
+            if (isCreated) {
+                this.writeFile(fileName, data);
+            }
+        }
+
         // Returns boolean indicating if file was successfully created
         public createFile(fileName):boolean {
             let fileKey = this.getNextDirBlockKey();
@@ -219,8 +233,8 @@ module TSOS {
                 let isCreated = this.createFile(newName);
                 if (isCreated) {
                     // get all the file date in the existing file
-                    let fileData = this.getFileData(fileName);
-                    // write the file data to the new file (can still copy if !fileData)
+                    let fileData = this.readFile(fileName);
+                    // write the file data to the new file
                     let msg = this.writeFile(newName, fileData);
                     if (msg == 'success') {
                         returnMsg = 'success';
@@ -232,11 +246,6 @@ module TSOS {
                 returnMsg = 'no existing file';
             }
             return returnMsg;
-        }
-
-        public getFileData(fileName) {
-            let fileContent = this.readFile(fileName);
-            return fileContent;
         }
 
         public renameFile(fileName, newName) {

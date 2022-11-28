@@ -52,6 +52,9 @@ module TSOS {
             // Create the Dispatcher
             _Dispatcher = new Dispatcher();
 
+            // Create the Swapper
+            _Swapper = new Swapper();
+
             //
             // ... more?
             //

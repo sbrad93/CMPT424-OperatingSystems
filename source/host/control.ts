@@ -210,7 +210,7 @@ module TSOS {
             var opcode_str = Control.validateUserInput(_input.value);
 
             // Reset textarea value
-            _input.value = "";
+            // _input.value = "";
 
             return opcode_str;
         }
@@ -421,7 +421,7 @@ module TSOS {
             priority.style.borderRight = "1px solid white";
 
             state.innerHTML = _CurrentPCB.state+"";
-            location.innerHTML = "memory";
+            location.innerHTML = _CurrentPCB.location;
             base.innerHTML = Utils.hexLog(_CurrentPCB.assignedSegment.base);
             limit.innerHTML = Utils.hexLog(_CurrentPCB.assignedSegment.limit);
             segment.innerHTML = _CurrentPCB.assignedSegment.sid+"";

@@ -10,11 +10,17 @@ module TSOS {
                 // No processes are running, so dequeue from the ready queue and set to current PCB
                 _CurrentPCB = _Scheduler.readyQueue.dequeue();
                 if (_CurrentPCB != null) {
-                    _CurrentPCB.state = "running";
-                    Control.updateReadyQueueTable();
-
-                    _CPU.init();
-                    _CPU.isExecuting = true;
+                    if (_CurrentPCB.location == 'disk') {
+                        let targetPCB = _MemoryManager.getSwapPcb();
+                        _Swapper.rollOut(targetPCB)
+                    } else {
+                        _CurrentPCB.state = "running";
+                        Control.updateReadyQueueTable();
+    
+                        _CPU.init();
+                        _CPU.isExecuting = true;
+                    }
+                    
                 }
             } else {
                 // Can't switch processes if there aren't any waiting to run

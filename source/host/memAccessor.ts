@@ -84,5 +84,21 @@ module TSOS {
             _StdOut.advanceLine();
             _OsShell.putPrompt();
         }
+
+        // returns all program data within a segment
+        public getSegmentData(segment) {
+            let i = segment.base;
+            let data = [];
+
+            while (i<segment.limit) { 
+                if (_Memory.memArr[i] == 0 && _Memory.memArr[i+1] == 0) {
+                    data.push(Utils.hexLog(_Memory.memArr[i]).slice(-2));
+                    break;
+                }
+                data.push(Utils.hexLog(_Memory.memArr[i]).slice(-2));
+                i++;
+            }
+            return data;
+        }
     }
 }

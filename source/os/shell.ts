@@ -919,23 +919,25 @@ module TSOS {
                 _StdOut.putText("Please format the disk first.");
             } else {
                 if (args.length >= 2) {
-                    if (args[1].startsWith('"') && args[args.length-1].endsWith('"')) {
-                        let fileName = args[0];
+                    if (args[1] == '\"\"') {
+                        _StdOut.putText('Invalid input: Please supply a valid data string');
+                        _StdOut.advanceLine();
+                        _StdOut.putText('Usage -- write <filename> "data"');
+                    } else if (args[1].startsWith('"') && args[args.length-1].endsWith('"')) {
+                            let fileName = args[0];
 
-                        // get the array of input data
-                        let dataArr = args.slice(1, args.length);
+                            // get the array of input data
+                            let dataArr = args.slice(1, args.length);
 
-                        // combine the array into a single string
-                        let data = dataArr.join(' ').slice(1, -1);
+                            // combine the array into a single string
+                            let data = dataArr.join(' ').slice(1, -1);
 
-                        let msg = _krnDiskDriver.writeFile(fileName, data);
-                        if (msg == 'success') {
-                            _StdOut.putText("\'" + fileName + "\' successfully edited (yay).");
-                        } else if (msg == 'does not exist') {
-                            _StdOut.putText("\'" + fileName + "\' doesn't exist.");
-                        } else {
-                            _StdOut.putText("\'" + fileName + "\' already has content. Please recreate the file before making changes.");
-                        }
+                            let msg = _krnDiskDriver.writeFile(fileName, data);
+                            if (msg == 'success') {
+                                _StdOut.putText("\'" + fileName + "\' successfully edited (yay).");
+                            } else if (msg == 'does not exist') {
+                                _StdOut.putText("\'" + fileName + "\' doesn't exist.");
+                            }
                     } else {
                         _StdOut.putText('Input must be wrapped in quotations: Usage -- write <filename> "data"')
                     }
@@ -946,7 +948,7 @@ module TSOS {
         }
 
         public shellDelete(args: string[]) {
-            if (_krnDiskDriver.disk.isFormatted) {
+            if (!_krnDiskDriver.disk.isFormatted) {
                 _StdOut.putText("Please format the disk first.");
             } else {
                 if (args.length > 0) {
@@ -1001,9 +1003,23 @@ module TSOS {
         }
 
         public shellLS(args: string[]) {
-            _krnDiskDriver.getAllData();
+            let files = _krnDiskDriver.getAllFiles();
+
+            if (!_krnDiskDriver.disk.isFormatted) {
+                _StdOut.putText("Please format the disk first.");
+            } else {
+                if (files.length > 0) {
+                    _StdOut.putText('Files currently stored on the disk:');
+                    _StdOut.advanceLine();
+                    for (let i=0; i<files.length; i++) {
+                        _StdOut.putText(files[i]);
+                        _StdOut.advanceLine();
+                    }
+                    console.log(files)
+                } else {
+                    _StdOut.putText('There are no files currently stored on the disk.');
+                }
+            }
         }
-
-
     }
 }

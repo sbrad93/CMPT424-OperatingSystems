@@ -33,12 +33,7 @@ module TSOS {
 
         // creates the swap file based on given pid
         public createSwapFile(pid, data) {
-            console.log('creating swap file...')
             let fileName = '.swap' + pid;
-
-            console.log('file name: ' + fileName);
-            console.log('file data: ' + data);
-
             let isCreated = this.createFile(fileName);
             if (isCreated) {
                 this.writeFile(fileName, data);
@@ -141,11 +136,11 @@ module TSOS {
 
                 if (input.length <= 60) {
                     sessionStorage.setItem(startingBlockKey, '1---:' + this.writeDataToBlock(data, input));
-                    console.log(sessionStorage.getItem(startingBlockKey))
+                    // console.log(sessionStorage.getItem(startingBlockKey))
                 } else {
                     // split the input into array, with each element having a max length of 60
                     let inputArr = input.match(/.{1,60}/g);
-                    console.log(inputArr);
+                    // console.log(inputArr);
 
                     let currKey = startingBlockKey;
                     // loop through each input chunk
@@ -159,7 +154,7 @@ module TSOS {
                         } else {
                             sessionStorage.setItem(currKey, '1' + nextKey + ':' + this.writeDataToBlock(data, inputArr[i]));
                         }
-                        console.log(sessionStorage.getItem(currKey))
+                        // console.log(sessionStorage.getItem(currKey))
                         currKey = nextKey;
                     }
                 }

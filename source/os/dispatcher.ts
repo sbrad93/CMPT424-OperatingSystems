@@ -11,16 +11,19 @@ module TSOS {
                 _CurrentPCB = _Scheduler.readyQueue.dequeue();
                 if (_CurrentPCB != null) {
                     if (_CurrentPCB.location == 'disk') {
-                        let targetPCB = _MemoryManager.getSwapPcb();
-                        _Swapper.rollOut(targetPCB)
-                    } else {
-                        _CurrentPCB.state = "running";
-                        Control.updateReadyQueueTable();
-    
-                        _CPU.init();
-                        _CPU.isExecuting = true;
+                        let targetPCB = _MemoryManager.getSwapPCB();
+
+                        // save target pcb to the disk
+                        _Swapper.rollOut(targetPCB);
+
+                        // roll in the current pcb from the disk to memory
+                        _Swapper.rollIn(_CurrentPCB, targetPCB.assignedSegment);
                     }
-                    
+
+                    _CurrentPCB.state = "running";
+                    Control.updateReadyQueueTable();
+                    _CPU.init();
+                    _CPU.isExecuting = true;
                 }
             } else {
                 // Can't switch processes if there aren't any waiting to run

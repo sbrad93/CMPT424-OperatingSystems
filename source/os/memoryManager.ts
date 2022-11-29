@@ -29,16 +29,34 @@ module TSOS {
         }
 
         // reset all segments to inactive
-        resetSegments(): void {
+        public resetSegments(): void {
             for (let i=0; i<this.segmentsList.length; i++) {
                 this.segmentsList[i].isActive = false;
             }
         }
 
+        public clearSegment(segment: MemorySegment) {
+            let i = segment.base;
+            while (i<segment.limit) {
+                _Memory.memArr[i++] = 0x00;
+            }
+        }
+
+        public areAllSegmentsActive() {
+            let res = true;
+            let i = 0;
+            while (i<this.segmentsList.length) {
+                if (!this.segmentsList[i].isActive) {
+                    res = false;
+                    break;
+                }
+                i++;
+            }
+            return res;
+        }
+
         // loads a static program into correct segment in memory array
         public load(pid:number, program_str: string[]): void {
-            console.log(pid)
-            console.log(program_str)
             let i = 0;
             let activeSegment = null;
 
@@ -68,7 +86,7 @@ module TSOS {
             }
             
             // check if all segments are active
-            if (this.segmentsList[this.segmentsList.length-1].isActive) {
+            if (this.areAllSegmentsActive()) {
                 _Memory.isFull = true;
                 console.log('memory full')
             } else {
@@ -113,23 +131,12 @@ module TSOS {
             }
         }
 
-        public getSwapPcb(): PCB {
-            let freeSegment = null;
+        // returns the pcb to complete disk swap
+        public getSwapPCB(): PCB {
             let target = null;
-            for (let i=0; i<this.segmentsList.length; i++) {
-                if (!this.segmentsList[i].isActive) {
-                    freeSegment = this.segmentsList[i];
-                    console.log('free segment: ' + freeSegment)
-                }
-            }
-            if (!freeSegment) {
-                console.log('hyjacking last segment')
-                freeSegment = this.segmentsList[this.segmentsList.length-1];
-                console.log('free segment: ' + freeSegment)
-            }
-
             for (let i=0; i<_PCBlist.length; i++) {
-                if (_PCBlist[i].assignedSegment === freeSegment) {
+                // first segment is designated swap segment
+                if (_PCBlist[i].assignedSegment == this.segmentsList[0]) {
                     target = _PCBlist[i];
                 }
             }

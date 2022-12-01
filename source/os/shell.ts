@@ -646,7 +646,7 @@ module TSOS {
     
                     // Load the program into memory	
                     // Regex that splits hex string into a list of individual op codes
-                    _MemoryManager.load(_CurrentPCB.pid, opcode_str.match(/.{1,2}/g));
+                    _MemoryManager.load(_CurrentPCB, opcode_str.match(/.{1,2}/g), null);
     
                     _StdOut.putText("Successfuly loaded program into memory.");
                     _StdOut.advanceLine();
@@ -689,8 +689,6 @@ module TSOS {
         }
 
         public shellRunAll(args: string[]) {
-            console.log(_PCBlist)
-            return;
             let processExists: boolean = false;
             _Scheduler.numActiveProcesses = 0;
 
@@ -701,7 +699,7 @@ module TSOS {
                     _CurrentPCB.state = "ready";
                     _Scheduler.readyQueue.enqueue(_CurrentPCB);
                     _Scheduler.numActiveProcesses++;
-                    Control.addRowToReadyQueueTable();
+                    // Control.addRowToReadyQueueTable();
                     processExists = true;
                 }
             }
@@ -839,11 +837,11 @@ module TSOS {
                 _CPU.init();
                 Control.updateCPUtable();
 
-                if (!Kernel.isShutdown) {
+                if (!Kernel.isShutdown && !_krnDiskDriver.disk.isFull ) {
                     _StdOut.putText("All processes have been killed.")
                 }
             } else {
-                if (!Kernel.isShutdown) {
+                if (!Kernel.isShutdown && !_krnDiskDriver.disk.isFull) {
                     _StdOut.putText("There are no processes to kill.");
                 }
             }

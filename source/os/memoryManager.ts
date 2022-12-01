@@ -56,22 +56,30 @@ module TSOS {
         }
 
         // loads a static program into correct segment in memory array
-        public load(pid:number, program_str: string[]): void {
+        public load(pcb:PCB, program_str: string[], segment: MemorySegment): void {
             let i = 0;
             let activeSegment = null;
 
             if (_Memory.isFull) {
-                _krnDiskDriver.createSwapFile(pid, program_str.join(''));
+                _krnDiskDriver.createSwapFile(pcb.pid, program_str.join(''));
             } else {
-                while (i < this.segmentsList.length && activeSegment == null) {
-                    // find the first inactive segment and set to active
-                    if (!this.segmentsList[i].isActive) {
-                        activeSegment = this.segmentsList[i];
-                        activeSegment.isActive = true;
-                    }
-                    i++;
+                // if segment is provided, assigned the program to that segment
+                // otherwise, assign the program to the first inactive segment
+                if (segment) {
+                    // console.log('assigning segment');
+                    activeSegment = segment;
+                } else {
+                    while (i < this.segmentsList.length && activeSegment == null) {
+                        if (!this.segmentsList[i].isActive) {
+                            activeSegment = this.segmentsList[i];
+                            break;
+                        }
+                        i++;
+                    } 
                 }
-    
+                activeSegment.isActive = true;
+                // console.log(activeSegment)    
+       
                 let program = [];
                 for (let i=0; i<program_str.length; i++) {
                     // create an array of numeric opcodes
@@ -88,7 +96,7 @@ module TSOS {
             // check if all segments are active
             if (this.areAllSegmentsActive()) {
                 _Memory.isFull = true;
-                console.log('memory full')
+                // console.log('memory full')
             } else {
                 _Memory.isFull = false;
             }
@@ -134,10 +142,26 @@ module TSOS {
         // returns the pcb to complete disk swap
         public getSwapPCB(): PCB {
             let target = null;
+            let freeSegment = null;
+
+            // check if there's any inactive segments
+            for (let i=0; i<this.segmentsList.length; i++) {
+                if (!this.segmentsList[i].isActive) {
+                    freeSegment = this.segmentsList[i];
+                }
+            }
+
             for (let i=0; i<_PCBlist.length; i++) {
-                // first segment is designated swap segment
-                if (_PCBlist[i].assignedSegment == this.segmentsList[0]) {
-                    target = _PCBlist[i];
+                // if there's an inactive segment, find the associated pcb
+                if (freeSegment) {
+                    if (_PCBlist[i].assignedSegment == freeSegment) {
+                        target = _PCBlist[i];
+                    }
+                } else {
+                    // otherwise, the first segment is the designated swap segment
+                    if (_PCBlist[i].assignedSegment == this.segmentsList[0]) {
+                        target = _PCBlist[i];
+                    }
                 }
             }
             return target;

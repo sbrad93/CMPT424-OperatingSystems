@@ -77,6 +77,7 @@ module TSOS {
         // Host Events
         //
         public static hostBtnStartOS_click(btn): void {
+            sessionStorage.clear();
             // Disable the (passed-in) start button...
             btn.disabled = true;
 

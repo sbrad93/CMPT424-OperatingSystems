@@ -34,19 +34,47 @@ module TSOS {
         // creates the swap file based on given pid
         public createSwapFile(pid, data) {
             let fileName = '.swap' + pid;
-            let isCreated = this.createFile(fileName);
-            if (isCreated) {
+            this.createFile(fileName);
+
+            if (this.findFile(fileName)) {
+                // file data will be overwritten if file already exists
                 this.writeFile(fileName, data);
+            } 
+        }
+
+        public getSwapFiles() {
+            let files = [];
+            for (let t=0; t<1; t++) {
+                for (let s=0; s<this.disk.sectorCnt; s++) {
+                    for (let b=0; b<this.disk.blockCnt; b++) {
+                        let potentialKey = this.createStorageKey(t, s, b);
+                        let dataArr = sessionStorage.getItem(potentialKey).split(":");
+
+                        if (dataArr) {
+                            let metaData = dataArr[0];
+                            let fileData = dataArr[1];
+                            let isUsed = this.checkIfInUse(metaData);
+
+                            if (isUsed && this.readBlockData(fileData).includes(Utils.textToHex('swap'))) {
+                                // directory key
+                                files.push(potentialKey);
+                                this.deleteFile(this.readBlockData(fileData))
+                            }
+                        }
+                    }
+                }
             }
+            console.log(files);
+            return files;
         }
 
         // Returns boolean indicating if file was successfully created
         public createFile(fileName):boolean {
-            let fileKey = this.getNextDirBlockKey();
             let created = false;
 
             let startingBlockKey = this.findFile(fileName)[1];
             if (!startingBlockKey) {
+                let fileKey = this.getNextDirBlockKey();
                 // Get the next available data block and set it at the end of the file chain
                 let nextKey = this.getNextDataBlockKey();
                 this.setFinalDataBlock(nextKey);
@@ -60,6 +88,9 @@ module TSOS {
                 sessionStorage.setItem(fileKey, Utils.replaceAt(file, 1, nextKey))
 
                 created = true;
+            }
+            if (!created) {
+                console.log('swap file already exists')
             }
             return created;
         }
@@ -145,14 +176,27 @@ module TSOS {
                     let currKey = startingBlockKey;
                     // loop through each input chunk
                     for (let i=0; i<inputArr.length; i++) {
-                        let data = sessionStorage.getItem(currKey);
+                        data = sessionStorage.getItem(currKey);
                         let nextKey = this.getNextDataBlockKey();
 
                         // last input chunk doesn't have a block to link to
                         if (i == inputArr.length-1) {
                             sessionStorage.setItem(currKey, '1---:' + this.writeDataToBlock(data, inputArr[i]));
                         } else {
-                            sessionStorage.setItem(currKey, '1' + nextKey + ':' + this.writeDataToBlock(data, inputArr[i]));
+                            if (nextKey) {
+                                sessionStorage.setItem(currKey, '1' + nextKey + ':' + this.writeDataToBlock(data, inputArr[i]));
+                            } else {
+                                console.log('no more data!!')
+                                this.disk.isFull = true;
+                                _OsShell.shellKillAll(null);
+
+                                _StdOut.advanceLine();
+                                _StdOut.putText('ERR: Disk is full.')
+                                _StdOut.advanceLine();
+                                _OsShell.putPrompt();
+                                break;
+                            }
+
                         }
                         // console.log(sessionStorage.getItem(currKey))
                         currKey = nextKey;
@@ -173,6 +217,10 @@ module TSOS {
                 blockData[i] = dataArr[i];
             }
             return (blockData.join(''));
+        }
+
+        public dataCleanup() {
+
         }
 
         // returns the key of where file content begins

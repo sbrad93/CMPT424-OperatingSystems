@@ -28,6 +28,7 @@ module TSOS {
                         break;
                 }
             } else {
+                _krnDiskDriver.getSwapFiles();
                 _StdOut.advanceLine();
                 _StdOut.putText("Execution completed.")
                 _StdOut.advanceLine();

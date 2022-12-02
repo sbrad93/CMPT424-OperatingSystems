@@ -423,9 +423,15 @@ module TSOS {
 
             state.innerHTML = _CurrentPCB.state+"";
             location.innerHTML = _CurrentPCB.location;
-            base.innerHTML = Utils.hexLog(_CurrentPCB.assignedSegment.base);
-            limit.innerHTML = Utils.hexLog(_CurrentPCB.assignedSegment.limit);
-            segment.innerHTML = _CurrentPCB.assignedSegment.sid+"";
+            if (_CurrentPCB.location == 'memory') {
+                base.innerHTML = Utils.hexLog(_CurrentPCB.assignedSegment.base);
+                limit.innerHTML = Utils.hexLog(_CurrentPCB.assignedSegment.limit);
+                segment.innerHTML = _CurrentPCB.assignedSegment.sid+"";
+            } else {
+                base.innerHTML = '---';
+                limit.innerHTML = '---';
+                segment.innerHTML = '---';
+            }
             priority.innerHTML = "";
             quantum.innerHTML = _Scheduler.quantum+"";
         }
@@ -462,10 +468,16 @@ module TSOS {
                 priority.style.borderRight = "1px solid white";
 
                 state.innerHTML = _Scheduler.readyQueue.getAt(i).state+"";
-                location.innerHTML = "memory";
-                base.innerHTML = Utils.hexLog(_Scheduler.readyQueue.getAt(i).assignedSegment.base);
-                limit.innerHTML = Utils.hexLog(_Scheduler.readyQueue.getAt(i).assignedSegment.limit);
-                segment.innerHTML = _Scheduler.readyQueue.getAt(i).assignedSegment.sid+"";
+                location.innerHTML = _Scheduler.readyQueue.getAt(i).location;
+                if (_Scheduler.readyQueue.getAt(i).location == 'memory') {
+                    base.innerHTML = Utils.hexLog(_Scheduler.readyQueue.getAt(i).assignedSegment.base);
+                    limit.innerHTML = Utils.hexLog(_Scheduler.readyQueue.getAt(i).assignedSegment.limit);
+                    segment.innerHTML = _Scheduler.readyQueue.getAt(i).assignedSegment.sid+"";
+                } else {
+                    base.innerHTML = '---';
+                    limit.innerHTML = '---';
+                    segment.innerHTML = '---';
+                }
                 priority.innerHTML = "";
                 quantum.innerHTML = _Scheduler.quantum+"";
 

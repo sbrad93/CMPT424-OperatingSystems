@@ -34,38 +34,20 @@ module TSOS {
         // creates the swap file based on given pid
         public createSwapFile(pid, data) {
             let fileName = '.swap' + pid;
-            this.createFile(fileName);
 
-            if (this.findFile(fileName)) {
-                // file data will be overwritten if file already exists
-                this.writeFile(fileName, data);
-            } 
+            // file data will be overwritten if file already exists
+            this.createFile(fileName);
+            this.writeFile(fileName, data);
         }
 
-        public getSwapFiles() {
-            let files = [];
-            for (let t=0; t<1; t++) {
-                for (let s=0; s<this.disk.sectorCnt; s++) {
-                    for (let b=0; b<this.disk.blockCnt; b++) {
-                        let potentialKey = this.createStorageKey(t, s, b);
-                        let dataArr = sessionStorage.getItem(potentialKey).split(":");
-
-                        if (dataArr) {
-                            let metaData = dataArr[0];
-                            let fileData = dataArr[1];
-                            let isUsed = this.checkIfInUse(metaData);
-
-                            if (isUsed && this.readBlockData(fileData).includes(Utils.textToHex('swap'))) {
-                                // directory key
-                                files.push(potentialKey);
-                                this.deleteFile(this.readBlockData(fileData))
-                            }
-                        }
-                    }
+        // deletes all swap files on disk
+        public deleteSwapFiles() {
+            let files = this.getAllFiles();
+            for (let i in files) {
+                if (files[i].includes('swap')) {
+                    this.deleteFile(files[i]);
                 }
             }
-            console.log(files);
-            return files;
         }
 
         // Returns boolean indicating if file was successfully created
@@ -88,9 +70,6 @@ module TSOS {
                 sessionStorage.setItem(fileKey, Utils.replaceAt(file, 1, nextKey))
 
                 created = true;
-            }
-            if (!created) {
-                console.log('swap file already exists')
             }
             return created;
         }
@@ -120,8 +99,8 @@ module TSOS {
                         nextKey = nextData.split(':')[0].slice(1,4);
                         nextData = sessionStorage.getItem(nextKey);
                     }
-                } 
-                return Utils.hexToText(dataStr);
+                }
+                return dataStr;
             }
         }
 
@@ -131,13 +110,9 @@ module TSOS {
             let hexCodesArr = data.match(/.{1,2}/g);
             let res = '';
             let i = 0;
-            // loop through array and build res string until break is reached
+            // loop through array and build res string
             while (i < hexCodesArr.length) {
-                if (hexCodesArr[i] != '00') {
-                    res += hexCodesArr[i];
-                } else {
-                    break;
-                }
+                res += hexCodesArr[i];
                 i++;
             }
             return res;
@@ -147,8 +122,6 @@ module TSOS {
         public writeFile(fileName, input) {
             let startingBlockKey = this.findFile(fileName)[1];
             let returnMsg = '';
-
-            input = Utils.textToHex(input);
 
             // check if file exists
             if (!startingBlockKey) {
@@ -186,7 +159,7 @@ module TSOS {
                             if (nextKey) {
                                 sessionStorage.setItem(currKey, '1' + nextKey + ':' + this.writeDataToBlock(data, inputArr[i]));
                             } else {
-                                console.log('no more data!!')
+                                returnMsg = 'no more data';
                                 this.disk.isFull = true;
                                 _OsShell.shellKillAll(null);
 
@@ -196,9 +169,7 @@ module TSOS {
                                 _OsShell.putPrompt();
                                 break;
                             }
-
                         }
-                        // console.log(sessionStorage.getItem(currKey))
                         currKey = nextKey;
                     }
                 }
@@ -219,10 +190,6 @@ module TSOS {
             return (blockData.join(''));
         }
 
-        public dataCleanup() {
-
-        }
-
         // returns the key of where file content begins
         public findFile(fileName):string[] {
             let startingBlockKey = null;
@@ -237,7 +204,7 @@ module TSOS {
 
                         if (dataArr) {
                             let metaData = dataArr[0];
-                            let fileData = dataArr[1];
+                            let fileData = this.trimData(dataArr[1]);
                             let isUsed = this.checkIfInUse(metaData);
 
                             if (isUsed && this.readBlockData(fileData) == (Utils.textToHex(fileName))) {
@@ -253,6 +220,21 @@ module TSOS {
                 }
             }
             return fileArr;
+        }
+
+        public trimData(data: string) {
+            let hexCodesArr = data.match(/.{1,2}/g);
+            let i = 0;
+            let res = ''
+            while (i < hexCodesArr.length) {
+                if (hexCodesArr[i] != '00') {
+                    res += hexCodesArr[i];
+                } else {
+                    break;
+                }
+                i++;
+            }
+            return res;
         }
 
         // returns boolean indicating if file was deleted

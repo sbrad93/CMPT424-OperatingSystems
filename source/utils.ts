@@ -59,6 +59,7 @@ module TSOS {
             return value.substring(0, index) + replacement + value.substring(index + replacement.length);
         }
 
+        // converts a text string to equivalent hex
         public static textToHex(str): string {
             let hexStr = "";
             for (let i=0; i<str.length; i++) {
@@ -67,12 +68,34 @@ module TSOS {
             return hexStr;
         }
 
+        // converts a hex string to equivalent text
         public static hexToText(str): string {
-            let textStr = "";
-            for (let i=0; i<str.length; i+=2) {
-                textStr += String.fromCharCode(parseInt(str.substr(i, 2), 16));
+            if (str) {
+                str = this.trimData(str);
+                let textStr = "";
+                for (let i=0; i<str.length; i+=2) {
+                    textStr += String.fromCharCode(parseInt(str.substr(i, 2), 16));
+                }
+                return textStr;
+            } else {
+                return null;
             }
-            return textStr;
+        }
+
+        // removes trailing zeros from hex string
+        public static trimData(data: string) {
+            let dataArr = data.match(/.{1,2}/g);
+            let i = 0;
+            let res = ''
+            while (i < dataArr.length) {
+                if (dataArr[i] != '00') {
+                    res += dataArr[i];
+                } else {
+                    break;
+                }
+                i++;
+            }
+            return res;
         }
     }
 }

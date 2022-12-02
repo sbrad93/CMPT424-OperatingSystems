@@ -28,7 +28,8 @@ module TSOS {
                         break;
                 }
             } else {
-                _krnDiskDriver.getSwapFiles();
+                // delete any existing swap files once execution completes
+                _krnDiskDriver.deleteSwapFiles();
                 _StdOut.advanceLine();
                 _StdOut.putText("Execution completed.")
                 _StdOut.advanceLine();

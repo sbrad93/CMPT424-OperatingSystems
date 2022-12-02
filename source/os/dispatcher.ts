@@ -15,21 +15,12 @@ module TSOS {
                         if (targetPCB) {
 
                             // save target pcb to the disk
-                            // console.log('ROLLING OUT');
-                            // console.log(targetPCB.pid)
-                            // console.log(JSON.stringify(targetPCB))
                             _Swapper.rollOut(targetPCB);
 
                             // roll in the current pcb from the disk to memory
-                            // console.log('ROLLING IN')
-                            // console.log(_CurrentPCB.pid)
-                            // console.log(JSON.stringify(_CurrentPCB))
                             _Swapper.rollIn(_CurrentPCB, targetPCB.assignedSegment);
                         }
                     }
-
-                    // _CurrentPCB.state = "running";
-                    // Control.updateReadyQueueTable();
                     _CPU.init();
                     _CPU.isExecuting = true;
                 }
@@ -40,7 +31,7 @@ module TSOS {
                     this.runningPCB.state = "ready";
                     Control.updatePCBStateInTable(this.runningPCB.pid, this.runningPCB.state);
                     _Scheduler.readyQueue.enqueue(this.runningPCB);
-                    // Control.updateReadyQueueTable();
+                    Control.updateReadyQueueTable();
 
                     // Incremement waiting and turn around cycles every time a process is placed back in ready queue
                     this.runningPCB.waitingCycles++;
@@ -53,46 +44,24 @@ module TSOS {
                             let targetPCB = _MemoryManager.getSwapPCB();
                             if (targetPCB) {
                                 // save target pcb to the disk
-                                // console.log('ROLLING OUT');
-                                // console.log(targetPCB.pid)
-                                // console.log(JSON.stringify(targetPCB))
                                 _Swapper.rollOut(targetPCB);
 
                                 // roll in the current pcb from the disk to memory
-                                // console.log('ROLLING IN')
-                                // console.log(_CurrentPCB.pid)
-                                // console.log(JSON.stringify(_CurrentPCB))
                                 _Swapper.rollIn(_CurrentPCB, targetPCB.assignedSegment);
                             } else {
-                                console.log('no target')
                                 _Swapper.rollIn(_CurrentPCB, null);
-                            }
-    
-                            
+                            }  
                         }
-    
-            
-                        // Control.updateReadyQueueTable();
-                        // _CPU.init();
-                        // _CPU.isExecuting = true;
                     }
-
-
-
-                    // Control.updateReadyQueueTable();
-                   
                 }
             }
-
+            Control.updateReadyQueueTable();
             // Set the CPU registers to the saved registers in the current PCB
             if (_CurrentPCB != null) {
                 this.updateCPU();
                 _CurrentPCB.state = "running";
                 this.runningPCB = _CurrentPCB;
-            }
-
-            
-            
+            } 
         }
 
         public updateCPU() {
@@ -102,10 +71,6 @@ module TSOS {
             _CPU.Xreg = _CurrentPCB.Xreg;
             _CPU.Yreg = _CurrentPCB.Yreg;
             _CPU.Zflag = _CurrentPCB.Zflag;
-        }
-
-        public cpuSnapshot() {
-
         }
     }
 }

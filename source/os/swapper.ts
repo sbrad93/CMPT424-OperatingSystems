@@ -9,8 +9,6 @@ module TSOS {
             if (pcb) {
                 // read the swap file data
                 let data = _krnDiskDriver.readFile('.swap' + pcb.pid);
-                console.log('reading...')
-                console.log(data)
 
                 // load the data into memory and update location
                 _MemoryManager.load(pcb, data.match(/.{1,2}/g), segment);

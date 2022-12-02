@@ -891,7 +891,7 @@ module TSOS {
         public shellRead(args: string[]) {
             if (_krnDiskDriver.disk.isFormatted) {
                 if (args.length > 0) {
-                    let data = _krnDiskDriver.readFile(args[0])
+                    let data = Utils.hexToText(_krnDiskDriver.readFile(args[0]));
                     if (data == null) {
                         _StdOut.putText("\'" + args[0] + "\' does not exist.");
                     } else if (data == '') {
@@ -925,6 +925,7 @@ module TSOS {
 
                             // combine the array into a single string
                             let data = dataArr.join(' ').slice(1, -1);
+                            data = Utils.textToHex(data);
 
                             let msg = _krnDiskDriver.writeFile(fileName, data);
                             if (msg == 'success') {

@@ -1001,7 +1001,6 @@ module TSOS {
 
         public shellLS(args: string[]) {
             let files = _krnDiskDriver.getAllFiles();
-
             if (!_krnDiskDriver.disk.isFormatted) {
                 _StdOut.putText("Please format the disk first.");
             } else {
@@ -1012,7 +1011,6 @@ module TSOS {
                         _StdOut.putText(files[i]);
                         _StdOut.advanceLine();
                     }
-                    console.log(files)
                 } else {
                     _StdOut.putText('There are no files currently stored on the disk.');
                 }

@@ -45,7 +45,7 @@ module TSOS {
             let files = this.getAllFiles();
             for (let i in files) {
                 if (files[i].includes('swap')) {
-                    this.deleteFile(files[i]);
+                    this.deepDeleteFile(files[i]);
                 }
             }
         }
@@ -100,8 +100,8 @@ module TSOS {
                         nextData = sessionStorage.getItem(nextKey);
                     }
                 }
-                return dataStr;
             }
+            return dataStr;
         }
 
         // returns the hex string contained within a data block
@@ -130,9 +130,11 @@ module TSOS {
                 // get the block data
                 let data = sessionStorage.getItem(startingBlockKey);
 
-                // recreate the file if overwriting data
+                // remove all file data before overwriting
                 if (this.doesBlockHaveData(data)) {
-                    this.deleteFile(fileName);
+                    // deep delete ensures that the original file is overwritten
+                    // not simple just clearing the directory (like normal deleting)
+                    this.deepDeleteFile(fileName)
                     this.createFile(fileName);
                     startingBlockKey = this.findFile(fileName)[1];
                     data = sessionStorage.getItem(startingBlockKey);
@@ -140,11 +142,9 @@ module TSOS {
 
                 if (input.length <= 60) {
                     sessionStorage.setItem(startingBlockKey, '1---:' + this.writeDataToBlock(data, input));
-                    // console.log(sessionStorage.getItem(startingBlockKey))
                 } else {
                     // split the input into array, with each element having a max length of 60
                     let inputArr = input.match(/.{1,60}/g);
-                    // console.log(inputArr);
 
                     let currKey = startingBlockKey;
                     // loop through each input chunk
@@ -190,7 +190,8 @@ module TSOS {
             return (blockData.join(''));
         }
 
-        // returns the key of where file content begins
+        // returns an array of file info
+        // including the key of the directory and the key of the starting block
         public findFile(fileName):string[] {
             let startingBlockKey = null;
             let fileArr = [];
@@ -222,6 +223,7 @@ module TSOS {
             return fileArr;
         }
 
+        // removes trailing zeros from block
         public trimData(data: string) {
             let hexCodesArr = data.match(/.{1,2}/g);
             let i = 0;
@@ -244,9 +246,35 @@ module TSOS {
 
             if (key) {
                 sessionStorage.setItem(key, this.emptyBlockInit());
+                console.log('deleted file')
+                console.log(sessionStorage.getItem(key))
                 isDeleted = true;
             }
             return isDeleted;
+        }
+
+        // removes all data within a file
+        public deepDeleteFile(fileName) {
+            let startingBlockKey = this.findFile(fileName)[1];
+
+            if (startingBlockKey) {
+                let block = sessionStorage.getItem(startingBlockKey);
+                let blockArr = block.split(':');
+                let metaData = blockArr[0];
+
+                sessionStorage.setItem(startingBlockKey, this.emptyBlockInit());
+                let nextKey = metaData.slice(1,4);
+                let nextData = sessionStorage.getItem(nextKey);
+
+                // File contains more than 1 block
+                while (nextKey != '---') {
+                    sessionStorage.setItem(nextKey, this.emptyBlockInit());
+                    nextKey = nextData.split(':')[0].slice(1,4);
+                    nextData = sessionStorage.getItem(nextKey);
+                }
+                // clear the directory once all data has been removed
+                this.deleteFile(fileName);
+            }
         }
 
         // returns message indicating if copy command was sccessful
@@ -273,6 +301,7 @@ module TSOS {
             return returnMsg;
         }
 
+        // returns message indicating if file was successfully renamed
         public renameFile(fileName, newName) {
             let returnMsg = '';
             let key = this.findFile(fileName)[0];
@@ -315,7 +344,10 @@ module TSOS {
 
                         if (file && this.checkIfInUse(file)) {
                             let fileName = Utils.hexToText(this.readBlockData(file.split(':')[1]));
-                            files.push(fileName);
+                            // only show non-hidden files
+                            if (!fileName.startsWith('.')) {
+                                files.push(fileName);
+                            }
                         }
                     }
                 }

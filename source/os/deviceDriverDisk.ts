@@ -28,6 +28,7 @@ module TSOS {
                 console.log(err);
                 isFormatted = false;
             }
+            Control.updateDiskTable();
             return isFormatted;
         }
 
@@ -71,6 +72,7 @@ module TSOS {
 
                 created = true;
             }
+            Control.updateDiskTable();
             return created;
         }
 
@@ -149,13 +151,14 @@ module TSOS {
                     let currKey = startingBlockKey;
                     // loop through each input chunk
                     for (let i=0; i<inputArr.length; i++) {
+                        let nextKey;
                         data = sessionStorage.getItem(currKey);
-                        let nextKey = this.getNextDataBlockKey();
 
                         // last input chunk doesn't have a block to link to
                         if (i == inputArr.length-1) {
                             sessionStorage.setItem(currKey, '1---:' + this.writeDataToBlock(data, inputArr[i]));
                         } else {
+                            nextKey = this.getNextDataBlockKey();
                             if (nextKey) {
                                 sessionStorage.setItem(currKey, '1' + nextKey + ':' + this.writeDataToBlock(data, inputArr[i]));
                             } else {
@@ -175,6 +178,7 @@ module TSOS {
                 }
                 returnMsg = 'success';
             }
+            Control.updateDiskTable();
             return returnMsg; 
         }
 
@@ -246,10 +250,9 @@ module TSOS {
 
             if (key) {
                 sessionStorage.setItem(key, this.emptyBlockInit());
-                console.log('deleted file')
-                console.log(sessionStorage.getItem(key))
                 isDeleted = true;
             }
+            Control.updateDiskTable();
             return isDeleted;
         }
 
@@ -298,6 +301,7 @@ module TSOS {
             } else {
                 returnMsg = 'no existing file';
             }
+            Control.updateDiskTable();
             return returnMsg;
         }
 
@@ -321,17 +325,8 @@ module TSOS {
             } else if (otherKey) {
                 returnMsg = 'name taken';
             }
+            Control.updateDiskTable();
             return returnMsg;
-        }
-
-        public getAllData() {
-            for (let t=0; t<this.disk.trackCtn; t++) {
-                for (let s=0; s<this.disk.sectorCnt; s++) {
-                    for (let b=0; b<this.disk.blockCnt; b++) {
-                        console.log(sessionStorage.getItem(this.createStorageKey(t, s, b)));
-                    }
-                }
-            }
         }
 
         // returns an array of all active filenames
@@ -344,10 +339,7 @@ module TSOS {
 
                         if (file && this.checkIfInUse(file)) {
                             let fileName = Utils.hexToText(this.readBlockData(file.split(':')[1]));
-                            // only show non-hidden files
-                            if (!fileName.startsWith('.')) {
                                 files.push(fileName);
-                            }
                         }
                     }
                 }

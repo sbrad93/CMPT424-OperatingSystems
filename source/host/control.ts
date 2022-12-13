@@ -77,6 +77,7 @@ module TSOS {
         // Host Events
         //
         public static hostBtnStartOS_click(btn): void {
+            sessionStorage.clear();
             // Disable the (passed-in) start button...
             btn.disabled = true;
 
@@ -116,6 +117,10 @@ module TSOS {
             
             // Display empty memory
             Control.updateMemoryOutput();
+
+            // Test data
+            var _input = <HTMLInputElement> document.getElementById("taProgramInput");
+            _input.value = "A9068D3100A9018D3000AC3000A201FFEE3000AE3000EC3100D0EF00";
         }
 
         public static hostBtnHaltOS_click(btn): void {
@@ -201,7 +206,7 @@ module TSOS {
             var opcode_str = Control.validateUserInput(_input.value);
 
             // Reset textarea value
-            _input.value = "";
+            // _input.value = "";
 
             return opcode_str;
         }
@@ -412,10 +417,16 @@ module TSOS {
             priority.style.borderRight = "1px solid white";
 
             state.innerHTML = _CurrentPCB.state+"";
-            location.innerHTML = "memory";
-            base.innerHTML = Utils.hexLog(_CurrentPCB.assignedSegment.base);
-            limit.innerHTML = Utils.hexLog(_CurrentPCB.assignedSegment.limit);
-            segment.innerHTML = _CurrentPCB.assignedSegment.sid+"";
+            location.innerHTML = _CurrentPCB.location;
+            if (_CurrentPCB.location == 'memory') {
+                base.innerHTML = Utils.hexLog(_CurrentPCB.assignedSegment.base);
+                limit.innerHTML = Utils.hexLog(_CurrentPCB.assignedSegment.limit);
+                segment.innerHTML = _CurrentPCB.assignedSegment.sid+"";
+            } else {
+                base.innerHTML = '---';
+                limit.innerHTML = '---';
+                segment.innerHTML = '---';
+            }
             priority.innerHTML = "";
             quantum.innerHTML = _Scheduler.quantum+"";
         }
@@ -452,51 +463,60 @@ module TSOS {
                 priority.style.borderRight = "1px solid white";
 
                 state.innerHTML = _Scheduler.readyQueue.getAt(i).state+"";
-                location.innerHTML = "memory";
-                base.innerHTML = Utils.hexLog(_Scheduler.readyQueue.getAt(i).assignedSegment.base);
-                limit.innerHTML = Utils.hexLog(_Scheduler.readyQueue.getAt(i).assignedSegment.limit);
-                segment.innerHTML = _Scheduler.readyQueue.getAt(i).assignedSegment.sid+"";
+                location.innerHTML = _Scheduler.readyQueue.getAt(i).location;
+                if (_Scheduler.readyQueue.getAt(i).location == 'memory') {
+                    base.innerHTML = Utils.hexLog(_Scheduler.readyQueue.getAt(i).assignedSegment.base);
+                    limit.innerHTML = Utils.hexLog(_Scheduler.readyQueue.getAt(i).assignedSegment.limit);
+                    segment.innerHTML = _Scheduler.readyQueue.getAt(i).assignedSegment.sid+"";
+                } else {
+                    base.innerHTML = '---';
+                    limit.innerHTML = '---';
+                    segment.innerHTML = '---';
+                }
                 priority.innerHTML = "";
                 quantum.innerHTML = _Scheduler.quantum+"";
 
                 i++;
             }
         }
+
+        public static updateDiskTable() {
+            // Updates all cell values in the disk table
+            
+            const table = <HTMLTableElement> document.getElementById("disk-table");
+
+            // delete all rows first...
+            while(table.rows.length > 1) {
+                table.deleteRow(1);
+            }
+
+            for (let t=0; t<_krnDiskDriver.disk.trackCtn; t++) {
+                for (let s=0; s<_krnDiskDriver.disk.sectorCnt; s++) {
+                    for (let b=0; b<_krnDiskDriver.disk.blockCnt; b++) {
+                        // console.log(sessionStorage.getItem(_krnDiskDriver.createStorageKey(t, s, b)));
+                        const row = table.insertRow(-1);
+
+                        const tsb = row.insertCell(0);
+                        const inUse = row.insertCell(1);
+                        const next = row.insertCell(2);
+                        const data = row.insertCell(3);
+
+                        // inUse.style.borderLeft = "1px solid white";
+                        inUse.style.borderRight = "1px solid white";
+                        next.style.borderRight = "1px solid white";
+
+                        let block = sessionStorage.getItem(_krnDiskDriver.createStorageKey(t, s, b));
+                        let blockArr = block.split(':');
+                        tsb.innerHTML = _krnDiskDriver.createStorageKey(t, s, b);
+                        tsb.style.backgroundColor = "#087098";
+                        tsb.style.borderRadius = "15px";
+                        inUse.innerHTML = blockArr[0].slice(0,1);
+                        next.innerHTML = blockArr[0].slice(1,4);
+                        data.innerHTML = blockArr[1].toUpperCase();
+                    }
+                }
+            }
+
+        }
     }
 }
-
-// // Base case
-// if (j==0) {
-//     console.log("base case")
-//     bit = row.insertCell(-1);
-//     bit.style.borderRight = "1px solid white";
-//     bit.innerHTML = Utils.hexLog(_Memory.memArr[j]).slice(-2);
-//     j++;
-//     console.log(j)
-// }
-
-// // Loop through each byte
-// console.log("start loop")
-// while (j%8 != 0) {
-//     bit = row.insertCell(-1);
-//     bit.style.borderRight = "1px solid white";
-//     bit.innerHTML = Utils.hexLog(_Memory.memArr[j]).slice(-2);
-
-//     // Prevent very last bit from being skipped
-//     // if (j == _Memory.memSize-1) {
-//     //     bit = row.insertCell(-1);
-//     //     bit.style.borderRight = "1px solid white";
-//     //     bit.innerHTML = Utils.hexLog(_Memory.memArr[j]).slice(-2);
-//     // }
-//     j++;
-//     console.log(j)
-// }
-// console.log("end loop")
-
-// // Edge cases
-// // if (j!= _Memory.memSize && j!=8) {
-// //     console.log(j)
-// //     bit = row.insertCell(-1);
-// //     bit.style.borderRight = "1px solid white";
-// //     bit.innerHTML = Utils.hexLog(_Memory.memArr[j]).slice(-2);
-// // }

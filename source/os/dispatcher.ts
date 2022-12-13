@@ -10,9 +10,17 @@ module TSOS {
                 // No processes are running, so dequeue from the ready queue and set to current PCB
                 _CurrentPCB = _Scheduler.readyQueue.dequeue();
                 if (_CurrentPCB != null) {
-                    _CurrentPCB.state = "running";
-                    Control.updateReadyQueueTable();
+                    if (_CurrentPCB.location == 'disk') {
+                        let targetPCB = _MemoryManager.getSwapPCB();
+                        if (targetPCB) {
 
+                            // save target pcb to the disk
+                            _Swapper.rollOut(targetPCB);
+
+                            // roll in the current pcb from the disk to memory
+                            _Swapper.rollIn(_CurrentPCB, targetPCB.assignedSegment);
+                        }
+                    }
                     _CPU.init();
                     _CPU.isExecuting = true;
                 }
@@ -31,16 +39,29 @@ module TSOS {
                     
                     // Dequeue the next PCB from ready queue and set to current PCB
                     _CurrentPCB = _Scheduler.readyQueue.dequeue();
-                    Control.updateReadyQueueTable();
-                    _CurrentPCB.state = "running";
+                    if (_CurrentPCB != null) {
+                        if (_CurrentPCB.location == 'disk') {
+                            let targetPCB = _MemoryManager.getSwapPCB();
+                            if (targetPCB) {
+                                // save target pcb to the disk
+                                _Swapper.rollOut(targetPCB);
+
+                                // roll in the current pcb from the disk to memory
+                                _Swapper.rollIn(_CurrentPCB, targetPCB.assignedSegment);
+                            } else {
+                                _Swapper.rollIn(_CurrentPCB, null);
+                            }  
+                        }
+                    }
                 }
             }
-            this.runningPCB = _CurrentPCB;
-
+            Control.updateReadyQueueTable();
             // Set the CPU registers to the saved registers in the current PCB
             if (_CurrentPCB != null) {
                 this.updateCPU();
-            }
+                _CurrentPCB.state = "running";
+                this.runningPCB = _CurrentPCB;
+            } 
         }
 
         public updateCPU() {

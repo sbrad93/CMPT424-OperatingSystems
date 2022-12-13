@@ -84,5 +84,30 @@ module TSOS {
             _StdOut.advanceLine();
             _OsShell.putPrompt();
         }
+
+        // returns all program data within a segment
+        public getSegmentData(segment) {
+            let i = segment.limit;
+            let data = [];
+            let brkIndex = -1;
+
+            // loop from end of segment to beginning
+            // find the index of brk
+            while (i>segment.base) { 
+                if (_Memory.memArr[i-1] != 0 && _Memory.memArr[i] == 0) {
+                    brkIndex = i;
+                    break;
+                }
+                i--;
+            }
+
+            // create array of op codes from beginning of segment to brk index
+            i = segment.base;
+            while (i <= brkIndex) {
+                data.push(Utils.hexLog(_Memory.memArr[i]).slice(-2));
+                i++;
+            }
+            return data;
+        }
     }
 }

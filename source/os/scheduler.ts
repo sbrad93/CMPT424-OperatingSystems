@@ -21,13 +21,20 @@ module TSOS {
 
         public schedule() {
             if (this.readyQueue.getSize() > 0) {
+                this.quantaCount = 0;
                 switch (this.schedulingAlgorithm) {
                     case ROUND_ROBIN:
                         // Generate a software interrupt to implement a context switch
-                        this.generateInterrupt()
+                        this.generateInterrupt();
+                        break;
+                    case FCFS:
+                        this.quantum = Number.MAX_VALUE;
+                        this.generateInterrupt();
                         break;
                 }
             } else {
+                // delete any existing swap files once execution completes
+                _krnDiskDriver.deleteSwapFiles();
                 _StdOut.advanceLine();
                 _StdOut.putText("Execution completed.")
                 _StdOut.advanceLine();
@@ -55,7 +62,7 @@ module TSOS {
 
         public quantumSurveillance() {
             // Quantum has been used up
-            if (this.schedulingAlgorithm == ROUND_ROBIN && this.quantaCount == this.quantum) {
+            if ((this.schedulingAlgorithm == ROUND_ROBIN || this.schedulingAlgorithm == FCFS) && this.quantaCount == this.quantum) {
                 _Kernel.krnTrace("Quantum expired");
                 // Generate a software interrupt to implement a context switch
                 this.generateInterrupt();

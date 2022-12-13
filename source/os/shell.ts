@@ -91,65 +91,131 @@ module TSOS {
                                 "<string> - Displays song recommendations based on your mood.");
             this.commandList[this.commandList.length] = sc;
 
-            // status
+            // status <string>
             sc = new ShellCommand(this.shellStatus,
                                 "status",
                                 "<string> - Sets the status message.");
             this.commandList[this.commandList.length] = sc;
 
-            // test kernel trap error
+            // bsod
             sc = new ShellCommand(this.shellTestKrnTrapError,
                                 "bsod",
                                 "- Tests when kernel traps an OS error and displays BSOD.");
             this.commandList[this.commandList.length] = sc;
             
-            // load input values into console
+            // load <string>
             sc = new ShellCommand(this.shellLoad,
                             "load",
                             "<string> - Loads a user program into the console.");
             this.commandList[this.commandList.length] = sc;
 
-            // run a process
+            // run <pid>
             sc = new ShellCommand(this.shellRun,
                             "run",
                             "<pid> - Runs a specified process.");
             this.commandList[this.commandList.length] = sc;
 
-            // memory dump testing
+            // memdump
             sc = new ShellCommand(this.shellMemoryDump,
                             "memdump",
                             " - Displays memory in browser console.");
             this.commandList[this.commandList.length] = sc;
 
-            // clear all memory pertitions
+            // clearmem
             sc = new ShellCommand(this.shellClearMem,
                             "clearmem",
                             " - Clears all memory partitions.");
             this.commandList[this.commandList.length] = sc;
-            // clear all memory pertitions
+
+            // runall
             sc = new ShellCommand(this.shellRunAll,
                             "runall",
                             " - Run all loaded processes.");
             this.commandList[this.commandList.length] = sc;
+
+            // ps
             sc = new ShellCommand(this.shellPS,
                             "ps",
                             " - Displays the PID and state of all processes.");
             this.commandList[this.commandList.length] = sc;
+
+            // kill <pid>
             sc = new ShellCommand(this.shellKill,
                             "kill",
                             "<pid> - Kills a specified process.");
             this.commandList[this.commandList.length] = sc;
+
+            // killall
             sc = new ShellCommand(this.shellKillAll,
                             "killall",
                             "<pid> - Kills all processes.");
             this.commandList[this.commandList.length] = sc;
+
+            // quantum <int>
             sc = new ShellCommand(this.shellSetQuantum,
                             "quantum",
                             "<int> - Sets the quantum value.");
             this.commandList[this.commandList.length] = sc;
 
-            // ps  - list the running processes and their IDs
-            // kill <id> - kills the specified process id.
+            // format
+            sc = new ShellCommand(this.shellFormat,
+                            "format",
+                            "- Initializes all disk blocks.");
+            this.commandList[this.commandList.length] = sc;
+
+            // create <filename>
+            sc = new ShellCommand(this.shellCreate,
+                            "create",
+                            "<filename> - Creates the file.");
+            this.commandList[this.commandList.length] = sc;
+
+            // read <filename>
+            sc = new ShellCommand(this.shellRead,
+                            "read",
+                            "<filename> - Read and displays contents of <filename>.");
+            this.commandList[this.commandList.length] = sc;
+
+            // write <filename> "data"
+            sc = new ShellCommand(this.shellWrite,
+                            "write",
+                            "<filename> \"data\" - Write data inside quotes to <filename>.");
+            this.commandList[this.commandList.length] = sc;
+
+            // delete <filename>
+            sc = new ShellCommand(this.shellDelete,
+                            "delete",
+                            "<filename> - Remove <filename> from storage.");
+            this.commandList[this.commandList.length] = sc;
+
+            // copy <existing filename> <new filename>
+            sc = new ShellCommand(this.shellCopy,
+                            "copy",
+                            "<existing filename> <new filename> - Copies an existing file.");
+            this.commandList[this.commandList.length] = sc;
+
+            // rename <existing filename> <new filename>
+            sc = new ShellCommand(this.shellRename,
+                            "rename",
+                            "<existing filename> <new filename> - Renames an existing file.");
+            this.commandList[this.commandList.length] = sc;
+
+            // ls
+            sc = new ShellCommand(this.shellLS,
+                            "ls",
+                            "- List the files currently stored on the disk.");
+            this.commandList[this.commandList.length] = sc;
+
+            // setschedule <newSchedule>
+            sc = new ShellCommand(this.shellSetSchedule,
+                            "setschedule",
+                            "<newSchedule> - Sets the scheduling algorithm.");
+            this.commandList[this.commandList.length] = sc;
+
+            // getschedule
+            sc = new ShellCommand(this.shellGetSchedule,
+                "getschedule",
+                "- Gets the current scheduling algorithm.");
+            this.commandList[this.commandList.length] = sc;
 
             // Display the initial prompt.
             this.putPrompt();
@@ -389,6 +455,30 @@ module TSOS {
                     case "quantum":
                         _StdOut.putText("Sets the quantum value. Default is 6 CPU cycles.");
                         break;
+                    case "format":
+                        _StdOut.putText("Initializes all disk blocks.");
+                        break;
+                    case "create":
+                        _StdOut.putText("Creates a file.");
+                        break;
+                    case "read":
+                        _StdOut.putText("Reads and displays contents of a given file.");
+                        break;
+                    case "write":
+                        _StdOut.putText("Writes data to a file.");
+                        break;
+                    case "delete":
+                        _StdOut.putText("Deletes an existing file.");
+                        break;
+                    case "copy":
+                        _StdOut.putText("Copies an existing file.");
+                        break;
+                    case "rename":
+                        _StdOut.putText("Renames an existing file.");
+                        break;
+                    case "ls":
+                        _StdOut.putText("Lists all files on the disk.");
+                        break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -530,51 +620,52 @@ module TSOS {
             if (_CPU.isExecuting) {
                 _StdOut.putText("Load Error: Please wait for the current process(s) to finish executing.");
             } else {
-                if ((_Memory.isFull) && (_CurrentPCB != null)) {
-                    _CurrentPCB.state = "terminated";
-                    // set the last segment to inactive and overwrite memory
-                    _MemoryManager.segmentsList[_MemoryManager.segmentsList.length-1].isActive = false;
-                    Control.updatePCBStateInTable(_CurrentPCB.pid, _CurrentPCB.state);
-                    _StdOut.putText(`Process ${_CurrentPCB.pid}: Overwriting Memory...`);
-                    _StdOut.advanceLine();
-                }
-                // Clear temp array 
-                _Memory.tempArr = [];
+                // if ((_Memory.isFull) && (_CurrentPCB != null)) {
+                //     _CurrentPCB.state = "terminated";
+                //     // set the last segment to inactive and overwrite memory
+                //     _MemoryManager.segmentsList[_MemoryManager.segmentsList.length-1].isActive = false;
+                //     Control.updatePCBStateInTable(_CurrentPCB.pid, _CurrentPCB.state);
+                //     _StdOut.putText(`Process ${_CurrentPCB.pid}: Overwriting Memory...`);
+                //     _StdOut.advanceLine();
+                // }
     
                 // Clear memory of inactive segments
                 // Implemented to improve memory output updating
-                //  I didn't want to clear segment memory each time a process finished executing bc it felt too abrupt
-                //  ... so I did this instead 
                 _MemoryManager.clearInactiveSegments();
                 
                 // Get da op codes
                 var opcode_str = Control.getOpCodes();
     
                 if (opcode_str != null) {
-                    // Create a new process and add to PCB list
                     _CurrentPCB = new PCB(_PidCounter);
+
+                    if (_Memory.isFull) {
+                        if (_krnDiskDriver.disk.isFormatted) {
+                            _CurrentPCB.location = "disk";
+                        } else {
+                            _StdOut.putText("Memory is full.");
+                            _StdOut.advanceLine();
+                            _StdOut.putText("Please format the disk to load another program.");
+                            return;
+                        }
+                    }
+
                     _PidCounter += 1;
                     _PCBlist.push(_CurrentPCB);
-                    
+    
+                    // Add a new row to the Processes table
+                    Control.addRowToPCBTable();
+    
+                    // Load the program into memory	
                     // Regex that splits hex string into a list of individual op codes
-                    // Assign to a temporary memory array
-                   _Memory.tempArr = opcode_str.match(/.{1,2}/g);
+                    _MemoryManager.load(_CurrentPCB, opcode_str.match(/.{1,2}/g), null);
     
-                   // Add a new row to the Processes table
-                   Control.addRowToPCBTable();
-    
-                   // Memory output
-                   var memory_out = <HTMLInputElement> document.getElementById("taMemory");
-    
-                   // Load the program into memory	
-                   _MemoryManager.load(_Memory.tempArr);
-    
-                   _StdOut.putText("Successfuly loaded program into memory.");
-                   _StdOut.advanceLine();
-                   _StdOut.putText(`PID: ${_CurrentPCB.pid}`);
-                   _StdOut.advanceLine();
-                   _StdOut.advanceLine();
-                   _StdOut.putText(`Execute \'run ${_CurrentPCB.pid}\' to run your program.`)
+                    _StdOut.putText("Successfuly loaded program into memory.");
+                    _StdOut.advanceLine();
+                    _StdOut.putText(`PID: ${_CurrentPCB.pid}`);
+                    _StdOut.advanceLine();
+                    _StdOut.advanceLine();
+                    _StdOut.putText(`Execute \'run ${_CurrentPCB.pid}\' to run your program.`)
                 }
             } 
         }
@@ -604,7 +695,7 @@ module TSOS {
                 // Add the process to the ready queue and schedule it
                 _Scheduler.readyQueue.enqueue(_CurrentPCB);
                 _Scheduler.numActiveProcesses++;
-                Control.addRowToReadyQueueTable();
+                // Control.addRowToReadyQueueTable();
                 _Scheduler.schedule();
             }
         }
@@ -620,7 +711,7 @@ module TSOS {
                     _CurrentPCB.state = "ready";
                     _Scheduler.readyQueue.enqueue(_CurrentPCB);
                     _Scheduler.numActiveProcesses++;
-                    Control.addRowToReadyQueueTable();
+                    // Control.addRowToReadyQueueTable();
                     processExists = true;
                 }
             }
@@ -758,11 +849,11 @@ module TSOS {
                 _CPU.init();
                 Control.updateCPUtable();
 
-                if (!Kernel.isShutdown) {
+                if (!Kernel.isShutdown && !_krnDiskDriver.disk.isFull ) {
                     _StdOut.putText("All processes have been killed.")
                 }
             } else {
-                if (!Kernel.isShutdown) {
+                if (!Kernel.isShutdown && !_krnDiskDriver.disk.isFull) {
                     _StdOut.putText("There are no processes to kill.");
                 }
             }
@@ -777,6 +868,199 @@ module TSOS {
                 _StdOut.advanceLine();
                 _StdOut.putText(`Switching quantum ${_Scheduler.quantum} to ${parseInt(args[0], 10)}.`);
                 _Scheduler.quantum = parseInt(args[0], 10);
+            }
+        }
+
+        public shellFormat(args: string[]) {
+            let isFormatted = _krnDiskDriver.format();
+            if (isFormatted) {
+                _StdOut.putText("Disk successfully formatted.");
+            } else {
+                _StdOut.putText("ERR: Could not format disk.");
+            }
+        }
+
+        public shellCreate(args: string[]) {
+            // check if disk is formatted
+            if (!_krnDiskDriver.disk.isFormatted) {
+                _StdOut.putText("Please format the disk first.");
+            } else {
+                let fileName = args[0];
+                if (!fileName) {
+                    _StdOut.putText("Invalid input: Usage -- create <filename>");
+                } else {
+                    // false returned if file already exists
+                    let created = _krnDiskDriver.createFile(fileName);
+                    if (created) {
+                        _StdOut.putText(`File ${fileName} successfully created.`);
+                    } else {
+                        _StdOut.putText(`ERR: File ${fileName} already exists.`);
+                    }
+                }
+            }
+            
+        }
+
+        public shellRead(args: string[]) {
+            if (_krnDiskDriver.disk.isFormatted) {
+                if (args.length > 0) {
+                    let data = Utils.hexToText(_krnDiskDriver.readFile(args[0]));
+                    if (data == null) {
+                        _StdOut.putText("\'" + args[0] + "\' does not exist.");
+                    } else if (data == '') {
+                        _StdOut.putText("\'" + args[0] + "\' has no content.");
+                    } else {
+                        _StdOut.putText(data);
+                    }
+                } else {
+                    _StdOut.putText('Invalid input: Usage -- read <filename>');
+                }
+            } else {
+                _StdOut.putText("Please format the disk first.");
+            }
+        }
+
+        public shellWrite(args: string[]) {
+            // check if disk is formatted
+            if (!_krnDiskDriver.disk.isFormatted) {
+                _StdOut.putText("Please format the disk first.");
+            } else {
+                if (args.length >= 2) {
+                    if (args[1] == '\"\"') {
+                        _StdOut.putText('Invalid input: Please supply a valid data string');
+                        _StdOut.advanceLine();
+                        _StdOut.putText('Usage -- write <filename> "data"');
+                    } else if (args[1].startsWith('"') && args[args.length-1].endsWith('"')) {
+                            let fileName = args[0];
+
+                            // get the array of input data
+                            let dataArr = args.slice(1, args.length);
+
+                            // combine the array into a single string
+                            let data = dataArr.join(' ').slice(1, -1);
+                            data = Utils.textToHex(data);
+
+                            let msg = _krnDiskDriver.writeFile(fileName, data);
+                            if (msg == 'success') {
+                                _StdOut.putText("\'" + fileName + "\' successfully edited (yay).");
+                            } else if (msg == 'does not exist') {
+                                _StdOut.putText("\'" + fileName + "\' doesn't exist.");
+                            }
+                    } else {
+                        _StdOut.putText('Input must be wrapped in quotations.');
+                        _StdOut.advanceLine();
+                        _StdOut.putText('Usage -- write <filename> "data"');
+                    }
+                } else {
+                    _StdOut.putText('Invalid input: Usage -- write <filename> "data"');
+                }
+            }
+        }
+
+        public shellDelete(args: string[]) {
+            if (!_krnDiskDriver.disk.isFormatted) {
+                _StdOut.putText("Please format the disk first.");
+            } else {
+                if (args.length > 0) {
+                    let isDeleted = _krnDiskDriver.deleteFile(args[0]);
+                    if (isDeleted) {
+                        _StdOut.putText(args[0] + ' successfully deleted.');
+                    } else {
+                        _StdOut.putText(args[0] + ' does not exist.');
+                    }
+                } else {
+                    _StdOut.putText('Invalid input: Usage -- delete <filename>');
+                }
+            } 
+        }
+
+        public shellCopy(args: string[]) {
+            if (!_krnDiskDriver.disk.isFormatted) {
+                _StdOut.putText("Please format the disk first.");
+            } else {
+                if (args.length == 2) {
+                    let msg = _krnDiskDriver.copyFile(args[0], args[1]);
+                    if (msg == 'success') {
+                        _StdOut.putText('Copy successful.');
+                    } else if (msg == 'new file exists') {
+                        _StdOut.putText("\'" + args[1] + '\' already exists.');
+                    } else {
+                        _StdOut.putText("\'" + args[0] + '\' does not exist.');
+                    }
+                } else {
+                    _StdOut.putText('Invalid input: Usage -- copy <existing filename> <new filename>');
+                }
+            }
+        }
+
+        public shellRename(args: string[]) {
+            if (!_krnDiskDriver.disk.isFormatted) {
+                _StdOut.putText("Please format the disk first.");
+            } else {
+                if (args.length > 0) {
+                    let msg = _krnDiskDriver.renameFile(args[0], args[1])
+                    if (msg == 'success') {
+                        _StdOut.putText('Rename successful. ' + args[0] + ' => ' + args[1]);
+                    } else if (msg == 'cannot find file') {
+                        _StdOut.putText(args[0] + ' does not exist.');
+                    } else {
+                        _StdOut.putText(args[1] + ' already exists.');
+                    }
+                } else {
+                    _StdOut.putText('Invalid input: Usage -- rename <existing filename> <new filename>');
+                }
+            }    
+        }
+
+        public shellLS(args: string[]) {
+            let files = _krnDiskDriver.getAllFiles();
+            if (!_krnDiskDriver.disk.isFormatted) {
+                _StdOut.putText("Please format the disk first.");
+            } else {
+                if (files.length > 0) {
+                    _StdOut.putText('Files currently stored on the disk:');
+                    _StdOut.advanceLine();
+                    for (let i=0; i<files.length; i++) {
+                        _StdOut.putText(files[i]);
+                        _StdOut.advanceLine();
+                    }
+                } else {
+                    _StdOut.putText('There are no files currently stored on the disk.');
+                }
+            }
+        }
+
+        public shellSetSchedule(args: string[]) {
+            if (args.length > 0) {
+                args[0] = args[0].toUpperCase();
+                if (args[0] == ROUND_ROBIN) {
+                    _Scheduler.schedulingAlgorithm = args[0];
+                    _Scheduler.quantum = 6;
+                    _StdOut.putText("Scheduling algorithm set to Round Robin.");
+                } else if (args[0] == FCFS) {
+                    _Scheduler.schedulingAlgorithm = args[0];
+                    _StdOut.putText("Scheduling algorithm set to First Come First Serve.");
+                } else {
+                    _StdOut.putText("Invalid input: Possible algorithms include");
+                    _StdOut.advanceLine();
+                    _StdOut.putText("RR - Round Robin");
+                    _StdOut.advanceLine();
+                    _StdOut.putText("FCFS - First Come First Serve");
+                }
+            } else {
+                _StdOut.putText("Invalid input: Possible algorithms include");
+                _StdOut.advanceLine();
+                _StdOut.putText("RR - Round Robin");
+                _StdOut.advanceLine();
+                _StdOut.putText("FCFS - First Come First Serve");
+            }
+        }
+
+        public shellGetSchedule() {
+            if (_Scheduler.schedulingAlgorithm == ROUND_ROBIN) {
+                _StdOut.putText("Round Robin");
+            } else if (_Scheduler.schedulingAlgorithm == FCFS) {
+                _StdOut.putText("First Come First Serve");
             }
         }
     }

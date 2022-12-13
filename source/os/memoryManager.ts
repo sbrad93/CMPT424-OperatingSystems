@@ -29,41 +29,74 @@ module TSOS {
         }
 
         // reset all segments to inactive
-        resetSegments(): void {
+        public resetSegments(): void {
             for (let i=0; i<this.segmentsList.length; i++) {
                 this.segmentsList[i].isActive = false;
             }
         }
 
-        // loads a static program into correct segment in memory array
-        public load(program_str: string[]): void {
-            let i = 0;
-            let activeSegment = null;
+        public clearSegment(segment: MemorySegment) {
+            let i = segment.base;
+            while (i<segment.limit) {
+                _Memory.memArr[i++] = 0x00;
+            }
+        }
 
-            while (i < this.segmentsList.length && activeSegment == null) {
-                // find the first inactive segment and set to active
+        public areAllSegmentsActive() {
+            let res = true;
+            let i = 0;
+            while (i<this.segmentsList.length) {
                 if (!this.segmentsList[i].isActive) {
-                    activeSegment = this.segmentsList[i];
-                    activeSegment.isActive = true;
+                    res = false;
+                    break;
                 }
                 i++;
             }
+            return res;
+        }
 
-            let program = [];
-            for (let i=0; i<program_str.length; i++) {
-                // create an array of numeric opcodes
-                program.push(parseInt(program_str[i], 16));
+        // loads a static program into correct segment in memory array
+        public load(pcb:PCB, program_str: string[], segment: MemorySegment): void {
+            let i = 0;
+            let activeSegment = null;
+
+            if (_Memory.isFull) {
+                _krnDiskDriver.createSwapFile(pcb.pid, program_str.join(''));
+            } else {
+                // if segment is provided, assigned the program to that segment
+                // otherwise, assign the program to the first inactive segment
+                if (segment) {
+                    // console.log('assigning segment');
+                    activeSegment = segment;
+                } else {
+                    while (i < this.segmentsList.length && activeSegment == null) {
+                        if (!this.segmentsList[i].isActive) {
+                            activeSegment = this.segmentsList[i];
+                            break;
+                        }
+                        i++;
+                    } 
+                }
+                activeSegment.isActive = true;
+                // console.log(activeSegment)    
+       
+                let program = [];
+                for (let i=0; i<program_str.length; i++) {
+                    // create an array of numeric opcodes
+                    program.push(parseInt(program_str[i], 16));
+                }
+    
+                // write program to memory
+                _MemoryManager.writeImmmediate(program, activeSegment);
+    
+                // assign the segment to the current process
+                _CurrentPCB.assignedSegment = activeSegment;
             }
-
-            // write program to memory
-            _MemoryManager.writeImmmediate(program, activeSegment);
-
-            // assign the segment to the current process
-            _CurrentPCB.assignedSegment = activeSegment;
             
             // check if all segments are active
-            if (this.segmentsList[this.segmentsList.length-1].isActive) {
+            if (this.areAllSegmentsActive()) {
                 _Memory.isFull = true;
+                // console.log('memory full')
             } else {
                 _Memory.isFull = false;
             }
@@ -104,6 +137,34 @@ module TSOS {
                     }
                 }
             }
+        }
+
+        // returns the pcb to complete disk swap
+        public getSwapPCB(): PCB {
+            let target = null;
+            let freeSegment = null;
+
+            // check if there's any inactive segments
+            for (let i=0; i<this.segmentsList.length; i++) {
+                if (!this.segmentsList[i].isActive) {
+                    freeSegment = this.segmentsList[i];
+                }
+            }
+
+            for (let i=0; i<_PCBlist.length; i++) {
+                // if there's an inactive segment, find the associated pcb
+                if (freeSegment) {
+                    if (_PCBlist[i].assignedSegment == freeSegment) {
+                        target = _PCBlist[i];
+                    }
+                } else {
+                    // otherwise, the first segment is the designated swap segment
+                    if (_PCBlist[i].assignedSegment == this.segmentsList[0]) {
+                        target = _PCBlist[i];
+                    }
+                }
+            }
+            return target;
         }
 
         // all memory properties are reinitialized to zero

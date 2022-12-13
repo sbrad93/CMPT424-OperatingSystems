@@ -20,6 +20,7 @@ module TSOS {
                     public isExecuting: boolean = false,
                     public instructionReg: number = 0x00,
                     public assignedSegment: MemorySegment = null,
+                    public location: string = "memory",
                     public waitingCycles: number = 0,
                     public turnAroundCycles: number = 0) {
 

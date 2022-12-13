@@ -148,7 +148,7 @@ module TSOS {
                             Control.updatePCBStateInTable(_Scheduler.readyQueue.getAt(i).pid, _Scheduler.readyQueue.getAt(i).state);
                         }
                         _Scheduler.readyQueue.reset();
-                        Control.updateReadyQueueTable();
+                        // Control.updateReadyQueueTable();
                     }
                     _StdOut.advanceLine();
                     _OsShell.putPrompt();

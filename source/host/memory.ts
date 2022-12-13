@@ -10,7 +10,6 @@ module TSOS {
 
         constructor(public memArr: number [] = null,
                     public memSize: number = 0x300,
-                    public tempArr: string[] = null,
                     public mar: number = 0x0000,
                     public mdr: number = 0x00,
                     public isFull: boolean = false) {
@@ -18,7 +17,6 @@ module TSOS {
 
         // initializes all elements in the memory array
         public arrInit():number[] {
-            this.tempArr = [];
             interface Array<T> {
                 fill(number: T): Array<T>;
             }

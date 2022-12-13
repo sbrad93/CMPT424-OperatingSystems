@@ -29,6 +29,7 @@ const CONTEXT_SWITCH_IRQ: number = 2;
 
 // Scheduling Algorithms
 const ROUND_ROBIN: string = "RR";
+const FCFS: string = "FCFS";
 
 // Hardware (host)
 var _Memory: TSOS.Memory;
@@ -40,6 +41,8 @@ var _CPU: TSOS.Cpu;  // Utilize TypeScript's type annotation system to ensure th
 var _MemoryManager: TSOS.MemoryManager;
 var _Scheduler: TSOS.Scheduler;
 var _Dispatcher: TSOS.Dispatcher;
+var _Swapper: TSOS.Swapper;
+
 var _WaitTimeList: string[] = [];
 var _TurnAroundTimeList: string[] = [];
 
@@ -83,6 +86,7 @@ var _SarcasticMode: boolean = false;
 
 // Global Device Driver Objects - page 12
 var _krnKeyboardDriver: TSOS.DeviceDriverKeyboard  = null;
+var _krnDiskDriver: TSOS.DeviceDriverDisk  = null;
 
 var _hardwareClockID: number = null;
 

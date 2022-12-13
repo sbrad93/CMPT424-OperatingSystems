@@ -29,6 +29,7 @@ const CONTEXT_SWITCH_IRQ: number = 2;
 
 // Scheduling Algorithms
 const ROUND_ROBIN: string = "RR";
+const FCFS: string = "FCFS";
 
 // Hardware (host)
 var _Memory: TSOS.Memory;

@@ -117,6 +117,10 @@ module TSOS {
             
             // Display empty memory
             Control.updateMemoryOutput();
+
+            // Test data
+            var _input = <HTMLInputElement> document.getElementById("taProgramInput");
+            _input.value = "A9068D3100A9018D3000AC3000A201FFEE3000AE3000EC3100D0EF00";
         }
 
         public static hostBtnHaltOS_click(btn): void {

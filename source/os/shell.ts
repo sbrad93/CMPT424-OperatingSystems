@@ -205,6 +205,18 @@ module TSOS {
                             "- List the files currently stored on the disk.");
             this.commandList[this.commandList.length] = sc;
 
+            // setschedule <newSchedule>
+            sc = new ShellCommand(this.shellSetSchedule,
+                            "setschedule",
+                            "<newSchedule> - Sets the scheduling algorithm.");
+            this.commandList[this.commandList.length] = sc;
+
+            // getschedule
+            sc = new ShellCommand(this.shellGetSchedule,
+                "getschedule",
+                "- Gets the current scheduling algorithm.");
+            this.commandList[this.commandList.length] = sc;
+
             // Display the initial prompt.
             this.putPrompt();
         }
@@ -1014,6 +1026,40 @@ module TSOS {
                 } else {
                     _StdOut.putText('There are no files currently stored on the disk.');
                 }
+            }
+        }
+
+        public shellSetSchedule(args: string[]) {
+            if (args.length > 0) {
+                args[0] = args[0].toUpperCase();
+                if (args[0] == ROUND_ROBIN) {
+                    _Scheduler.schedulingAlgorithm = args[0];
+                    _Scheduler.quantum = 6;
+                    _StdOut.putText("Scheduling algorithm set to Round Robin.");
+                } else if (args[0] == FCFS) {
+                    _Scheduler.schedulingAlgorithm = args[0];
+                    _StdOut.putText("Scheduling algorithm set to First Come First Serve.");
+                } else {
+                    _StdOut.putText("Invalid input: Possible algorithms include");
+                    _StdOut.advanceLine();
+                    _StdOut.putText("RR - Round Robin");
+                    _StdOut.advanceLine();
+                    _StdOut.putText("FCFS - First Come First Serve");
+                }
+            } else {
+                _StdOut.putText("Invalid input: Possible algorithms include");
+                _StdOut.advanceLine();
+                _StdOut.putText("RR - Round Robin");
+                _StdOut.advanceLine();
+                _StdOut.putText("FCFS - First Come First Serve");
+            }
+        }
+
+        public shellGetSchedule() {
+            if (_Scheduler.schedulingAlgorithm == ROUND_ROBIN) {
+                _StdOut.putText("Round Robin");
+            } else if (_Scheduler.schedulingAlgorithm == FCFS) {
+                _StdOut.putText("First Come First Serve");
             }
         }
     }
